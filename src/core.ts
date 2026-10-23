@@ -41,7 +41,7 @@ export function blit(lo){ctx.drawImage(lo.c,0,0,W,H)}
 // ---------- input ----------
 export const keys:any={};export let fireEdge=false,jumpEdge=false;export const mv={x:0,y:0};export let lastInputReal=-1e9;
 export function clearEdges(){fireEdge=false;jumpEdge=false;mv.x=0;mv.y=0}
-addEventListener('keydown',e=>{const k=e.key;if(k==='p'||k==='P'||k==='Escape'){HK.togglePlay();return}if(k==='m'||k==='M'){HK.toggleClick();return}if(k==='Tab'){e.preventDefault();HK.cycleAuto();return}if(k==='l'||k==='L'){HK.toggleCaptions();return}if(k>='1'&&k<='5'){HK.seek(ERAS[+k-1].start);return}
+addEventListener('keydown',e=>{const k=e.key;if(k==='p'||k==='P'||k==='Escape'){HK.togglePlay();return}if(k==='m'||k==='M'){HK.toggleClick();return}if(k==='q'||k==='Q'){HK.cycleAuto();return}if(k==='l'||k==='L'){HK.toggleCaptions();return}if(k>='1'&&k<='5'){HK.seek(ERAS[+k-1].start);return}
  if(e.repeat){if(k===' ')e.preventDefault();return}keys[k]=true;
  if(k===' '){fireEdge=true;e.preventDefault()}if(k==='ArrowUp'||k==='w'||k==='W'){jumpEdge=true;mv.y-=1}if(k==='ArrowDown'||k==='s'||k==='S')mv.y+=1;if(k==='ArrowLeft'||k==='a'||k==='A')mv.x-=1;if(k==='ArrowRight'||k==='d'||k==='D')mv.x+=1;
  if(k.startsWith('Arrow')||k===' '||'wasdWASD'.includes(k)){lastInputReal=performance.now();if(k.startsWith('Arrow'))e.preventDefault()}});

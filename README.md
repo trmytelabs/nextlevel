@@ -30,7 +30,7 @@ GitHub Pages is only available on private repos with a paid plan; on the free pl
 | Space | Fire, place block |
 | P or Escape | Pause |
 | M | Sound (synthesized click track and SFX) |
-| Tab | Autopilot mode: when idle / on / off |
+| Q | Autopilot mode: when idle / on / off |
 | L | Lyric captions on / off |
 | 1 to 5 | Jump to an era |
 
