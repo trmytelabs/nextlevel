@@ -2,15 +2,24 @@
 
 A three-minute music video that is also a game. Five eras of play, one continuous take, locked to a 128 BPM clock. It starts as Space Invaders and ends as a swarm of AI agents building a neon future city ahead of you while you play it. The lyrics are part of the gameplay in every era.
 
-Prototype for the Maximalist team application. Single file, no build step, no dependencies beyond one Google font.
+Prototype for the Maximalist team application. Canvas 2D and Web Audio, no runtime dependencies beyond one Google font. Built with Vite and TypeScript.
 
 ## Run it
 
 ```bash
-python -m http.server 8765 --bind 127.0.0.1
+npm install
+npm run dev
 ```
 
-Then open http://localhost:8765/. Opening `index.html` directly also works.
+Then open the URL Vite prints (http://localhost:5173/maximalist/). `npm run build` type-checks and writes a static site to `dist/`; `npm run preview` serves that build.
+
+## Deploy
+
+Every push to `main` runs `.github/workflows/pages.yml`, which builds the site and publishes `dist/` to GitHub Pages. Once Pages is enabled for the repo (Settings → Pages → Source: GitHub Actions) the site lives at:
+
+https://trmytelabs.github.io/maximalist/
+
+GitHub Pages is only available on private repos with a paid plan; on the free plan the repo has to be public for the deploy to work. `vite.config.ts` sets `base` to `/maximalist/` so asset paths resolve under that prefix.
 
 ## Controls
 
@@ -41,13 +50,17 @@ Era five is scripted and deterministic. Nothing is generated live, so every play
 
 ## Where things live
 
-Everything is in `index.html`, in order:
+`index.html` holds the markup, CSS and HUD, and loads `src/main.ts`. The modules under `src/`, in load order:
 
-- Constants, `ERAS`, and `LYRICS`. All timing is in bars.
-- `E1`, `E2`, `E3`: the arcade, platformer, and racer modules. The racer includes a small flat-shaded polygon renderer and the car, tree, and gate models.
-- `WD` and `WORLD`: the isometric sandbox.
-- `E5`: the agents era. `RULES` is the rule schedule, `genChunk` decides what each sector contains, `wire`, `fill`, and `lit` set how far ahead the agents build, and `agentModel` is the 3D drone.
-- Transport, compositing, transitions, bloom, and HUD.
+- `core.ts`: constants, `ERAS`, `LYRICS`, seeded RNG, the main canvas and low-res offscreen layers, keyboard input, and the synthesized audio. All timing is in bars. Hotkeys are routed through a small `HK` table that `main.ts` fills in.
+- `era1.ts`, `era2.ts`, `era3.ts`: the arcade, platformer, and racer modules. The racer includes a small flat-shaded polygon renderer and the car, tree, and gate models.
+- `world.ts`: `WD` and `WORLD`, the isometric sandbox, plus its renderer and the shared colour helpers.
+- `era5.ts`: the agents era. `RULES` is the rule schedule, `genChunk` decides what each sector contains, `wire`, `fill`, and `lit` set how far ahead the agents build, and `agentModel` is the 3D drone.
+- `main.ts`: transport, compositing, transitions, bloom, and HUD.
+
+Each era exposes the same `init / update / draw / onBeat / on8th / onLine` surface, and `seek(t)` rebuilds every era's state from scratch at any time, which is what the scrubber uses.
+
+TypeScript is deliberately loose (`strict` off) so the port from the single-file prototype stayed mechanical.
 
 ## Status
 
