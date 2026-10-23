@@ -13,7 +13,7 @@ export const ERAS=[
  {name:'1978 · ARCADE',start:bar(0)},
  {name:'1991 · 16-BIT',start:bar(19)},
  {name:'1997 · 32-BIT',start:bar(37)},
- {name:'2016 · SANDBOX',start:bar(56)},
+ {name:'2013 · MOBILE',start:bar(56)},
  {name:'NOW · AGENTS',start:bar(75)}];
 export const TRANS=BAR*1.5;
 export const eraAt=t=>{let e=0;for(let i=0;i<ERAS.length;i++)if(t>=ERAS[i].start)e=i;return e};
@@ -23,8 +23,8 @@ export const LYRICS:[number,string][]=[[2,'One pixel, one life, one line to hold
 [27.5,"Now I've got legs and the ground's got springs"],[29.5,"Coins in the sky and the sky's got rings"],[31.5,"Jump on the beat, every block's a drum"],[33.5,"Wherever I land is where I'm from"],
 [38,'Spin the world till it shows me a horizon'],[40,'Fog at the edge where the polygons quit'],[42,'Foot to the floor and the floor is a texture'],[44,'A thousand triangles chasing the light'],
 [47,'Give me everything, then give me more'],[49,'Every screen I ever sat in front of'],[51,'Give me everything, then give me more'],[53,"I don't want the game, I want what it's made of"],
-[57,'Now every brick I drop stays down'],[59,"I'm not just playing, I'm laying the town"],[61,'Shadows that bend and water that knows'],[63,'Whatever I picture is a place I can go'],
-[66.5,"Wait, who's placing that?"],[68,"I didn't put that there"],[69.5,'I said what I wanted out loud'],[71,'And a hundred hands appeared'],
+[57,'Now the whole arcade fits in my hand'],[59,"One thumb, one tap, and I'm up again"],[61,"Thread the gap and don't look down"],[63,'Wherever I tap is a place I can go'],
+[66.5,"Wait, who's flying that?"],[68,"I didn't tap that there"],[69.5,'I said what I wanted out loud'],[71,'And a hundred hands appeared'],
 [75,'A hundred little hands and they all learned from mine'],[77,"Writing out a world while I'm still reading the line"],[79,"Spawn a sky, spawn a road, spawn a rule I don't know"],[81,"I'll play whatever you make me, just don't stop, go"],
 [83,'Give me everything, then give me more'],[85,'Every game I ever played is in here'],[87,'Give me everything, then give me more'],[89,"Now the game is building a game, and it's building it for me"],
 [94,'One pixel. One life.'],[95,'Press start.']];

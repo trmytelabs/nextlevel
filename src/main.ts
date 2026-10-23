@@ -2,12 +2,12 @@ import {$,clamp,lerp,smooth,rngf,hash,BPM,BEAT,BAR,TOTAL,bar,W,H,ERAS,eraAt,tran
 import {E1} from './era1';
 import {E2} from './era2';
 import {E3} from './era3';
-import {WD,WORLD,rgb} from './world';
+import {E4} from './era4';
 import {E5} from './era5';
 
 // ---------- transport, compositing, HUD ----------
-let songT=0,playing=true,lastNow=performance.now(),ended=false,cubeP:any=null,lastBeatT=-1,beatIdx=0;
-function seek(t){lineIdx=-1;songT=clamp(t,0,TOTAL);E1.init(songT);E2.init(songT);E3.init(songT);WORLD.init(songT);E5.init(songT);cubeP=null;ended=false}
+let songT=0,playing=true,lastNow=performance.now(),ended=false,lastBeatT=-1,beatIdx=0;
+function seek(t){lineIdx=-1;songT=clamp(t,0,TOTAL);E1.init(songT);E2.init(songT);E3.init(songT);E4.init(songT);E5.init(songT);ended=false}
 function togglePlay(){if(ended){seek(0);playing=true}else playing=!playing;$('#play').textContent=playing?'PAUSE':'PLAY'}
 function toggleClick(){ensureAC();setClickOn(!clickOn);$('#click').textContent='SOUND: '+(clickOn?'ON':'OFF');$('#click').classList.toggle('on',clickOn)}
 const AUTO_MODES=['idle','on','off'],AUTO_LABEL:any={idle:'AUTOPILOT: WHEN IDLE',on:'AUTOPILOT: ON',off:'AUTOPILOT: OFF'};let autoMode='idle';
@@ -18,25 +18,22 @@ const scrub=$('#scrub');let drag=false;const sc=e=>{const r=scrub.getBoundingCli
 scrub.addEventListener('pointerdown',e=>{drag=true;sc(e)});addEventListener('pointermove',e=>{if(drag)sc(e)});addEventListener('pointerup',()=>drag=false);
 for(const e of ERAS){const m=document.createElement('div');m.className='mark';m.style.left=(e.start/TOTAL*100)+'%';m.innerHTML='<span>'+e.name.split(' · ')[1]+'</span>';scrub.appendChild(m)}
 
-function onBeat(b,t,auto){const e=eraAt(t);if(!(e===4&&t>=bar(94.5)))drums(e,b);E1.onBeat(b,t);WORLD.onBeat(b,t,auto);E5.onBeat(b,t,auto)}
-function on8th(n,t,auto){const e=eraAt(t);if(clickOn&&e>=1&&!(e===4&&t>=bar(94.5)))hat(e===2&&n%2===1);E1.on8th(n,t,auto);WORLD.on8th(n,t,auto);E5.on8th(n,t,auto)}
+function onBeat(b,t,auto){const e=eraAt(t);if(!(e===4&&t>=bar(94.5)))drums(e,b);E1.onBeat(b,t);E4.onBeat(b,t,auto);E5.onBeat(b,t,auto)}
+function on8th(n,t,auto){const e=eraAt(t);if(clickOn&&e>=1&&!(e===4&&t>=bar(94.5)))hat(e===2&&n%2===1);E1.on8th(n,t,auto);E4.on8th(n,t,auto);E5.on8th(n,t,auto)}
 
-function miniCube(x,y,s,col){const h=s*0.5;ctx.fillStyle=rgb(col,1);ctx.beginPath();ctx.moveTo(x,y-h);ctx.lineTo(x+s,y);ctx.lineTo(x,y+h);ctx.lineTo(x-s,y);ctx.fill();ctx.fillStyle=rgb(col,0.75);ctx.beginPath();ctx.moveTo(x+s,y);ctx.lineTo(x,y+h);ctx.lineTo(x,y+h+s);ctx.lineTo(x+s,y+s);ctx.fill();ctx.fillStyle=rgb(col,0.55);ctx.beginPath();ctx.moveTo(x-s,y);ctx.lineTo(x,y+h);ctx.lineTo(x,y+h+s);ctx.lineTo(x-s,y+s);ctx.fill()}
-function cubes(p){if(!cubeP){cubeP=[];const r=rngf(5);for(let i=0;i<90;i++)cubeP.push({sx:W*0.5+(r()-.5)*W*0.5,sy:H*0.6+r()*H*0.4,tx:Math.floor(r()*WD.N),ty:Math.floor(r()*WD.N),d:r()*0.5,size:5+r()*7,col:[70+r()*90,90+r()*90,120+r()*100]})}
- for(const c of cubeP){const q=clamp((p-c.d)/0.5,0,1);if(q>=1)continue;const e=smooth(q);const tg=WD.iso(c.tx+0.5,c.ty+0.5,0);miniCube(lerp(c.sx,tg.x,e),lerp(c.sy,tg.y,e)-Math.sin(e*Math.PI)*90,c.size*(1-e*0.4),c.col)}}
 function glitch(t){if(t-lastBeatT<0.07&&hash(beatIdx)>0.5){for(let i=0;i<3;i++){const y=Math.floor(hash(beatIdx*7+i)*H),h=10+hash(beatIdx*13+i)*40,dx=(hash(beatIdx*17+i)-0.5)*40;ctx.drawImage(cv,0,y*dpr,W*dpr,h*dpr,dx,y,W,h)}}}
 function edge(x){const g=ctx.createLinearGradient(x-30,0,x+6,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(255,255,255,.9)');ctx.fillStyle=g;ctx.fillRect(x-30,0,36,H)}
 
 function render(t,auto){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=false;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);const e=eraAt(t),tr=transAt(t);
  if(e===0){E1.draw(lo1.x,t);if(tr){E2.draw(lo2.x,t);blit(lo2);const ex=W*smooth(tr.p);ctx.save();ctx.beginPath();ctx.rect(ex,0,W-ex,H);ctx.clip();blit(lo1);ctx.restore();edge(ex);scan(1-tr.p*0.7)}else{blit(lo1);scan(1)}}
  else if(e===1){E2.draw(lo2.x,t);if(tr){E3.draw(lo3.x,t);blit(lo3);const p=smooth(tr.p);ctx.save();ctx.globalAlpha=1-p;const hy=H*0.5;ctx.translate(W/2,hy);ctx.scale(1+p*0.6,1-p*0.98);ctx.translate(-W/2,-hy);blit(lo2);ctx.restore();scan(0.3*(1-p))}else{blit(lo2);scan(0.3)}}
- else if(e===2){E3.draw(lo3.x,t);if(tr){WORLD.draw(ctx,t,auto);ctx.globalAlpha=Math.pow(1-tr.p,1.5);blit(lo3);ctx.globalAlpha=1;cubes(tr.p);scan(0.07*(1-tr.p))}else{blit(lo3);scan(0.07)}}
- else if(e===3){WORLD.draw(ctx,t,auto);if(tr){const p=smooth(tr.p);ctx.save();ctx.translate(W*(1-p),0);ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();E5.draw(ctx,t);ctx.restore();edge(W*(1-p))}}
+ else if(e===2){E3.draw(lo3.x,t);if(tr){E4.draw(ctx,t);ctx.globalAlpha=Math.pow(1-tr.p,1.5);blit(lo3);ctx.globalAlpha=1;scan(0.07*(1-tr.p))}else{blit(lo3);scan(0.07)}}
+ else if(e===3){E4.draw(ctx,t);if(tr){const p=smooth(tr.p);ctx.save();ctx.translate(W*(1-p),0);ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();E5.draw(ctx,t);ctx.restore();edge(W*(1-p))}}
  else{E5.draw(ctx,t);const q=clamp((t-ERAS[4].start)/(BAR*8),0,1);scan(0.22*q);glitch(t)}}
 
 let lyricShown='',lineIdx=-1,captions=true;
 function toggleCaptions(){captions=!captions;lyricShown=''}
-function dispatchLine(i,t){const words=LYRICS[i][1].split(' ');E1.onLine(words,t);E2.onLine(words,t);E3.onLine(words,t);WORLD.onLine(words,t);E5.onLine(words,t)}
+function dispatchLine(i,t){const words=LYRICS[i][1].split(' ');E1.onLine(words,t);E2.onLine(words,t);E3.onLine(words,t);E4.onLine(words,t);E5.onLine(words,t)}
 function hud(t,auto){const e=eraAt(t),tr=transAt(t);$('#era').textContent=tr?ERAS[tr.from].name+'  >  '+ERAS[tr.to].name:ERAS[e].name;
  $('#clock').textContent='BAR '+(Math.floor(t/BAR)+1)+' · '+(Math.floor((t%BAR)/BEAT)+1)+'  ·  '+BPM+' BPM';
  let line='',idx=-1;for(let i=0;i<LYRICS.length;i++){const s=bar(LYRICS[i][0]);if(t<s)break;idx=i;const nx=LYRICS[i+1]?bar(LYRICS[i+1][0]):1e9;if(t-s<Math.min(nx-s,bar(1.9)))line=LYRICS[i][1];else line=''}
@@ -49,7 +46,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-las
  if(playing){const prev=songT;songT=Math.min(TOTAL,songT+dt);const pb=Math.floor(prev/BEAT),cb=Math.floor(songT/BEAT);if(cb!==pb){beatIdx=cb;lastBeatT=songT;onBeat(cb,songT,auto)}
   const p8=Math.floor(prev/(BEAT/2)),c8=Math.floor(songT/(BEAT/2));if(c8!==p8)on8th(c8,songT,auto);
   if(songT>=TOTAL){playing=false;ended=true;$('#play').textContent='REPLAY'}
-  E1.update(dt,songT,inp,auto);E2.update(dt,songT,inp,auto);E3.update(dt,songT,inp,auto);WORLD.update(dt,songT,inp,auto);E5.update(dt,songT,inp,auto)}
+  E1.update(dt,songT,inp,auto);E2.update(dt,songT,inp,auto);E3.update(dt,songT,inp,auto);E4.update(dt,songT,inp,auto);E5.update(dt,songT,inp,auto)}
  render(songT,auto);hud(songT,auto);clearEdges()}
 Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek});
 seek(0);requestAnimationFrame(frame);
