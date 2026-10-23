@@ -25,16 +25,16 @@ GitHub Pages is only available on private repos with a paid plan; on the free pl
 
 | Key | Action |
 |---|---|
-| Left / Right | Move, speed up, steer |
-| Up | Jump |
+| A / D or Left / Right | Move, speed up, steer |
+| W or Up | Jump |
 | Space | Fire, place block |
-| P | Pause |
+| P or Escape | Pause |
 | M | Sound (synthesized click track and SFX) |
-| A | Autopilot mode: when idle / on / off |
+| Tab | Autopilot mode: when idle / on / off |
 | L | Lyric captions on / off |
 | 1 to 5 | Jump to an era |
 
-Autopilot plays the whole piece by itself. Press any key to take over, and it returns after two idle seconds.
+Autopilot plays the whole piece by itself. Press any movement key to take over, and it returns after two idle seconds.
 
 ## The five eras
 
