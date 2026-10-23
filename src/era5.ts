@@ -11,7 +11,8 @@ const wire=k=>k<=3?bar(75+k*0.5):bar(k+73.2),fill=k=>wire(k)+BAR*0.6,lit=k=>fill
 const camAt=t=>Math.max(0,t-T0)*SPD;
 const CYAN='#4df0ff',MAG='#ff5be0',YEL='#ffe14d',ORG='#ff9a3c',GRN='#5bff5b';
 const RGB={[CYAN]:'rgb(77,240,255)',[MAG]:'rgb(255,91,224)',[YEL]:'rgb(255,225,77)',[ORG]:'rgb(255,154,60)',[GRN]:'rgb(91,255,91)','#fff':'rgb(255,255,255)'};
-const bloomC=mk(W/4,H/4);
+const bloomC=mk(W/4,H/4),bgC=mk(W/2,H/2),grainC=mk(256,256);let grainPat:any=null;
+(()=>{const d=grainC.x.createImageData(256,256);for(let i=0;i<d.data.length;i+=4){const v=120+Math.random()*135;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}grainC.x.putImageData(d,0,0)})();
 let S:any;
 function genChunk(k){const r=rngf(k*7919+13),x0=k*CW,c={k,x0,plats:[],pads:[],towers:[],lamps:[],speakers:[],drones:[],gate:null,orbs:[],type:'flat'};
  const nt=1+Math.floor(r()*2);for(let i=0;i<nt;i++){const w=54+r()*70;c.towers.push({x:x0+r()*(CW-w),w,h:110+r()*250,seed:Math.floor(r()*1e6),hue:r()<0.5?CYAN:MAG,holo:r()<0.6})}
@@ -135,6 +136,12 @@ function draw(ctx,t){const cam=camAt(t),pulse=1-((t/BEAT)%1),p=S.player;
  const bx=bloomC.x;bx.save();bx.filter='blur(5px) saturate(1.6) brightness(1.05)';bx.clearRect(0,0,bloomC.w,bloomC.h);bx.drawImage(cv,0,0,bloomC.w,bloomC.h);bx.restore();
  ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=0.45;ctx.imageSmoothingEnabled=true;ctx.drawImage(bloomC.c,0,0,W,H);ctx.restore();
  ctx.save();ctx.globalCompositeOperation='overlay';const gr=ctx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'rgba(77,160,255,.22)');gr.addColorStop(1,'rgba(255,80,200,.22)');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);ctx.restore();
+ // lens flare from the sun
+ {const sx=W*0.72,sy=HZ-78,cx=W/2,cy=H/2;ctx.save();ctx.globalCompositeOperation='lighter';for(const[k,r,c]of([[0.35,14,'255,120,200'],[0.6,26,'77,240,255'],[0.9,10,'255,225,100'],[1.3,34,'255,91,224'],[1.6,18,'77,240,255']] as any[])){const fx=sx+(cx-sx)*k,fy=sy+(cy-sy)*k;const fg=ctx.createRadialGradient(fx,fy,0,fx,fy,r);fg.addColorStop(0,`rgba(${c},.10)`);fg.addColorStop(0.7,`rgba(${c},.05)`);fg.addColorStop(1,`rgba(${c},0)`);ctx.fillStyle=fg;ctx.fillRect(fx-r,fy-r,r*2,r*2)}const st=ctx.createLinearGradient(sx-W*0.45,0,sx+W*0.45,0);st.addColorStop(0,'rgba(255,160,220,0)');st.addColorStop(0.5,'rgba(255,220,240,.28)');st.addColorStop(1,'rgba(255,160,220,0)');ctx.fillStyle=st;ctx.fillRect(sx-W*0.45,sy-1.5,W*0.9,3);ctx.restore()}
+ // beat-synced chromatic split
+ if(t-S.beatT<0.08){const k=(1-(t-S.beatT)/0.08)*3;ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=0.22;ctx.drawImage(cv,0,0,cv.width,cv.height,k,0,W,H);ctx.drawImage(cv,0,0,cv.width,cv.height,-k,0,W,H);ctx.restore()}
+ // film grain
+ if(!grainPat)grainPat=ctx.createPattern(grainC.c,'repeat');{const ox=Math.floor(hash(Math.floor(t*60))*256),oy=Math.floor(hash(Math.floor(t*60)+7)*256);ctx.save();ctx.globalCompositeOperation='overlay';ctx.globalAlpha=0.16;ctx.translate(-ox,-oy);ctx.fillStyle=grainPat;ctx.fillRect(ox,oy,W,H);ctx.restore()}
  const vg=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.9);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.6)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
  if(S.flash>0){ctx.fillStyle=`rgba(${S.flashCol},${S.flash*0.5})`;ctx.fillRect(0,0,W,H)}
  drawHUD(ctx,t,pulse);
@@ -149,10 +156,12 @@ function drawScene(ctx,cam,t,pulse,p){
  // aurora bands
  ctx.save();ctx.globalCompositeOperation='lighter';for(let i=0;i<3;i++){const y=60+i*40;const ag=ctx.createLinearGradient(0,y-30,0,y+30);ag.addColorStop(0,'rgba(77,240,255,0)');ag.addColorStop(0.5,`rgba(${i%2?'255,91,224':'77,240,255'},${0.05+0.03*Math.sin(t+i)})`);ag.addColorStop(1,'rgba(77,240,255,0)');ctx.fillStyle=ag;ctx.beginPath();ctx.moveTo(0,y);for(let x=0;x<=W;x+=40)ctx.lineTo(x,y+Math.sin(x*0.01+t*0.5+i)*18);ctx.lineTo(W,y+60);ctx.lineTo(0,y+60);ctx.fill()}ctx.restore();
  ctx.save();ctx.globalAlpha=0.07;ctx.fillStyle=GRN;ctx.font="9px ui-monospace,monospace";for(let c=0;c<12;c++){const x=30+c*80;const off=(t*(20+(c%4)*7)+c*140)%(HZ+200);for(let k=0;k<5;k++)ctx.fillText(CODE_RAIN[(c*3+k)%CODE_RAIN.length],x,HZ-((off+k*40)%(HZ+200))+100)}ctx.restore();
- // far city, three parallax layers
- for(const L of([[0.04,'#0f0828',0.5,78,0.25],[0.09,'#160c38',0.68,58,0.4],[0.16,'#1d1148',0.8,44,0.6]] as any[])){const sp=L[3];for(let i=Math.floor(cam*L[0]/sp)-1;i<Math.floor((cam*L[0]+W)/sp)+2;i++){const x=i*sp-cam*L[0],h=40+hash(i*1.7+L[0])*HZ*L[2]*0.62,w=sp-5;ctx.fillStyle=L[1];ctx.fillRect(x,HZ-h,w,h);
-   const n=Math.floor(h/9);for(let j=0;j<n;j++)for(let m=0;m<3;m++){if(hash(i*91+j*7+m+L[0]*10)>0.74){ctx.fillStyle=hash(i+j+m)>0.5?`rgba(77,240,255,${L[4]})`:`rgba(255,200,120,${L[4]})`;ctx.fillRect(x+5+m*(w/3),HZ-h+4+j*9,3,3)}}
-   if(hash(i*13+L[0])>0.7){ctx.fillStyle=Math.floor(t*2+i)%2?'#ff3050':'#400';ctx.fillRect(x+w/2,HZ-h-6,2,2)}}}
+ // far city, three parallax layers, rendered to a half-res buffer and defocused
+ {const b=bgC.x;b.save();b.setTransform(0.5,0,0,0.5,0,0);b.clearRect(0,0,W,H);
+  for(const L of([[0.04,'#0f0828',0.5,78,0.25],[0.09,'#160c38',0.68,58,0.4],[0.16,'#1d1148',0.8,44,0.6]] as any[])){const sp=L[3];for(let i=Math.floor(cam*L[0]/sp)-1;i<Math.floor((cam*L[0]+W)/sp)+2;i++){const x=i*sp-cam*L[0],h=40+hash(i*1.7+L[0])*HZ*L[2]*0.62,w=sp-5;b.fillStyle=L[1];b.fillRect(x,HZ-h,w,h);
+   const n=Math.floor(h/9);for(let j=0;j<n;j++)for(let m=0;m<3;m++){if(hash(i*91+j*7+m+L[0]*10)>0.74){b.fillStyle=hash(i+j+m)>0.5?`rgba(77,240,255,${L[4]})`:`rgba(255,200,120,${L[4]})`;b.fillRect(x+5+m*(w/3),HZ-h+4+j*9,3,3)}}
+   if(hash(i*13+L[0])>0.7){b.fillStyle=Math.floor(t*2+i)%2?'#ff3050':'#400';b.fillRect(x+w/2,HZ-h-6,2,2)}}}
+  b.restore();ctx.save();ctx.filter='blur(1.4px)';ctx.imageSmoothingEnabled=true;ctx.drawImage(bgC.c,0,0,W,H);ctx.restore()}
  // air traffic
  ctx.save();ctx.globalCompositeOperation='lighter';for(let i=0;i<7;i++){const y=50+i*28+Math.sin(t+i)*4,L=W+260,x=((t*(90+i*35)+i*300-cam*0.08)%L+L)%L-130,dir=i%2?1:-1;const tg=ctx.createLinearGradient(x,0,x+40*dir,0);tg.addColorStop(0,'rgba(255,255,255,0)');tg.addColorStop(1,i%2?'rgba(255,120,200,.9)':'rgba(120,230,255,.9)');ctx.strokeStyle=tg;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+40*dir,y);ctx.stroke()}ctx.restore();
  // haze band at horizon
