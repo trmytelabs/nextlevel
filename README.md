@@ -1,6 +1,6 @@
 # Everything, Then More
 
-A three-minute music video that is also a game. Five eras of play, one continuous take, locked to a 128 BPM clock. It starts as Space Invaders and ends as a swarm of AI agents building a neon future city ahead of you while you play it. The lyrics are part of the gameplay in every era.
+A three-minute music video that is also a game. Five eras of play, one continuous take, locked to a 128 BPM clock. It starts as Space Invaders and ends as a VR rhythm game where an AI co-pilot builds the arena out of every word you cut. The lyrics are part of the gameplay in every era.
 
 Ian Ginn's submission to join the Deputy's Maximalists (Government of Alberta): five eras of games for how far the tools came, and how far one desk came with them. Canvas 2D for the first four eras, Three.js (WebGL) for the finale, Web Audio for sound. Built with Vite and TypeScript.
 
@@ -49,7 +49,7 @@ Autopilot plays the whole piece by itself. Press any movement key to take over, 
 | 19 to 37 | 1991 16-bit | Autorun console platformer on a CRT, stomp walkers, dodge flyers | Word pickups along the platforms |
 | 37 to 56 | 1995 Saturn 3D | Arcade speedway race in Three.js, overtake traffic | Each line is an overhead gantry; take it by driving under it in the lit lane |
 | 56 to 75 | 2013 mobile | One-thumb flapping game on a phone, ghosts take over in the bridge | Words on signs in the pipe gaps |
-| 75 to 96 | Now | Agents build a future city left to right while you run it | Neon signs to light, then words on the finale boss |
+| 75 to 96 | Now | VR saber lane in Three.js: word blocks fly at you on the beat, cut them with both hands while an AI co-pilot builds the arena out of every word you cut; tunnel run for the last chorus | The blocks are the words; the arena is built from them |
 
 Era five is scripted and deterministic. Nothing is generated live, so every playthrough is identical and every build action lands on the beat.
 

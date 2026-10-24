@@ -59,13 +59,16 @@ puppeteer page if a case needs to drive input (`page.keyboard`, `page.touchscree
 - E4.3 words collected ≥ 70%.
 - E4.4 bridge (bars 66.5–75): ghost birds appear; at bar 73 the agents fly out right; the transition into era 5 at bar 75 is clean (no leftover phone frame after 75.3).
 
-## Era 5 — NOW agents finale (`src/era5.ts`, `src/era5gl.ts`)  bars 75–96
-- E5.1 GL renderer initialised (`gl.e5 === true`), no errors with shadows + Reflector (high) and without (low, `--q low`).
-- E5.2 build front stays ahead of the player: for every probe, the first unbuilt chunk x > player x.
-- E5.3 RULES unlock on schedule (77 run+jump, 79 weapon, 83 double jump, 86 low gravity, 89 boss); the rules panel lists them.
-- E5.4 boss: plates with words spawn at 89, are hit, boss clears before 94; the player never falls below the floor.
-- E5.5 all 18 agents have jobs after bar 76 (no agent idle for > 4 s before bar 93).
-- E5.6 outro: bars 94–96 show the end card (title, credit, name) and the sim stays stable.
+## Era 5 — NOW: VR saber lane + AI co-pilot (`src/era5.ts`, `src/era5gl.ts`)  bars 75–96
+- E5.1 GL renderer initialised (`gl.e5 === true`), no errors on high or low tier.
+- E5.2 blocks are planned from the lyric table and spawn LEAD seconds before their beat; `spawned` grows monotonically.
+- E5.3 autopilot cuts ≥95% of blocks and every cut adds exactly one arena piece (`built# === hits`).
+- E5.4 no misses under autopilot (combo never resets).
+- E5.5 the co-pilot status cycles with the build and ends on ARENA COMPLETE.
+- E5.6 the tunnel engages at bar 89; the run coasts to a stop after bar 94 so the arena stays around the player for the end card.
+- E5.7 seeking into the era rebuilds the same arena (deterministic replan from the table).
+- Visual (screenshots): headset-on lens transition 75–76.3, sabers low in the frame like VR hands, word faces readable,
+  arena pieces pop in ahead with the co-pilot beam, tunnel rings at 89, crane-up outro at 94.
 
 ## Transport / cards / audio (`src/main.ts`, `src/music.ts`, `src/song.ts`)
 - T1 captions (`#lyric`) show each LYRICS line within 0.1 s of its bar and hide after ≤ 1.9 bars.
