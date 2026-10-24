@@ -1,81 +1,119 @@
 # Next Level
 
-*"Everything, Then More" is the chorus; Next Level is the title.*
+![The finale: the tunnel run under the line "Deputy, I'm ready, make me a Maximalist"](docs/era5-tunnel.jpg)
 
-A three-minute music video that is also a game. Five eras of play, one continuous take, locked to a 128 BPM clock. It starts as Space Invaders and ends as a VR rhythm game where an AI co-pilot builds the arena out of every word you cut. The lyrics are part of the gameplay in every era.
+**Next Level** is a three-minute music video you can play. It is Ian Ginn's application to join the Deputy's Maximalists (Government of Alberta). Five generations of games stand for two curves rising together: what AI can do, and how well Ian uses it. The piece starts as a 1978 arcade crawl where you shoot the lyrics and ends in a VR saber lane where an AI co-pilot builds the arena out of every word you cut. The ask is the last chorus line, *"Deputy, I'm ready, make me a Maximalist"*, and the end card says *"Imagine what we could build together."*
 
-Ian Ginn's submission to join the Deputy's Maximalists (Government of Alberta): five eras of games for how far the tools came, and how far one desk came with them. Canvas 2D for the first four eras, Three.js (WebGL) for the finale, Web Audio for sound. Built with Vite and TypeScript.
+- Play it now: https://trmytelabs.github.io/maximalist/
+- Coming soon: https://nextlevel.patchnotes.ca
+
+It plays itself. Press a movement key or touch the screen to take over; autopilot picks back up after two idle seconds.
+
+![Title card](docs/title.jpg)
+
+## The five eras
+
+One continuous take, 96 bars at 128 BPM (one bar = 1.875 s, 3:00 total). Everything is timed in bars, and the lyrics are part of the gameplay in every era.
+
+| Bars | Chapter | Era | How you play the lyrics |
+|---|---|---|---|
+| 0 to 19 | 1 · FIRST PROMPTS | 1978 arcade crawl on a phosphor CRT | The lyric lines come down the screen in a perspective crawl. Shoot to chip pixels off the words. |
+| 19 to 37 | 2 · LEARNING TO ASK | 1991 Mario-style platformer | The runner autoruns on the ground. "?" blocks pop phrases of the lyric when hit from below; plain bricks break. |
+| 37 to 56 | 3 · AT MY DESK | 1995 Daytona-style racer (Three.js) | One overhead gantry per lyric line. Drive under it in the lit lane to take the line. |
+| 56 to 75 | 4 · IN MY POCKET | 2013 phone on a desk running a Flappy-style game | Words sit on signs in the pipe gaps. In the bridge, green ghost birds arrive and become the AI. |
+| 75 to 96 | 5 · DIRECTING AGENTS | Now: VR saber lane (Three.js), tunnel run for the last chorus | Word blocks fly in on the beat. Cut them with sabers that follow your mouse or finger while an AI co-pilot builds the arena out of the words. |
+
+| | |
+|---|---|
+| ![Era 1: chipped lyric words in the arcade crawl](docs/era1-arcade.jpg) | ![Era 2: the platformer with a "?" block ahead](docs/era2-platformer.jpg) |
+| **1 · First prompts.** The words are the enemies. | **2 · Learning to ask.** Phrases hide in "?" blocks. |
+| ![Era 3: the speedway with a lyric gantry ahead](docs/era3-racer.jpg) | ![Era 4: the phone game with ghost birds in the bridge](docs/era4-phone.jpg) |
+| **3 · At my desk.** One gantry per line. | **4 · In my pocket.** Ghost birds arrive in the bridge. |
+| ![Era 5: cutting word blocks with two sabers](docs/era5-saber.jpg) | ![End card](docs/end-card.jpg) |
+| **5 · Directing agents.** Cut words become the arena. | **End card.** The camera cranes up over what you built. |
+
+The "AI" in the finale is scripted, not live. Every playthrough is identical and every build lands on the beat.
+
+## Controls
+
+| Input | Action |
+|---|---|
+| A / D or Left / Right | Move, steer |
+| W or Up | Jump |
+| Space | Fire |
+| Mouse (finale) | Moves the sabers: left half of the screen is the magenta hand, right half the cyan hand |
+| Q | Autopilot: when idle / on / off |
+| M | Sound on / off |
+| L | Lyric captions on / off |
+| G | Graphics tier high / low (reloads at the same bar; phones default to low) |
+| P or Escape | Pause |
+| 1 to 5 | Jump to an era |
+
+**Phone** (landscape): hold the left or right edge to move, tap the top half to jump, tap the bottom half to fire. In the finale your finger moves the sabers. Portrait shows a rotate card. The page installs to the home screen via `public/manifest.webmanifest`.
 
 ## Run it
 
 ```bash
 npm install
-npm run dev
+npx vite
 ```
 
-Then open the URL Vite prints (http://localhost:5173/maximalist/). `npm run build` type-checks and writes a static site to `dist/`; `npm run preview` serves that build.
-
-## Deploy
-
-Every push to `main` runs `.github/workflows/pages.yml`, which builds the site and publishes `dist/` to GitHub Pages. Once Pages is enabled for the repo (Settings → Pages → Source: GitHub Actions) the site lives at:
-
-https://trmytelabs.github.io/maximalist/
-
-GitHub Pages is only available on private repos with a paid plan; on the free plan the repo has to be public for the deploy to work. `vite.config.ts` sets `base` to `/maximalist/` so asset paths resolve under that prefix.
-
-## Controls
-
-| Key | Action |
-|---|---|
-| A / D or Left / Right | Move, speed up, steer |
-| W or Up | Jump |
-| Space | Fire, place block |
-| P or Escape | Pause |
-| M | Sound (synthesized click track and SFX) |
-| Q | Autopilot mode: when idle / on / off |
-| L | Lyric captions on / off |
-| G | Graphics tier high / low (reloads at the same bar; phones default to low) |
-| 1 to 5 | Jump to an era |
-| [ / ] | Nudge the song offset by 50 ms (when a track is loaded) |
-| T / U / Y | Tap a lyric line start, clear taps, download `timing.json` |
-
-Autopilot plays the whole piece by itself. Press any movement key to take over, and it returns after two idle seconds.
-
-**On a phone** (landscape): hold the left or right edge of the screen to move, tap the upper middle to jump, tap the lower middle to fire. A rotate card appears in portrait. The page is installable (Add to Home Screen) via `public/manifest.webmanifest`.
-
-## The five eras
-
-| Bars | Era | Play | Lyrics become |
-|---|---|---|---|
-| 0 to 19 | 1978 arcade | Space Invaders on a phosphor screen | Words descend like a crawl, you shoot them |
-| 19 to 37 | 1991 16-bit | Autorun console platformer on a CRT, stomp walkers, dodge flyers | Word pickups along the platforms |
-| 37 to 56 | 1995 Saturn 3D | Arcade speedway race in Three.js, overtake traffic | Each line is an overhead gantry; take it by driving under it in the lit lane |
-| 56 to 75 | 2013 mobile | One-thumb flapping game on a phone, ghosts take over in the bridge | Words on signs in the pipe gaps |
-| 75 to 96 | Now | VR saber lane in Three.js: word blocks fly at you on the beat, cut them with both hands while an AI co-pilot builds the arena out of every word you cut; tunnel run for the last chorus | The blocks are the words; the arena is built from them |
-
-Era five is scripted and deterministic. Nothing is generated live, so every playthrough is identical and every build action lands on the beat.
-
-## Where things live
-
-`index.html` holds the markup, CSS and HUD, and loads `src/main.ts`. The modules under `src/`, in load order:
-
-- `core.ts`: constants, `ERAS`, `LYRICS`, seeded RNG, the main canvas and low-res offscreen layers, keyboard input, and the synthesized audio. All timing is in bars. Hotkeys are routed through a small `HK` table that `main.ts` fills in.
-- `era1.ts`, `era2.ts`: the arcade crawl and the 16-bit platformer, Canvas 2D, both displayed through `crt.ts`, a WebGL shader pass with curvature, scanlines, shadow mask, colour fringing and vignette.
-- `era3.ts`, `era3gl.ts`: the racer simulation (spline track, traffic, overtakes) and its Three.js renderer (stadium, pits, forest, slot-reel overhang, stock cars with liveries). Drop a `public/models/car.glb` to replace the procedural car bodies.
-- `era4.ts`: the mobile era, a phone on a desk running a flapping game, with the ghost players that become the agents.
-- `world.ts`: shared agent roles, code snippets and colour helpers used by era 5 (the old isometric sandbox lives here too, unused).
-- `era5gl.ts`: the WebGL renderer for era 5 (Three.js): lit geometry, fog, bloom, 3D agent drones, player and boss. It reads the era 5 simulation state each frame; if WebGL is unavailable the 2D renderer in `era5.ts` is used instead.
-- `era5.ts`: the agents era simulation and 2D fallback renderer. `RULES` is the rule schedule, `genChunk` decides what each sector contains, `wire`, `fill`, and `lit` set how far ahead the agents build, and `agentModel` is the 3D drone.
-- `main.ts`: transport, compositing, transitions, bloom, and HUD.
-
-Each era exposes the same `init / update / draw / onBeat / on8th / onLine` surface, and `seek(t)` rebuilds every era's state from scratch at any time, which is what the scrubber uses.
-
-TypeScript is deliberately loose (`strict` off) so the port from the single-file prototype stayed mechanical.
+Open http://localhost:5173/maximalist/ (add `?q=high` or `?q=low` to force a graphics tier). `npm run build` type-checks and writes the static site to `dist/`.
 
 ## Verify
 
-`node tools/test/run.mjs` drives the deterministic simulation through `window.ETM` in headless Edge/Chrome (software WebGL) and checks invariants (no page errors, no NaN state, era boundaries, the run reaching 3:00) plus the case files in `tools/test/cases/`. Flags: `--era N`, `--from/--to` (bars), `--controls` (keyboard + touch mapping), `--mobile` (iPhone landscape layout + portrait rotate card), `--q low`. Screenshots land in `tools/test/shots/`, the report in `tools/test/report*.json`. The spec is `tools/test/CASES.md`. `.github/workflows/test.yml` runs it on every push.
+```bash
+node tools/test/run.mjs
+```
 
-## Status
+The harness drives the deterministic simulation through `window.ETM` in headless Edge with software WebGL. It checks for page errors, NaN state, era boundaries and the run reaching 3:00, then runs the case files in `tools/test/cases/` (spec: `tools/test/CASES.md`). Screenshots go to `tools/test/shots/`, the report to `tools/test/report*.json`.
 
-Pre-music until the Suno track lands. Drop it at `public/song.mp3` and the game runs off the audio clock; `LYRICS.md` explains the offset nudge and the tap-to-sync tool that writes `public/timing.json`. Without a track, a synthesized click stands in.
+| Flag | Effect |
+|---|---|
+| `--era N` | One era only (1 to 5) |
+| `--from A --to B` | A bar range (`--chunk S` sets the step in seconds) |
+| `--controls` | Keyboard and touch input mapping |
+| `--mobile` | iPhone landscape layout checks plus the portrait rotate card |
+| `--q low` | Low graphics tier |
+| `--url URL` | Point at a dev server on another port |
+
+Screenshot regression lives in `tools/test/visual/`: `node tools/test/visual/snap.mjs` compares frames against `baseline/` and writes diffs to `diff/`; `--update` accepts the current frames, `--bars 1,20,76` picks a subset, and `tolerances.json` sets per-frame tolerances. `.github/workflows/test.yml` runs the harness on every push.
+
+In a browser console, `ETM.seek(bar*1.875); ETM.step(seconds); ETM.render(); ETM.probe()` drives the same simulation by hand.
+
+## Deploy
+
+- **Now:** every push to `main` runs `.github/workflows/pages.yml`, which builds and publishes `dist/` to GitHub Pages at https://trmytelabs.github.io/maximalist/ (`vite.config.ts` sets `base` to `/maximalist/`).
+- **Next:** a VPS behind Caddy at https://nextlevel.patchnotes.ca. After the headless verification passes on `main`, `.github/workflows/deploy.yml` builds with `--base /` and rsyncs `dist/` to the server as a restricted `deploy` user (enabled by the `DEPLOY_ENABLED` repository variable). Server setup is in `deploy/`: `server-setup.sh`, the `Caddyfile` (HTTPS, security headers, CSP, caching) and `landing-deploy.md`.
+
+## Soundtrack
+
+Today the score is generative Web Audio (`src/music.ts`): square-wave arcade, FM 16-bit, rave, EDM plucks, then everything stacked, plus drums and SFX through a soft limiter. The real track is a Suno song written from the brief in `LYRICS.md` (lyrics, section tags, bar map). Drop it at `public/song.mp3` and the game runs off the audio clock; `[` / `]` nudge the offset, and T / U / Y tap lyric starts, clear taps and save `timing.json` (see `LYRICS.md`).
+
+## Architecture
+
+`index.html` holds the markup, CSS and HUD and loads `src/main.ts`. Every era exposes the same `init / update / draw / onBeat / on8th / onLine` surface, and `seek(t)` rebuilds every era's state from scratch at any time.
+
+| File | Role |
+|---|---|
+| `src/main.ts` | Transport, compositing, transitions, title and end cards, HUD, the `window.ETM` test hook |
+| `src/core.ts` | Constants, `ERAS`, `LYRICS`, seeded RNG, canvases, keyboard and touch input, quality tier |
+| `src/music.ts` | Generative score |
+| `src/song.ts` | Song clock for `public/song.mp3`, offset nudge, tap sync |
+| `src/crt.ts` | WebGL CRT pass (curvature, scanlines, shadow mask) for eras 1 and 2 |
+| `src/era1.ts` | Arcade crawl |
+| `src/era2.ts` | Platformer |
+| `src/era3.ts`, `src/era3gl.ts` | Racer simulation and its Three.js renderer (stadium, gantries, GLB stock cars) |
+| `src/era4.ts` | Phone and Flappy-style game |
+| `src/era5.ts`, `src/era5gl.ts` | Saber lane simulation (with 2D fallback) and its Three.js renderer |
+| `src/world.ts` | Legacy, unused |
+
+The simulation is deterministic: seeded hashes, never `Math.random`, in sim code. TypeScript runs with `strict` off. `tools/blender/car.py` builds the stock cars headlessly into `public/models/car_N.glb`.
+
+## Credits
+
+- Textures: CC0 from [Poly Haven](https://polyhaven.com) (see `public/textures/LICENSE.txt`)
+- Font: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38
+- Rendering: [Three.js](https://threejs.org)
+- Stock cars: modelled with [Blender](https://www.blender.org)
+- Built by Ian Ginn with [Claude Code](https://claude.com/claude-code)
