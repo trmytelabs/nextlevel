@@ -11,8 +11,8 @@ The song ages forward the same way the game does. Each era has its own sound, an
 | Bars | Time | Era | Story | Sound |
 |---|---|---|---|---|
 | 0–19 | 0:00–0:36 | Arcade | Before AI. One form, one desk, by hand. | 8-bit chiptune. Square-wave lead, triangle bass, noise-channel hats, no real drums. Mono, dry, a little lonely. A four-note descending march under everything. |
-| 19–37 | 0:36–1:09 | 16-bit | The box talks back. Teaching myself to ask. | Colour arrives with the chorus. FM synth bass, bright PCM drums, Genesis / SNES brass stabs, chimes on the offbeats. Crunchy and joyful. |
-| 37–56 | 1:09–1:45 | 32-bit | Bringing it to work at the speed of light. | 90s breakbeat rave. Amen-style breaks, hoover and supersaw stabs, filtered pads, reverb opens up. Half-time on the verse, full-time on the chorus. |
+| 19–37 | 0:36–1:09 | 32-bit 2D | The box talks back. Teaching myself to ask. | Colour arrives with the chorus. CD-era synthpop: FM bass into sampled drums, brass stabs, chimes on the offbeats. Bright and joyful. |
+| 37–56 | 1:09–1:45 | Saturn 3D | Bringing it to work at the speed of light. | 90s breakbeat rave. Amen-style breaks, hoover and supersaw stabs, filtered pads, reverb opens up. Half-time on the verse, full-time on the chorus. |
 | 56–75 | 1:45–2:20 | Mobile | AI in my hand, evolving every week. | Bright 2013 EDM pop. Clean plucks, sidechained chords, trap hi-hat rolls, phone pings and taps as percussion. The bridge thins to a heartbeat and one voice. |
 | 75–96 | 2:20–3:00 | Agents | A hundred hands. Full automation. The ask. | Futuristic hyperpop synthwave. Every earlier era stacked at once: chiptune lead on top, breaks under the kick, FM bass, vocoded doubles, glitch edits, cinematic risers. Then one square-wave note alone. |
 

@@ -1,5 +1,4 @@
 import {W,H,ERAS,TRANS,bar,BAR,BEAT,hash,clamp,lerp,smooth,blip,pix,mk,cv} from './core';
-import {E2} from './era2';
 
 // ---------- ERAS 4+5: isometric world (sandbox, then agents) ----------
 export const WD:any={N:18,Cc:9,TW:44,TH:22,BH:20,ox:W/2,oy:H*0.58,s4:ERAS[3].start,s5:ERAS[4].start};
@@ -129,5 +128,5 @@ WORLD.draw=function(ctx,t,auto){const S=WORLD.S;if(!S)return;const{N,Cc,TW,TH,BH
   ctx.font="6px 'Press Start 2P',monospace";ctx.textAlign='center';ctx.fillStyle=a.col;ctx.fillText(WD.ROLE[a.role].n,p.x,p.y-16);ctx.textAlign='left';
   if(a.panel&&t-a.panel.t<2.4){const age=t-a.panel.t;const fa=age>2?1-(age-2)/0.4:1;ctx.globalAlpha=a.alpha*fa;const px=Math.min(W-200,p.x+14),py=Math.max(6,p.y-66);ctx.fillStyle='rgba(8,8,14,.88)';ctx.fillRect(px,py,186,42);ctx.strokeStyle=a.col;ctx.lineWidth=1;ctx.strokeRect(px,py,186,42);ctx.font="8px ui-monospace,monospace";let chars=Math.floor(age*46);for(let i=0;i<3;i++){const l=a.panel.lines[i];const n=clamp(chars,0,l.length);ctx.fillStyle=i===2?'#fff':'#cfd8e3';ctx.fillText(l.slice(0,n)+(n<l.length&&chars>=0?'_':''),px+6,py+13+i*12);chars-=l.length+4}}
   ctx.restore()}
- function drawPlayer(p){const g0=iso(p.x,p.y,0);ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(g0.x,g0.y,12,6,0,0,7);ctx.fill();const s=iso(p.x,p.y,p.z);pix(ctx,E2.DUDE[p.z>0?1:Math.floor(t/(BEAT/2))%2],s.x-12,s.y-32,E2.PAL,2)}
+ function drawPlayer(p){const g0=iso(p.x,p.y,0);ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(g0.x,g0.y,12,6,0,0,7);ctx.fill();const s=iso(p.x,p.y,p.z);ctx.fillStyle='#4df0ff';ctx.fillRect(s.x-6,s.y-28,12,28)}
 };

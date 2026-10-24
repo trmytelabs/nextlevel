@@ -43,8 +43,8 @@ Autopilot plays the whole piece by itself. Press any movement key to take over, 
 | Bars | Era | Play | Lyrics become |
 |---|---|---|---|
 | 0 to 19 | 1978 arcade | Space Invaders on a phosphor screen | Words descend like a crawl, you shoot them |
-| 19 to 37 | 1991 16-bit | Autorun platformer | Word pickups along the platforms |
-| 37 to 56 | 1997 32-bit | Low-poly 3D racer, software rendered | Words sit in the open gate lane |
+| 19 to 37 | 1995 32-bit 2D | Autorun platformer across crystal islands, stomp chompers, dodge wisps | Word pickups along the platforms |
+| 37 to 56 | 1997 Saturn 3D | Arcade speedway race in Three.js, overtake traffic | Words float above the cars you pass |
 | 56 to 75 | 2013 mobile | One-thumb flapping game on a phone, ghosts take over in the bridge | Words on signs in the pipe gaps |
 | 75 to 96 | Now | Agents build a future city left to right while you run it | Neon signs to light, then words on the finale boss |
 
@@ -55,7 +55,8 @@ Era five is scripted and deterministic. Nothing is generated live, so every play
 `index.html` holds the markup, CSS and HUD, and loads `src/main.ts`. The modules under `src/`, in load order:
 
 - `core.ts`: constants, `ERAS`, `LYRICS`, seeded RNG, the main canvas and low-res offscreen layers, keyboard input, and the synthesized audio. All timing is in bars. Hotkeys are routed through a small `HK` table that `main.ts` fills in.
-- `era1.ts`, `era2.ts`, `era3.ts`: the arcade, platformer, and racer modules. The racer includes a small flat-shaded polygon renderer and the car, tree, and gate models.
+- `era1.ts`, `era2.ts`: the arcade crawl and the 32-bit platformer, Canvas 2D.
+- `era3.ts`, `era3gl.ts`: the racer simulation (spline track, traffic, overtakes) and its Three.js renderer (stadium, pits, forest, slot-reel overhang, stock cars with liveries). Drop a `public/models/car.glb` to replace the procedural car bodies.
 - `era4.ts`: the mobile era, a phone on a desk running a flapping game, with the ghost players that become the agents.
 - `world.ts`: shared agent roles, code snippets and colour helpers used by era 5 (the old isometric sandbox lives here too, unused).
 - `era5gl.ts`: the WebGL renderer for era 5 (Three.js): lit geometry, fog, bloom, 3D agent drones, player and boss. It reads the era 5 simulation state each frame; if WebGL is unavailable the 2D renderer in `era5.ts` is used instead.
