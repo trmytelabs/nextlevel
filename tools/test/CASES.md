@@ -39,9 +39,9 @@ puppeteer page if a case needs to drive input (`page.keyboard`, `page.touchscree
 
 ## Era 2 — 1991 16-bit platformer (`src/era2.ts`)  bars 19–37
 - E2.1 the player sprite is on screen on the very first frame of the era (bar 19.0, also at 18.9 during the transition).
-- E2.2 autopilot collects word pickups; words collected ≥ 80% of words spawned by the end of the era.
+- E2.2 the runner stays on the ground; lyric phrases sit in ? blocks four tiles up and pop out when hit from below (plain bricks break); autopilot pops ≥ 50% of the phrases by the end of the era.
 - E2.3 enemies: walkers are stomped (count), flyers exist; the player never clips through ground (y never below ground level).
-- E2.4 death is a hop then a fall, then a drop-in from above at the next platform (no teleport: x changes only after the drop-in starts; `p.dead` resolves in < 2 s).
+- E2.4 death is a hop then a fall, then a drop-in from above at the next ground segment (no teleport); 2.6 s of invulnerability after a respawn, 2 s after an enemy hit.
 - E2.5 arms/legs animate: the run frame index advances while moving.
 - E2.6 camera never shows past the level end; SPEED gives a readable pace (player x advances ~50 px per beat).
 
@@ -60,6 +60,7 @@ puppeteer page if a case needs to drive input (`page.keyboard`, `page.touchscree
 - E4.4 bridge (bars 66.5–75): ghost birds appear; at bar 73 the agents fly out right; the transition into era 5 at bar 75 is clean (no leftover phone frame after 75.3).
 
 ## Era 5 — NOW: VR saber lane + AI co-pilot (`src/era5.ts`, `src/era5gl.ts`)  bars 75–96
+- E5.0 the sabers follow the pointer: the hand on the pointer's half of the screen moves to the pointer, blocks are cut when a hand is within 0.7 cells at the beat (±0.22 s); autopilot swings each hand to its next block.
 - E5.1 GL renderer initialised (`gl.e5 === true`), no errors on high or low tier.
 - E5.2 blocks are planned from the lyric table and spawn LEAD seconds before their beat; `spawned` grows monotonically.
 - E5.3 autopilot cuts ≥95% of blocks and every cut adds exactly one arena piece (`built# === hits`).

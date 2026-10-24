@@ -2,7 +2,7 @@ import {ERAS,TRANS,BAR,BEAT,rngf,hash,clamp,lerp,blip,hat,noise,pix} from './cor
 
 // ---------- ERA 2: 16-bit platformer. Autorun, stomp the walkers, dodge the flyers, collect the words ----------
 export const E2=(()=>{
-const LW=320,LH=180,B=16,SPEED=50/BEAT,PX=80,G=900,JV=-330;const start=ERAS[1].start,end=ERAS[2].start;
+const LW=320,LH=180,B=16,SPEED=50/BEAT,PX=80,G=900,JV=-380;const start=ERAS[1].start,end=ERAS[2].start;
 const PAL={K:'#2a1a2e',R:'#e8402c',r:'#a82418',S:'#f6c89a',s:'#d49a6a',B:'#2f5fd6',b:'#1d3f98',W:'#ffffff',Y:'#ffd23f',N:'#7a4a1e',P:'#9a4ad8',p:'#6a2aa8',C:'#58b8ff',c:'#2a78c8',G:'#6ad24a',g:'#3a9a2a'};
 // runner: 16 x 24, three run frames and a jump frame
 const TOP=['.....KKKKKK.....','....KRRRRRRK....','...KRRRRRRRRK...','...KRrRRRRRRK...','...KSSSKSSSK....','..KSSSSSSSSSK...','..KSSWKSSSSSK...','..KSSSSSSSSSK...','...KSsSSSSsK....','....KSSSSSK.....','...KRRRRRRRK....','..KRRRRRRRRRK...','..KRRRYRRRRRK...','..KBBBBBBBBBK...','..K.KBBBBBK.K...','....KBBBBBK.....'];
@@ -18,39 +18,55 @@ const FLY=[['KK............KK','KCCK........KCCK','.KCCCK....KCCCK.','..KCCCKKKK
  ['................','................','.....KKKKKK.....','...KKCCCCCCKK...','.KCCCCcccCCCCCK.','KCCK.KcWccWcK.KCCK'.slice(0,16),'KK...KcccccK...K','......KKKKK.....']];
 let S:any;
 function gen(to){while(S.genX<to){const r=S.rng;
- if(S.plats.length===0){S.plats.push({x:-200,y:LH-48,w:200+PX+B*9,f:0,kind:'ground'});S.genX=S.plats[0].x+S.plats[0].w;S.lastTop=LH-48;continue}
- const idx=S.plats.length;const w=(3+Math.floor(r()*6))*B;let top=clamp(S.lastTop+(Math.floor(r()*5)-2)*B,LH-112,LH-32);
- const dh=(S.lastTop-top)/B;const gap=(dh>=2?1:1+Math.floor(r()*3))*B;const x=S.genX+gap;const kind=top>=LH-48?'ground':(r()<0.5?'brick':'grass');
- const p={x,y:top,w,f:0,kind};S.plats.push(p);
- if(kind==='ground'&&w>=6*B&&r()<0.45){const px=x+B*2+Math.floor(r()*((w-4*B)/B))*B;const ph=(1+Math.floor(r()*2))*B;S.plats.push({x:px,y:top-ph,w:2*B,f:0,kind:'pipe',h:ph})}
- if(w>=5*B&&r()<0.55&&idx>2)S.foes.push({t:'walk',x:x+B,y:top,x0:x+4,x1:x+w-20,dir:1,alive:true,sq:0});
- if(r()<0.3&&idx>3)S.foes.push({t:'fly',x:x+w/2,y:top-60-r()*30,base:top-60-r()*30,ph:r()*6,alive:true,sq:0});
+ if(S.plats.length===0){S.plats.push({x:-200,y:LH-48,w:200+PX+B*10,f:0,kind:'ground'});S.genX=S.plats[0].x+S.plats[0].w;S.lastTop=LH-48;continue}
+ const idx=S.plats.filter(q=>q.kind==='ground'||q.kind==='grass').length;const roll=r();let top=LH-48,w=(6+Math.floor(r()*8))*B,gap=0;
+ if(idx>2&&roll<0.13)gap=(2+Math.floor(r()*2))*B;                       // a pit, two or three tiles
+ else if(idx>2&&roll<0.22){top=LH-80;w=(3+Math.floor(r()*3))*B}        // a raised grass step
+ const x=S.genX+gap,kind=top>=LH-48?'ground':'grass';S.plats.push({x,y:top,w,f:0,kind});
+ if(kind==='ground'&&w>=8*B&&r()<0.25){const px=x+B*2+Math.floor(r()*((w-4*B)/B))*B;const ph=(1+Math.floor(r()*2))*B;S.plats.push({x:px,y:top-ph,w:2*B,f:0,kind:'pipe',h:ph})}
+ // brick row: 3-6 single tiles, four tiles above the ground; words are put into them as the lines arrive
+ if(kind==='ground'&&w>=5*B&&idx>1&&r()<0.8){const n=3+Math.floor(r()*4);const bx=x+B*(1+Math.floor(r()*Math.max(1,w/B-n-1)));for(let i=0;i<n;i++)S.plats.push({x:bx+i*B,y:top-56,w:B,h:B,f:0,kind:'brick',word:null,used:false})}
+ if(w>=5*B&&r()<0.38&&idx>2)S.foes.push({t:'walk',x:x+B,y:top,x0:x+4,x1:x+w-20,dir:1,alive:true,sq:0});
+ if(r()<0.16&&idx>3)S.foes.push({t:'fly',x:x+w/2,y:top-100-r()*20,base:top-100-r()*20,ph:r()*6,alive:true,sq:0});
  S.genX=x+w;S.lastTop=top}
  S.plats=S.plats.filter(p=>p.x+p.w>S.camX-400);S.foes=S.foes.filter(f=>f.x>S.camX-120)}
-const under=(x)=>S.plats.filter(q=>x+2>=q.x&&x-2<=q.x+q.w);
+const under=(x)=>S.plats.filter(q=>q.kind!=='brick'&&x+2>=q.x&&x-2<=q.x+q.w);
 // landing oracle for the autopilot: runs the exact movement rules of update() at 60 Hz from (x,y,vy,ground) at speed sp; true if the runner lands (or stays) on a platform within n frames
 function safe(x,y,vy,g,sp,n=80){const dt=1/60;for(let i=0;i<n;i++){x+=sp*dt;const u=under(x);if(g&&!u.find(q=>Math.abs(q.y-y)<1))g=false;if(g)continue;const oy=y;vy+=G*dt;y+=vy*dt;if(vy>0)for(const q of u)if(oy<=q.y+0.01&&y>=q.y)return true;if(y>LH-14)return false}return g}
 function init(t){S={rng:rngf(21),plats:[],coins:[],foes:[],line:[],genX:0,lastTop:LH-48,score:0,coinsGot:0,coinsAll:0,stomps:0,deaths:0,camX:Math.max(0,t-(start-TRANS))*SPEED,pops:[],shake:0,steer:1};gen(S.camX+LW+64);
- let px=S.camX+PX;const p=S.plats.filter(q=>q.kind!=='pipe').sort((a,b)=>Math.max(0,a.x-px,px-a.x-a.w)-Math.max(0,b.x-px,px-b.x-b.w))[0];if(px<p.x+8||px>p.x+p.w-24){S.camX=clamp(px,p.x+8,p.x+p.w-24)-PX;px=S.camX+PX}S.pl={x:px,y:p.y,vy:0,ground:true,sq:0,stun:0,face:1,dead:false,deadT:-9,dy:0,deadX:0}}
-function onLine(words,t){if(t<start-TRANS||t>=end)return;let x=S.camX+LW-30;gen(x+900);S.coins=S.coins.filter(c=>c.got||c.x>S.camX-50);S.line=[];words.forEach((w,i)=>{const wd=w.length*6,cx=x+wd/2;const pl=S.plats.filter(q=>cx>=q.x&&cx<=q.x+q.w).sort((a,b)=>a.y-b.y)[0]||S.plats.filter(q=>q.kind!=='pipe').sort((a,b)=>Math.min(Math.abs(a.x-cx),Math.abs(a.x+a.w-cx))-Math.min(Math.abs(b.x-cx),Math.abs(b.x+b.w-cx)))[0];const top=pl?pl.y:S.lastTop;S.coins.push({x,y:top-18-(i%2)*18,w:wd,text:w,got:0});S.coinsAll++;x+=wd+26})}
+ let px=S.camX+PX;const p=S.plats.filter(q=>q.kind!=='pipe'&&q.kind!=='brick').sort((a,b)=>Math.max(0,a.x-px,px-a.x-a.w)-Math.max(0,b.x-px,px-b.x-b.w))[0];if(px<p.x+8||px>p.x+p.w-24){S.camX=clamp(px,p.x+8,p.x+p.w-24)-PX;px=S.camX+PX}S.pl={x:px,y:p.y,vy:0,ground:true,sq:0,stun:0,face:1,dead:false,deadT:-9,dy:0,deadX:0}}
+function onLine(words,t){if(t<start-TRANS||t>=end)return;S.coins=S.coins.filter(c=>c.got);S.line=[];const ahead=S.camX+LW-20,far=ahead+420;gen(far+240);
+ // the line's phrases go into blocks inside the next 420 px (what the runner covers while the line is sung), one jump apart
+ const taken=(q,sp)=>S.plats.some(o=>o!==q&&o.kind==='brick'&&(o.word||o.used)&&Math.abs(o.x-q.x)<sp);
+ const calm=(q)=>!S.plats.some(o=>o.kind==='pipe'&&Math.abs(o.x+B-q.x-8)<60)&&!S.foes.some(f=>f.t==='walk'&&f.alive&&q.x+8>f.x0-24&&q.x+8<f.x1+40);
+ const pick=(filt,sp)=>{const out:any[]=[];let last=-1e9;for(const q of S.plats.filter(q=>q.kind==='brick'&&!q.word&&!q.used&&q.x>ahead&&q.x<far&&filt(q)&&!taken(q,sp)).sort((a,b)=>a.x-b.x)){if(q.x-last>=sp){out.push(q);last=q.x}}return out};
+ const want=Math.min(4,words.length);let chosen=pick(calm,90);if(chosen.length<want)chosen=pick(()=>true,64);
+ for(let x=ahead+60;chosen.length<want&&x<far;x+=96){const g=S.plats.find(q=>q.kind==='ground'&&q.x<=x&&q.x+q.w>=x+B);if(!g||S.plats.some(q=>q.kind==='brick'&&Math.abs(q.x-x)<48)||chosen.some(q=>Math.abs(q.x-x)<64))continue;const nb={x,y:g.y-56,w:B,h:B,f:0,kind:'brick',word:null,used:false};S.plats.push(nb);chosen.push(nb)}
+ chosen.sort((a,b)=>a.x-b.x);const n=Math.max(1,Math.min(chosen.length,words.length));
+ for(let j=0;j<n;j++){const a=Math.floor(j*words.length/n),bb=Math.floor((j+1)*words.length/n);const q=chosen[j];if(q&&bb>a){q.word=words.slice(a,bb).join(' ');S.coinsAll++}}}
 function update(dt,t,inp,auto){if(t<start-TRANS||t>=end)return;const p=S.pl;
  // autopilot steers in the air with the same speed control a player has (hold right = 1.25x, left = 0.8x) to reach a landing
  let mul=inp.right?1.25:inp.left?.8:1;if(auto&&mul===1&&!p.ground&&!p.dead)mul=[1,1.25,.8].find(k=>safe(p.x,p.y,p.vy,false,SPEED*k))||1;S.steer=mul;
  const sp=SPEED*mul;S.camX+=sp*dt;gen(S.camX+LW+64);p.x=S.camX+PX;p.stun=Math.max(0,p.stun-dt);S.shake=Math.max(0,S.shake-dt);
- if(p.dead){p.vy+=G*dt;p.dy+=p.vy*dt;if(t-p.deadT>0.9){const q=S.plats.find(q=>q.kind!=='pipe'&&q.x+q.w>p.x+40&&safe(p.x,q.y-120,0,false,sp));if(q){p.dead=false;p.y=q.y-120;p.vy=0;p.ground=false;p.stun=2.6;for(let i=0;i<12;i++)S.pops.push({x:p.x,y:p.y-8,vx:(hash(t*31+i)-.5)*80,vy:(hash(t*17+i)-.5)*80,l:.5});blip(880,0.08,0.08)}}}
+ if(p.dead){p.vy+=G*dt;p.dy+=p.vy*dt;if(t-p.deadT>0.9){const q=S.plats.find(q=>q.kind!=='pipe'&&q.kind!=='brick'&&q.x+q.w>p.x+40&&safe(p.x,q.y-120,0,false,sp));if(q){p.dead=false;p.y=q.y-120;p.vy=0;p.ground=false;p.stun=2.6;for(let i=0;i<12;i++)S.pops.push({x:p.x,y:p.y-8,vx:(hash(t*31+i)-.5)*80,vy:(hash(t*17+i)-.5)*80,l:.5});blip(880,0.08,0.08)}}}
  const u=under(p.x);if(!p.dead&&p.ground&&!u.find(q=>Math.abs(q.y-p.y)<1))p.ground=false;
  let want=false;
  if(auto){const cur=u.filter(q=>Math.abs(q.y-p.y)<1).sort((a,b)=>a.y-b.y)[0];
-  if(p.ground&&cur){const jumpOK=safe(p.x,p.y,JV,false,sp);const next=S.plats.find(q=>q.kind!=='pipe'&&q.x>cur.x&&q.x>p.x);const toEdge=cur.x+cur.w-p.x;
+  if(p.ground&&cur){const jumpOK=safe(p.x,p.y,JV,false,sp);const next=S.plats.find(q=>q.kind!=='pipe'&&q.kind!=='brick'&&q.x>cur.x&&q.x>p.x);const toEdge=cur.x+cur.w-p.x;
    if(toEdge<28&&((next&&next.y<cur.y&&jumpOK)||!safe(p.x,p.y,0,true,sp)))want=true; // at the edge: jump up to a higher platform, or jump when running off would not land; otherwise just run off
-   if(jumpOK){if(next&&next.y<cur.y&&next.x-p.x<40&&toEdge<48)want=true;
-    const pipe=S.plats.find(q=>q.kind==='pipe'&&q.x>p.x&&q.x-p.x<44);if(pipe)want=true;
-    const foe=S.foes.find(f=>f.alive&&!f.sq&&f.t==='walk'&&f.x>p.x&&f.x-p.x<46&&Math.abs(f.y-p.y)<20);if(foe)want=true;
+   const wbSoon=S.plats.some(q=>q.kind==='brick'&&q.word&&!q.used&&q.x+8-p.x>14&&q.x+8-p.x<90&&q.y<p.y-30); // a word block is coming: stay on the ground for it
+   if(jumpOK){if(!wbSoon&&next&&next.y<cur.y&&next.x-p.x<40&&toEdge<48)want=true;
+    const pipe=S.plats.find(q=>q.kind==='pipe'&&q.x>p.x&&q.x-p.x<44);if(pipe&&(!wbSoon||pipe.x-p.x<30))want=true;
+    const foe=S.foes.find(f=>f.alive&&!f.sq&&f.t==='walk'&&f.x>p.x&&f.x-p.x<46&&Math.abs(f.y-p.y)<20);if(foe&&(!wbSoon||foe.x-p.x<30))want=true;
     const fly=S.foes.find(f=>f.alive&&!f.sq&&f.t==='fly'&&f.x>p.x-8&&f.x-p.x<60&&f.y>p.y-80&&f.y<p.y+10);
-    if(!want&&!fly&&S.coins.some(c=>!c.got&&c.x+c.w/2>p.x&&c.x+c.w/2-p.x<34&&c.y<p.y-26))want=true}}}
+    if(!want&&!fly&&S.plats.some(q=>q.kind==='brick'&&q.word&&!q.used&&q.x+8-p.x>-4&&q.x+8-p.x<14*mul&&q.y<p.y-30))want=true}}}
  else if(inp.jump)want=true;
  if(!p.dead&&want&&p.ground){p.vy=JV;p.ground=false;blip(660,0.08)}
- if(!p.dead&&!p.ground){const oy=p.y;p.vy+=G*dt;p.y+=p.vy*dt;if(p.vy>0)for(const q of u){if(oy<=q.y+0.01&&p.y>=q.y){p.y=q.y;p.vy=0;p.ground=true;q.f=0.25;p.sq=0.15;hat(false);break}}}
+ if(!p.dead&&!p.ground){const oy=p.y;p.vy+=G*dt;p.y+=p.vy*dt;if(p.vy>0)for(const q of u){if(oy<=q.y+0.01&&p.y>=q.y){p.y=q.y;p.vy=0;p.ground=true;q.f=0.25;p.sq=0.15;hat(false);break}}
+  else{for(const q of S.plats){if(q.kind!=='brick'||(q.used&&!q.word))continue;const bottom=q.y+(q.h||16);if(p.x+6>q.x&&p.x-6<q.x+q.w&&oy-24>=bottom-7&&p.y-24<bottom){p.y=bottom+24;p.vy=90;q.f=0.3;
+    if(q.word){S.coins.push({x:q.x,y:q.y-6,w:q.word.length*6,text:q.word,got:0.001});S.coinsGot++;S.score+=10;S.line.push(q.word);q.word=null;q.used=true;blip(1320,0.06);blip(1760,0.08,0.08)}
+    else{q.broken=true;S.score+=5;for(let i=0;i<6;i++)S.pops.push({x:q.x+8,y:q.y+8,vx:(hash(t*7+i)-.5)*120,vy:-60-hash(t*11+i)*120,l:.6});noise(0.08,0.25,900);blip(220,0.06,0.1)}break}}
+   S.plats=S.plats.filter(q=>!q.broken)}}
  if(!p.dead&&p.y>LH-14){p.dead=true;S.deaths++;p.deadT=t;p.dy=LH-14;p.vy=-330;p.deadX=p.x-S.camX;p.ground=false;S.score=Math.max(0,S.score-50);S.shake=0.3;noise(0.12,0.3,700);blip(196,0.35,0.15)}
  // enemies
  for(const f of S.foes){if(!f.alive)continue;if(f.sq){f.sq+=dt;if(f.sq>0.4)f.alive=false;continue}
@@ -79,7 +95,7 @@ function draw(x,t){const cam=S.camX,pulse=1-((t/BEAT)%1);x.save();if(S.shake>0)x
  for(let i=-1;i<7;i++){const base=LH-20;const cx=i*70-((cam*0.4)%70)+20;hill(x,cx,base,26,12,'#2f9a3c','#5ac448')}
  x.fillStyle='#8c5a2b';x.fillRect(-4,LH-20,LW+8,24);tileGround(x,-4,LH-20,LW+8,24,999);
  for(const q of S.plats){const sx=Math.round(q.x-cam);if(sx>LW||sx+q.w<0)continue;const h=q.kind==='pipe'?q.h:LH-q.y;
-  if(q.kind==='ground')tileGround(x,sx,q.y,q.w,h+4,q.x);else if(q.kind==='brick')tileBrick(x,sx,q.y,q.w,Math.min(h,32));else if(q.kind==='grass')tileGrass(x,sx,q.y,q.w,Math.min(h,20));else pipe(x,sx,q.y,h);
+  if(q.kind==='ground')tileGround(x,sx,q.y,q.w,h+4,q.x);else if(q.kind==='brick'){if(q.word){x.fillStyle='#f0b020';x.fillRect(sx,q.y,16,16);x.fillStyle='#8a5a10';x.fillRect(sx,q.y,16,1);x.fillRect(sx,q.y+15,16,1);x.fillRect(sx,q.y,1,16);x.fillRect(sx+15,q.y,1,16);x.fillStyle='#fff6c0';x.font="8px 'Press Start 2P',monospace";x.fillText('?',sx+4,q.y+12)}else if(q.used){x.fillStyle='#8a5a30';x.fillRect(sx,q.y,16,16);x.fillStyle='#5a3a18';x.fillRect(sx,q.y,16,1);x.fillRect(sx,q.y+15,16,1);x.fillRect(sx,q.y,1,16);x.fillRect(sx+15,q.y,1,16)}else tileBrick(x,sx,q.y,q.w,q.h||Math.min(h,32))}else if(q.kind==='grass')tileGrass(x,sx,q.y,q.w,Math.min(h,20));else pipe(x,sx,q.y,h);
   if(q.f>0){x.fillStyle=`rgba(255,255,255,${q.f*2})`;x.fillRect(sx,q.y,q.w,3)}}
  for(const f of S.foes){if(!f.alive)continue;const sx=Math.round(f.x-cam);if(sx<-20||sx>LW+20)continue;if(f.sq){pix(x,SQUASH,sx,Math.round(f.y-5),PAL);continue}
   if(f.t==='walk')pix(x,WALK[Math.floor(t/(BEAT/2))%2],sx,Math.round(f.y-14),PAL,1,f.dir<0);else pix(x,FLY[Math.floor(t*6)%2],sx,Math.round(f.y-8),PAL)}

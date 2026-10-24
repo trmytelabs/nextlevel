@@ -1,4 +1,4 @@
-import {$,clamp,lerp,smooth,rngf,hash,BPM,BEAT,BAR,TOTAL,bar,W,H,ERAS,eraAt,transAt,LYRICS,cv,dpr,ctx,lo1,lo2,lo3,scan,blit,readInput,clickOn,setClickOn,ensureAC,hat,drums,lastInputReal,clearEdges,HK,MOBILE,QUALITY,setQuality,lastTouch} from './core';
+import {$,clamp,lerp,smooth,rngf,hash,BPM,BEAT,BAR,TOTAL,bar,W,H,ERAS,eraAt,transAt,LYRICS,cv,dpr,ctx,lo1,lo2,lo3,scan,blit,readInput,clickOn,setClickOn,ensureAC,hat,drums,lastInputReal,clearEdges,HK,MOBILE,QUALITY,setQuality,lastTouch,ptr} from './core';
 import {E1} from './era1';
 import {E2} from './era2';
 import {E3} from './era3';
@@ -18,7 +18,7 @@ function togglePlay(){if(ended){seek(0);setPlaying(true)}else setPlaying(!playin
 function toggleClick(){ensureAC();setClickOn(!clickOn);$('#click').textContent='SOUND: '+(clickOn?'ON':'OFF');$('#click').classList.toggle('on',clickOn)}
 const AUTO_MODES=['idle','on','off'],AUTO_LABEL:any={idle:'AUTOPILOT: WHEN IDLE',on:'AUTOPILOT: ON',off:'AUTOPILOT: OFF'};let autoMode='idle';
 function cycleAuto(){autoMode=AUTO_MODES[(AUTO_MODES.indexOf(autoMode)+1)%3];$('#autoBtn').textContent=AUTO_LABEL[autoMode];$('#autoBtn').classList.toggle('on',autoMode==='on')}
-function isAuto(now){return autoMode==='on'?true:autoMode==='off'?false:now-lastInputReal>2000}
+function isAuto(now){const last=eraAt(songT)===4?Math.max(lastInputReal,ptr.t):lastInputReal;return autoMode==='on'?true:autoMode==='off'?false:now-last>2000}
 $('#qBtn').textContent='FX: '+QUALITY.toUpperCase();$('#qBtn').onclick=()=>setQuality(QUALITY==='low'?'high':'low');$('#rotate').onclick=()=>document.body.classList.add('pok');
 $('#play').onclick=togglePlay;$('#restart').onclick=()=>{seek(0);setPlaying(true)};$('#click').onclick=toggleClick;$('#autoBtn').onclick=cycleAuto;
 const scrub=$('#scrub');let drag=false;const sc=e=>{const r=scrub.getBoundingClientRect();seek(clamp((e.clientX-r.left)/r.width,0,1)*TOTAL)};
@@ -69,7 +69,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-las
  render(songT,auto);cards(songT);chapters(songT);touchHints(songT);hud(songT,auto);clearEdges()}
 Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek,nudge,tap,clearTaps,saveTiming,now:()=>songT,toggleQuality:()=>setQuality(QUALITY==='low'?'high':'low')});loadSong();E5GL.init();E3GL.init();CRT.init();
 (window as any).ETM={seek,step(secs){stepping=true;try{const inp={left:false,right:false,up:false,down:false,fire:false,jump:false,upEdge:false,mv:{x:0,y:0}};for(let i=0;i<secs*60;i++){const prev=songT;songT=Math.min(TOTAL,songT+1/60);const pb=Math.floor(prev/BEAT),cb=Math.floor(songT/BEAT);if(cb!==pb){beatIdx=cb;lastBeatT=songT;onBeat(cb,songT,true)}const p8=Math.floor(prev/(BEAT/2)),c8=Math.floor(songT/(BEAT/2));if(c8!==p8)on8th(c8,songT,true);hud(songT,true);E1.update(1/60,songT,inp,true);E2.update(1/60,songT,inp,true);E3.update(1/60,songT,inp,true);E4.update(1/60,songT,inp,true);E5.update(1/60,songT,inp,true)}render(songT,true);hud(songT,true)}finally{stepping=false}},
- render(){render(songT,true);cards(songT)},input:()=>readInput(),now:()=>songT,errs:[] as any[],setAuto(m:string){autoMode=m;$('#autoBtn').textContent=AUTO_LABEL[autoMode]},setPlaying,
+ render(){render(songT,true);cards(songT)},input:()=>readInput(),now:()=>songT,raw:{e1:()=>(E1 as any).S,e2:()=>(E2 as any).S,e3:()=>E3.S,e4:()=>E4.S,e5:()=>E5.S},errs:[] as any[],setAuto(m:string){autoMode=m;$('#autoBtn').textContent=AUTO_LABEL[autoMode]},setPlaying,
  probe(){const sum=(S:any)=>{if(!S||typeof S!=='object')return null;const o:any={},bad:string[]=[];const walk=(v:any,path:string,depth:number)=>{if(typeof v==='number'){if(!isFinite(v))bad.push(path)}else if(v&&typeof v==='object'&&depth<4){if(Array.isArray(v)){if(v.length<=64)v.forEach((x,i)=>walk(x,path+'['+i+']',depth+1))}else for(const k in v){if(k.startsWith('_')||k==='g'||k==='mesh'||k==='map')continue;walk(v[k],path+'.'+k,depth+1)}}};walk(S,'',0);for(const k in S){const v=S[k];if(typeof v==='number'||typeof v==='boolean'||typeof v==='string')o[k]=v;else if(Array.isArray(v))o[k+'#']=v.length;else if(v&&typeof v==='object'){const q:any={};for(const kk in v){const vv=v[kk];if(typeof vv==='number'||typeof vv==='boolean'||typeof vv==='string')q[kk]=vv}o[k]=q}}return{bad,...o}};
   return{t:songT,bar:songT/BAR,era:eraAt(songT),playing,ended,lyricIdx:lineIdx,caption:lyricShown,quality:QUALITY,mobile:MOBILE,gl:{e5:E5GL.ok,e3:E3GL.ok},e1:sum((E1 as any).S),e2:sum((E2 as any).S),e3:sum(E3.S),e4:sum(E4.S),e5:sum(E5.S)}}};
 addEventListener('error',e=>(window as any).ETM.errs.push(String(e.message||e)));addEventListener('unhandledrejection',e=>(window as any).ETM.errs.push('rejection: '+String((e as any).reason)));

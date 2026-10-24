@@ -4,6 +4,16 @@
 sideways, hold the left/right edge to move, tap the top half to jump, tap the bottom half to fire. The FX button (or G)
 switches to the light graphics tier; phones default to it. Sound is off until you press SOUND (phones need a tap first).
 
+**Round after you played it (applied)**
+- Invulnerability after any death is longer: arcade 2.6 s, platformer 2.6 s (2 s after a hit), flappy four beats.
+- Racer: track 7 → 11 wide, full-resolution antialiased render, CC0 Poly Haven textures (asphalt with normal map, grass,
+  concrete walls, pine twig billboards, bark), lane markings, denser crowd. Textures in `public/textures/` (LICENSE.txt).
+- Platformer is Mario-proper: the runner stays on the ground (pits, the odd step, pipes), brick rows float four tiles up,
+  plain bricks shatter when hit from below and ? blocks pop a phrase of the lyric. Higher jump to reach them.
+- Finale: sabers follow the mouse or finger (left half = magenta hand, right half = cyan hand) and reach into the lane to
+  the hit plane three units ahead; blob shadows under blocks and passing light pillars for depth; HUD cut to score and
+  caption; word faces bigger, bold, outlined, spin in; only every other word becomes an arena piece.
+
 **Editorial pass (approved, applied)**
 - Title is now **Next Level**; "Everything, Then More" stays as the chorus. Title card: "My AI journey, told through five
   generations of games. / The tools got better. So did I." Chapter labels at each era start (FIRST PROMPTS, LEARNING TO
