@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "pixelmatch": "^8.0.0",
+    "pngjs": "^7.0.0",
     "puppeteer-core": "^25.16.0",
     "typescript": "^7.0.2",
     "vite": "^7.3.7"

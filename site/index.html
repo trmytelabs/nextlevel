@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patch Notes</title>
+<meta name="description" content="Patch Notes is Ian Ginn's log of small tools and experiments built with AI: what got fixed, what shipped, and what is next.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#07070b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f6fb" media="(prefers-color-scheme: light)">
+<link rel="canonical" href="https://patchnotes.ca/">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Patch Notes">
+<meta property="og:title" content="Patch Notes">
+<meta property="og:description" content="Small tools and experiments built with AI. Here is what I fixed and shipped.">
+<meta property="og:url" content="https://patchnotes.ca/">
+<meta property="og:image" content="https://patchnotes.ca/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="hero">
+  <div class="sun" aria-hidden="true"></div>
+  <div class="grid" aria-hidden="true"></div>
+  <div class="wrap hero-inner">
+    <p class="kicker">patchnotes.ca</p>
+    <h1 class="title"><span class="t1">PATCH</span> <span class="t2">NOTES</span></h1>
+    <p class="lede">Small tools and experiments, built with AI. Here is what I fixed and what I shipped.</p>
+    <p class="byline">A log by <strong>Ian Ginn</strong>. In games, patch notes are the list that comes with every update: what changed, what got fixed, what is new. Same idea here.</p>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+  <section class="featured" aria-labelledby="feat-title">
+    <p class="section-label"><span class="tag tag-green">NOW PLAYING</span></p>
+    <article class="card">
+      <div class="card-art" aria-hidden="true">
+        <svg viewBox="0 0 160 100" width="160" height="100" role="img" focusable="false">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ffe14d"/><stop offset="1" stop-color="#ff5be0"/>
+            </linearGradient>
+          </defs>
+          <rect width="160" height="100" fill="#0b0b14"/>
+          <circle cx="80" cy="46" r="24" fill="url(#g1)"/>
+          <rect x="40" y="46" width="80" height="3" fill="#0b0b14"/>
+          <rect x="44" y="54" width="72" height="3" fill="#0b0b14"/>
+          <rect x="50" y="62" width="60" height="3" fill="#0b0b14"/>
+          <g stroke="#4df0ff" stroke-width="1" opacity=".8">
+            <line x1="0" y1="70" x2="160" y2="70"/><line x1="0" y1="78" x2="160" y2="78"/>
+            <line x1="0" y1="88" x2="160" y2="88"/><line x1="0" y1="100" x2="160" y2="100"/>
+            <line x1="80" y1="70" x2="80" y2="100"/><line x1="60" y1="70" x2="30" y2="100"/>
+            <line x1="100" y1="70" x2="130" y2="100"/><line x1="40" y1="70" x2="-20" y2="100"/>
+            <line x1="120" y1="70" x2="180" y2="100"/>
+          </g>
+          <g fill="#5bff5b">
+            <rect x="8" y="10" width="4" height="4"/><rect x="16" y="10" width="4" height="4"/>
+            <rect x="12" y="14" width="4" height="4"/><rect x="8" y="18" width="4" height="4"/><rect x="16" y="18" width="4" height="4"/>
+          </g>
+          <g fill="#ff5be0"><rect x="136" y="12" width="6" height="6"/><rect x="144" y="12" width="6" height="6"/><rect x="140" y="18" width="6" height="6"/></g>
+        </svg>
+      </div>
+      <div class="card-body">
+        <h2 id="feat-title" class="card-title">NEXT LEVEL</h2>
+        <p class="pitch">My AI journey, told through five generations of games.</p>
+        <p class="meta">A three-minute playable music video. 1978 arcade, 1991 platformer, 1995 racer, 2013 phone game, then a VR lane where an AI co-pilot builds the arena out of every word you cut. It plays itself if you just want to watch.</p>
+        <div class="actions">
+          <a class="btn btn-play" href="https://nextlevel.patchnotes.ca/">
+            <svg aria-hidden="true" viewBox="0 0 12 12" width="12" height="12"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg>
+            PLAY
+          </a>
+          <a class="link-secondary" href="https://trmytelabs.github.io/maximalist/">Mirror on GitHub Pages</a>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="notes" aria-labelledby="notes-title">
+    <h2 id="notes-title" class="section-title">LATEST PATCH NOTES</h2>
+    <ol class="log" reversed>
+      <li class="entry">
+        <div class="entry-head">
+          <time datetime="2026-10-24">2026-10-24</time>
+          <span class="tag tag-magenta">NEXT LEVEL</span>
+        </div>
+        <h3>Finale rebuilt as a VR saber lane with an AI co-pilot</h3>
+        <p>The last era was agents building a neon city ahead of a runner. It did not land, so it is now two sabers, word blocks on the beat, and a co-pilot that turns the words you cut into arches, pillars and rings ahead of you. The sabers follow your mouse or finger into the lane, and the headset-on transition at bar 75 is the moment the genre changes.</p>
+      </li>
+      <li class="entry">
+        <div class="entry-head">
+          <time datetime="2026-10-24">2026-10-24</time>
+          <span class="tag tag-cyan">NEXT LEVEL</span>
+        </div>
+        <h3>Racer: one gantry per lyric line, not a word every half second</h3>
+        <p>Streaming individual words past the car was unreadable. Each line is now a single overhead gantry every two bars with the racing line lit on one lane; drive under it in that lane to take the line. Track widened, full-resolution antialiased render, and CC0 textures for asphalt, grass and walls. Fixed an inverted banking sign while in there.</p>
+      </li>
+      <li class="entry">
+        <div class="entry-head">
+          <time datetime="2026-10-24">2026-10-24</time>
+          <span class="tag tag-yellow">NEXT LEVEL</span>
+        </div>
+        <h3>Platformer made Mario-proper, plus a headless test harness</h3>
+        <p>The 16-bit era now runs on the ground with pits and pipes; plain bricks shatter from below and ? blocks pop a phrase of the lyric. Behind it, a puppeteer-core harness drives the full three minutes in headless Edge, checks era boundaries and page errors, and runs on every push. Server side: a Caddy config with HTTPS and security headers, a restricted rsync deploy user, and a deploy workflow gated on the tests passing.</p>
+      </li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <p class="foot-name">Ian Ginn</p>
+    <p class="foot-mail">hello@patchnotes.ca</p>
+    <p class="foot-fine">Hand-written HTML and CSS. No trackers, no scripts.</p>
+  </div>
+</footer>
+</body>
+</html>
