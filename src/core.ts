@@ -63,7 +63,7 @@ export const LYRICS:[number,string][]=[
 // ---------- canvas ----------
 export const cv:HTMLCanvasElement=$('#c');export const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;export const ctx=cv.getContext('2d');
 export function mk(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.imageSmoothingEnabled=false;return{c,x,w,h}}
-export const lo1=mk(192,108),lo2=mk(320,180),lo3=mk(480,270);
+export const lo1=mk(480,270),lo2=mk(320,180),lo3=mk(480,270);
 export function pix(x,pat,px,py,pal,s=1,flip=false){for(let r=0;r<pat.length;r++){const row=pat[r];for(let c=0;c<row.length;c++){const ch=row[flip?row.length-1-c:c];if(ch==='.')continue;x.fillStyle=typeof pal==='string'?pal:pal[ch];x.fillRect(px+c*s,py+r*s,s,s)}}}
 export const scanPat=(()=>{const p=mk(1,3);p.x.fillStyle='rgba(0,0,0,.45)';p.x.fillRect(0,2,1,1);return ctx.createPattern(p.c,'repeat')})();
 export function scan(a){if(a<=0)return;ctx.save();ctx.globalAlpha=a;ctx.fillStyle=scanPat;ctx.fillRect(0,0,W,H);const g=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.85);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.75)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.restore()}
