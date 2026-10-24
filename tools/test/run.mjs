@@ -110,8 +110,9 @@ const to=opt('to',null)!=null?+opt('to'):ERA!=null?ERA_BARS[ERA]:96;
 console.log(`simulate bars ${from} -> ${to} in ${CHUNK}s steps, ${CASES.length} cases loaded`);
 await page.evaluate(t=>ETM.seek(t),bar(from));
 const history=[];const perf={};let t=bar(from);const tEnd=Math.min(TOTAL,bar(to));
+const isolated=c=>/ETM\.seek\(/.test(String(c.fn));
 const pending=CASES.filter(c=>c.era==null||(ERA_BARS[c.era-1]>=from-1e-6&&ERA_BARS[c.era-1]<to+1e-6)||(c.bar!=='end'&&c.bar>=from&&c.bar<=to)).map(c=>({...c,done:false}));
-const runCases=async(p,endOfRange)=>{for(const c of pending){if(c.done)continue;const due=c.bar==='end'?(endOfRange&&(c.era==null||p.bar>=ERA_BARS[c.era]-1e-6||p.t>=tEnd-1e-6)):p.bar>=c.bar;if(!due)continue;c.done=true;let r;try{r=await c.fn(p,history,page)}catch(e){r='threw '+e.message}if(r===true||r===undefined)pass(c.name,p.t);else fail(c.name,String(r),p.t)}};
+const runCases=async(p,endOfRange)=>{for(const c of pending){if(c.done||isolated(c))continue;const due=c.bar==='end'?(endOfRange&&(c.era==null||p.bar>=ERA_BARS[c.era]-1e-6||p.t>=tEnd-1e-6)):p.bar>=c.bar;if(!due)continue;c.done=true;let r;try{r=await c.fn(p,history,page)}catch(e){r='threw '+e.message}if(r===true||r===undefined)pass(c.name,p.t);else fail(c.name,String(r),p.t)}};
 const shotBars=new Set();for(let e=0;e<5;e++){shotBars.add(ERA_BARS[e]+0.6);shotBars.add((ERA_BARS[e]+ERA_BARS[e+1])/2);shotBars.add(ERA_BARS[e+1]-0.4)}
 let nextShot=[...shotBars].filter(b=>b>=from&&b<=to).sort((a,b)=>a-b);
 while(t<tEnd-1e-6){
@@ -128,7 +129,8 @@ while(t<tEnd-1e-6){
   if(history.length%10===0)process.stdout.write(`  bar ${r.p.bar.toFixed(1)} era ${era+1} sim ${(r.ms/step).toFixed(0)}ms/s render ${r.renderMs.toFixed(1)}ms\n`);
 }
 const last=await probe();await runCases(last,true);
-for(const c of pending)if(!c.done){try{const r=await c.fn(last,history,page);if(r===true||r===undefined)pass(c.name+' (final)',last.t);else fail(c.name+' (final)',String(r),last.t)}catch(e){fail(c.name,'threw '+e.message,last.t)}}
+for(const c of pending)if(!c.done&&!isolated(c)){if(c.era!=null&&to<ERA_BARS[c.era]-1e-6){console.log('  skip ',c.name,'(range ends before era '+c.era+' does)');continue}try{const r=await c.fn(last,history,page);if(r===true||r===undefined)pass(c.name+' (final)',last.t);else fail(c.name+' (final)',String(r),last.t)}catch(e){fail(c.name,'threw '+e.message,last.t)}}
+for(const c of pending)if(isolated(c)){const b=c.bar==='end'?(c.era!=null?ERA_BARS[c.era]-0.5:to-0.5):c.bar;if(b<from||b>to)continue;try{const p=await page.evaluate(t=>{ETM.seek(t);ETM.step(0.05);return ETM.probe()},bar(b));const r=await c.fn(p,history,page);if(r===true||r===undefined)pass(c.name+' (isolated)',p.t);else fail(c.name+' (isolated)',String(r),p.t)}catch(e){fail(c.name,'threw '+e.message,bar(b))}}
 for(const e in perf){const p=perf[e];report.perf['era'+(+e+1)]={simMsPerSimSecond:+(p.simMsPerSec/p.n).toFixed(1),renderMs:+(p.renderMs/p.n).toFixed(1),worstRenderMs:+p.worstRender.toFixed(1)}}
 if(to>=96){if(last.ended||last.t>=TOTAL-0.02)pass('run reaches the end');else fail('end','t='+last.t)}
 report.history=history.map(h=>({bar:+h.bar.toFixed(2),era:h.era,ms:+h.ms.toFixed(0),renderMs:+h.renderMs.toFixed(1),e1:h.p.e1,e2:h.p.e2,e3:h.p.e3,e4:h.p.e4,e5:h.p.e5,caption:h.p.caption}));

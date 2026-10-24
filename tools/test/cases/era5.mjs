@@ -41,7 +41,7 @@ export default [
  {name:'E5 shot 94.95 end card fade-in',era:5,bar:94.95,fn:async(p,h,page)=>{await snap(page,'bar94.95-endcard');return true}},
 
  {name:'E5.3 rules unlock at 77/79/83/86/89 (probe history)',era:5,bar:89.6,fn:(p,h)=>{const RB=[77,79,83,86,89];const errs=[];
-  for(let i=0;i<5;i++){const first=h.find(x=>x.era===4&&x.p.e5&&x.p.e5['rules#']>=i+1);if(!first){errs.push(`rule ${i} never unlocked`);continue}if(first.bar<RB[i]-1e-6||first.bar>RB[i]+0.6)errs.push(`rule ${i} first seen at bar ${first.bar.toFixed(2)} (want ${RB[i]}..${RB[i]+0.6})`);
+  for(let i=0;i<5;i++){const first=h.find(x=>x.era===4&&x.p.e5&&x.p.e5['rules#']>=i+1);if(!first){errs.push(`rule ${i} never unlocked`);continue}if(first.bar<RB[i]-1e-6||first.bar>RB[i]+1.2)errs.push(`rule ${i} first seen at bar ${first.bar.toFixed(2)} (want ${RB[i]}..${RB[i]+1.2}, probes are ~1.07 bars apart)`);
    const early=h.find(x=>x.era===4&&x.bar<RB[i]-1e-6&&x.p.e5&&x.p.e5['rules#']>i);if(early)errs.push(`rule ${i} already present at bar ${early.bar.toFixed(2)}`)}
   if(p.e5['rules#']!==5||p.e5.ruleIdx!==4)errs.push(`at bar ${p.bar.toFixed(2)} rules#=${p.e5['rules#']} ruleIdx=${p.e5.ruleIdx}`);return errs.length?errs.join('; '):true}},
 

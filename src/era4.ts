@@ -27,7 +27,7 @@ function update(dt,t,inp,auto){if(t<s4-TRANS||t>=s5)return;const b=S.bird;
    if(b.y<8){b.y=8;b.vy=0}
    // collisions
    b.inv=Math.max(0,b.inv-dt);let hit=b.y>GROUND-12;if(!hit&&b.inv<=0)for(let i=k;i<k+2;i++){const px=pipeX(i,t);if(BX+10>px&&BX-10<px+PWD){const c=gapY(i);if(b.y-9<c-GAP/2||b.y+9>c+GAP/2)hit=true}}
-   if(hit){b.alive=false;b.deadT=t;b.vy=-150;S.deaths++;S.flash=0.3;S.best=Math.max(S.best,S.score);noise(0.15,0.4,900);blip(110,0.25,0.15)}
+   if(hit&&t<bar(74.4)){b.alive=false;b.deadT=t;b.vy=-150;S.deaths++;S.flash=0.3;S.best=Math.max(S.best,S.score);noise(0.15,0.4,900);blip(110,0.25,0.15)}
    for(let i=k-1;i<k+1;i++){if(i<0||S.counted.has(i))continue;if(pipeX(i,t)+PWD<BX-10){S.counted.add(i);S.score++;const w=S.words.get(i);if(w){S.line.push(w);S.got+=w.split(' ').length;S.words.delete(i);S.signs=S.words.size;blip(1568,0.08,0.1)}else blip(1046,0.06,0.08)}}}
   else{b.vy+=G*dt;b.y=Math.min(GROUND-12,b.y+b.vy*dt);if(t-b.deadT>BEAT*2){b.alive=true;b.y=gapY(k);b.vy=0;b.inv=BEAT;S.score=0;for(let i=0;i<=k;i++){S.counted.add(i);S.words.delete(i)}S.signs=S.words.size}}
   // ghosts: perfect players that appear during the bridge
