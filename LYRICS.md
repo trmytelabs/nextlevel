@@ -162,6 +162,15 @@ Lines land on these bars in the game. Use it to check a generation against the t
 
 Verse 5 line three, "spawn a plan, spawn a form, spawn a fix on the fly," is a placeholder for two or three real things automated at work. Swap in the real nouns before recording. One true, specific example here and on the end card is what turns the verse from swagger into evidence.
 
+## Syncing the game to your Suno track
+
+1. Export the track from Suno as MP3 and save it as `public/song.mp3`. Reload. The game now runs off the audio's clock and starts paused; press Play. The synthesized click track is muted automatically while a song is present.
+2. Line up the start. The clock in the top right shows `SONG +0.00s`. Press `]` to push the game later against the song by 50 ms and `[` to pull it earlier, until the first chorus hits on bar 19. The offset is remembered in the browser.
+3. If Suno's sections don't land on the bar map, tap them in. Play the song from the start and press `T` the moment each lyric line begins, all 40 lines, in order. The clock shows `TAP 12/40` as you go. Press `U` to clear and start over.
+4. Press `Y` to download `timing.json`. Save it as `public/timing.json` and reload. Every line and every era switch now follows your taps instead of the bar map.
+
+`timing.json` is plain JSON: `offset`, a `lines` array of seconds for each lyric line, and an `eras` array of seconds for each era start, derived from the chorus and verse taps. Edit it by hand if a tap was late.
+
 ## Getting Suno to change sound on the bar
 
 Suno will not hold five genres in one prompt reliably. Build the song in pieces with Extend:

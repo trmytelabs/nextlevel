@@ -33,6 +33,8 @@ GitHub Pages is only available on private repos with a paid plan; on the free pl
 | Q | Autopilot mode: when idle / on / off |
 | L | Lyric captions on / off |
 | 1 to 5 | Jump to an era |
+| [ / ] | Nudge the song offset by 50 ms (when a track is loaded) |
+| T / U / Y | Tap a lyric line start, clear taps, download `timing.json` |
 
 Autopilot plays the whole piece by itself. Press any movement key to take over, and it returns after two idle seconds.
 
@@ -65,4 +67,4 @@ TypeScript is deliberately loose (`strict` off) so the port from the single-file
 
 ## Status
 
-Prototype, pre-music. The synthesized click track stands in for the song. When the track exists, swap it for an audio element and read its current time as the master clock in the frame loop.
+Pre-music until the Suno track lands. Drop it at `public/song.mp3` and the game runs off the audio clock; `LYRICS.md` explains the offset nudge and the tap-to-sync tool that writes `public/timing.json`. Without a track, a synthesized click stands in.
