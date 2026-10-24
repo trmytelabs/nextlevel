@@ -25,7 +25,6 @@ async function driveLine(page,x0,secs,drawAt){return page.evaluate(async(x0,secs
 export default [
  {name:'E1.0 ETM.step dispatches lyric lines (main.ts)',era:1,bar:0,fn:async(p,h,page)=>{
   const seq=await page.evaluate(t=>{ETM.seek(2.2*1.875);ETM.step(0.3);const s=ETM.probe().e1.seq;ETM.seek(t);return s},p.t);
-  await page.evaluate(SHIM);
   return seq>0||'no lyric line reached E1.onLine during ETM.step: main.ts:56 gates dispatchLine on `playing` (harness runs paused); shimmed for the rest of this run'}},
 
  {name:'E1.1 title card bars 0-2, crawl word on screen by bar 3.5',era:1,bar:3.5,fn:async(p,h,page)=>{
@@ -79,7 +78,7 @@ export default [
   if(bad)return `bar ${bad.bar}: lines#=${bad.p.e1['lines#']} debris#=${bad.p.e1['debris#']}`;
   if(!(p.e1['lines#']===0&&p.e1.ship.dead===false))return `at the era end lines#=${p.e1['lines#']} dead=${p.e1.ship.dead}`;
   const t=p.t;
-  const same=await page.evaluate(()=>{const a=JSON.stringify(ETM.probe().e1);ETM.step(1);const b=JSON.stringify(ETM.probe().e1);return a===b?true:a+' -> '+b});
+  const same=await page.evaluate(()=>{ETM.seek(19.05*1.875);ETM.step(0.05);const a=JSON.stringify(ETM.probe().e1);ETM.step(1);const b=JSON.stringify(ETM.probe().e1);return a===b?true:a+' -> '+b});
   await page.screenshot({path:'tools/test/shots/era1-bar19.5-after.png'});
   await page.evaluate(t=>ETM.seek(t),t);
   return same===true||'era 1 state kept updating after bar 19: '+same}},
