@@ -64,6 +64,7 @@ function jobTarget(a,t,cam){const j=a.job;const pr=clamp((t-j.start)/(j.end-j.st
  else if(j.kind==='speaker'){const c=chunk(j.k),s=c.speakers[0];a.tx=s.x+15;a.ty=GY-110;a.beam={x:s.x+15,y:GY-21}}
  else if(j.kind==='rule'){a.tx=S.player.x+40;a.ty=Math.min(S.player.y,GY)-110;a.beam=pr<0.6?{x:S.player.x,y:S.player.y-20}:null}
  else if(j.kind==='boss'&&S.boss){const b=S.boss;const ang=j.seed*0.7+t*0.8;a.tx=cam+b.sx+77+Math.cos(ang)*120;a.ty=b.sy+56+Math.sin(ang)*80;const pl=b.plates[Math.floor(hash(Math.floor(t*5)+j.seed)*b.plates.length)];a.beam={x:cam+b.sx+pl.c*14+7,y:b.sy+pl.r*14+7}}
+  if(a.job&&a.job.kind!=='boss'&&a.job.kind!=='rule'){a.tx+=((a.i*7)%5-2)*18;a.ty+=((a.i*3)%4-1.5)*16} // fan the swarm out around a shared work site
  return pr}
 function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;const cam=camAt(t);tick(t,false);
  for(let k=Math.max(0,Math.floor(cam/CW)-1);k<=Math.floor((cam+W)/CW)+3;k++)chunk(k);
@@ -151,7 +152,7 @@ function overlay(ctx,t){const pulse=1-((t/BEAT)%1);if(S.flash>0){ctx.fillStyle=`
  drawHUD(ctx,t,pulse);
  if(t>=bar(94.5)){ctx.fillStyle=`rgba(0,0,0,${smooth((t-bar(94.5))/(BAR*0.5))})`;ctx.fillRect(0,0,W,H)}
  if(t>=bar(94.75)){const a=Math.min(1,(t-bar(94.75))/0.5)*(0.8+0.2*pulse);glow(ctx,W/2,H/2,40,'rgb(91,255,91)',a*0.5);ctx.fillStyle=`rgba(91,255,91,${a})`;ctx.fillRect(W/2-3,H/2-3,6,6)}
- if(t>=bar(95)&&Math.floor(t*2)%2===0){ctx.font="14px 'Press Start 2P',monospace";ctx.fillStyle=GRN;ctx.textAlign='center';ctx.fillText('PRESS START',W/2,H*0.90);ctx.textAlign='left'}}
+ }
 function drawScene(ctx,cam,t,pulse,p){
  // sky
  const g=ctx.createLinearGradient(0,0,0,HZ);g.addColorStop(0,'#04030d');g.addColorStop(0.5,'#180a36');g.addColorStop(0.85,'#45175e');g.addColorStop(1,'#7a2a6a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
