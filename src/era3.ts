@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {ERAS,TRANS,W,H,rngf,hash,clamp,lerp,blip,noise} from './core';
 
-// ---------- ERA 3: arcade racer. Tri-oval with banked turns, traffic to overtake, lyrics floating above the cars ----------
+// ---------- ERA 3: arcade racer. Tri-oval with banked turns, traffic to overtake, each lyric line an overhead gantry you drive under ----------
 export const E3=(()=>{
 const start=ERAS[2].start,end=ERAS[3].start;
 const ROADW=7,SPEED=72,WSP=SPEED*0.5,NCARS=12,LANES=[-0.62,-0.21,0.21,0.62]; // words drift at half speed so the pack sweeps past them and they arrive one at a time
@@ -16,11 +16,13 @@ function init(t){const r=rngf(31);S={s:Math.max(0,t-start)*SPEED,x:0,vx:0,speedK
 function rel(c){let d=c.s-S.s;d=((d+L/2)%L+L)%L-L/2;return d}
 // each word is placed so it reaches the player `gap` seconds after the previous one (closing speed SPEED-WSP), in a lane at most one over from the last word, so a lane change is always possible between words
 // lanes are chosen where the pack will not be when the word arrives (cars close at only 4-7 u/s, so one car blocks a lane for seconds)
-function onLine(words,t){if(t<start-TRANS||t>=end)return;S.line=[];const gap=Math.min(0.45,3.4/words.length),cl=SPEED-WSP;const pend=S.lyr.filter(w=>!w.got&&!w.missed).pop();let li=LANES.indexOf(pend?pend.x:LANES.reduce((a,b)=>Math.abs(b-S.x)<Math.abs(a-S.x)?b:a));
- words.forEach((w,i)=>{const ta=2.2+i*gap;let bi=li,bs=-1e9;for(let k=Math.max(0,li-1);k<=Math.min(3,li+1);k++){let m=30;for(const c of S.cars)if(Math.abs(c.tx-LANES[k])<0.3)m=Math.min(m,Math.abs(rel(c)+(c.sp-SPEED)*ta));const sc=m-(k===li?0:4)+hash(t*7.3+i*1.7+k)*2;if(sc>bs){bs=sc;bi=k}}li=bi;
-  S.spawned++;S.lyr.push({text:w,s:S.s+ta*cl,x:LANES[li],h:22,t0:t+ta-1.9,got:0,missed:false,id:t+'-'+i})})}
+// each lyric line is one overhead gantry, placed to arrive 2 s ahead (one every two bars), with the racing line lit on one lane.
+// drive under it in the lit lane to take the line. The lane is picked where the pack will not be when you get there.
+function onLine(words,t){if(t<start-TRANS||t>=end)return;S.line=[];const ta=2.0,sAt=S.s+ta*SPEED;let bi=1,bs=-1e9;
+ for(let k=0;k<4;k++){let m=40;for(const c of S.cars)if(Math.abs(c.tx-LANES[k])<0.3||Math.abs(c.x-LANES[k])<0.3){const d=rel(c)+(c.sp-SPEED)*ta;if(d>-6)m=Math.min(m,Math.abs(d))}const sc=m-Math.abs(LANES[k]-S.x)*6+hash(t*7.3+k)*2;if(sc>bs){bs=sc;bi=k}}
+ S.spawned++;S.lyr.push({text:words.join(' '),s:sAt,x:LANES[bi],lane:bi,t0:t,got:0,missed:false,id:String(t)})}
 function update(dt,t,inp,auto){if(t<start-TRANS||t>=end)return;S.speedK=lerp(S.speedK,1,1-Math.pow(0.1,dt));const ps=S.s;S.s+=SPEED*S.speedK*dt;S.lap=Math.floor(S.s/L);const ox=S.x;
- if(auto){let best=-1e9,bl=S.x;for(const ln of LANES){let score=0;for(const c of S.cars){const d=rel(c);if(d>-5&&d<30){const near=Math.max(1-Math.abs(c.x-ln)/0.4,1-Math.abs(c.tx-ln)/0.4);if(near>0){const ttc=d<4?0:(d-4)/Math.max(1.5,SPEED*S.speedK-c.sp);score-=near*(ttc<=0?60:30*Math.max(0,1-ttc/2.5))}}}for(const w of S.lyr){const d=w.s-S.s;if(!w.got&&!w.missed&&d>0&&d<40&&Math.abs(w.x-ln)<0.25)score+=14*(1-d/50)}score-=Math.abs(ln-S.x)*4;if(score>best){best=score;bl=ln}}S.x+=(bl-S.x)*(1-Math.pow(0.03,dt))}
+ if(auto){let best=-1e9,bl=S.x;for(const ln of LANES){let score=0;for(const c of S.cars){const d=rel(c);if(d>-5&&d<30){const near=Math.max(1-Math.abs(c.x-ln)/0.4,1-Math.abs(c.tx-ln)/0.4);if(near>0){const ttc=d<4?0:(d-4)/Math.max(1.5,SPEED*S.speedK-c.sp);score-=near*(ttc<=0?60:30*Math.max(0,1-ttc/2.5))}}}for(const w of S.lyr){const d=w.s-S.s;if(!w.got&&!w.missed&&d>0&&d<110&&Math.abs(w.x-ln)<0.25)score+=18*(1-d/130)}score-=Math.abs(ln-S.x)*4;if(score>best){best=score;bl=ln}}S.x+=(bl-S.x)*(1-Math.pow(0.03,dt))}
  else{if(inp.left)S.x-=1.4*dt;if(inp.right)S.x+=1.4*dt;S.x=clamp(S.x,-0.85,0.85)}
  S.vx=lerp(S.vx,(S.x-ox)/Math.max(dt,0.001),0.2);
  for(const c of S.cars){c.s+=c.sp*dt;c.changeT-=dt;if(c.changeT<=0){c.changeT=2+hash(c.i*7+Math.floor(t))*3;c.tx=LANES[Math.floor(hash(c.i*13+Math.floor(t*3))*4)]}c.x+=(c.tx-c.x)*(1-Math.pow(0.3,dt));
@@ -28,13 +30,12 @@ function update(dt,t,inp,auto){if(t<start-TRANS||t>=end)return;S.speedK=lerp(S.s
   if(wasAhead&&!c.ahead&&d>-20){S.passes++;S.score+=100;S.flash=0.2;blip(1046,0.08,0.1)}
   if(d<-45){c.s+=L*0.5+45;c.ahead=true}
   if(Math.abs(d)<3.2&&Math.abs(c.x-S.x)<0.3){const push=S.x<c.x?-1:1;S.x=clamp(S.x+push*2.2*dt,-0.9,0.9);if(S.shake<=0){S.bumps++;S.speedK=0.86;S.score=Math.max(0,S.score-30);noise(0.1,0.3,1200);blip(110,0.2,0.12)}S.shake=0.3}}
- for(const w of S.lyr){const age=t-w.t0,k=Math.min(1,Math.max(0,age)/1.6);w.h=lerp(22,3.2,k*(2-k));const before=w.s-ps;w.s+=WSP*dt;const after=w.s-S.s;
-  if(!w.got&&!w.missed&&before>0&&after<=0){if(Math.abs(S.x-w.x)<0.34){w.got=t;S.words++;S.score+=150;S.line.push(w.text);S.flash=Math.max(S.flash,0.25);blip(1568,0.1,0.12);blip(2093,0.16,0.08)}else{w.missed=true;S.missed++}}}
- S.lyr=S.lyr.filter(w=>(w.s-S.s)>-40&&!(w.got&&t-w.got>1.2));
+ for(const w of S.lyr){const before=w.s-ps,after=w.s-S.s;if(!w.got&&!w.missed&&before>0&&after<=0){if(Math.abs(S.x-w.x)<0.36){w.got=t;S.words++;S.score+=300;S.line=[w.text];S.flash=Math.max(S.flash,0.3);blip(1568,0.1,0.12);blip(2093,0.16,0.08)}else{w.missed=true;S.missed++;blip(220,0.12,0.08)}}}
+ S.lyr=S.lyr.filter(w=>(w.s-S.s)>-70);
  S.shake=Math.max(0,S.shake-dt);S.flash=Math.max(0,S.flash-dt)}
 function overlay(ctx,t){if(t<start-TRANS*0.3||t>=end)return;const a=clamp((t-(start-TRANS*0.3))/0.6,0,1);ctx.save();ctx.globalAlpha=a;
  const pos=clamp(1+NCARS-S.passes,1,NCARS+1);ctx.font="12px 'Press Start 2P',monospace";ctx.lineWidth=4;ctx.strokeStyle='#102040';ctx.fillStyle='#ffe066';ctx.strokeText('POS '+pos+'/'+(NCARS+1),20,86);ctx.fillText('POS '+pos+'/'+(NCARS+1),20,86);
- ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='#fff';ctx.strokeText('SCORE '+S.score,20,106);ctx.fillText('SCORE '+S.score,20,106);ctx.fillStyle='#5df2ff';ctx.strokeText('WORDS '+S.words+'   PASSES '+S.passes,20,124);ctx.fillText('WORDS '+S.words+'   PASSES '+S.passes,20,124);
+ ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='#fff';ctx.strokeText('SCORE '+S.score,20,106);ctx.fillText('SCORE '+S.score,20,106);ctx.fillStyle='#5df2ff';ctx.strokeText('LINES '+S.words+'/'+S.spawned+'   PASSES '+S.passes,20,124);ctx.fillText('LINES '+S.words+'/'+S.spawned+'   PASSES '+S.passes,20,124);
  ctx.textAlign='right';ctx.font="14px 'Press Start 2P',monospace";ctx.fillStyle='#ffe066';const kmh=Math.round(288*S.speedK+Math.sin(t*20)*2);ctx.strokeText(kmh+' KM/H',W-20,90);ctx.fillText(kmh+' KM/H',W-20,90);ctx.font="8px 'Press Start 2P',monospace";ctx.fillStyle='#fff';ctx.strokeText('LAP '+(S.lap+1),W-20,108);ctx.fillText('LAP '+(S.lap+1),W-20,108);ctx.textAlign='left';
  if(S.line.length){ctx.textAlign='center';ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='#ffe066';ctx.strokeText(S.line.join(' '),W/2,H*0.86);ctx.fillText(S.line.join(' '),W/2,H*0.86);ctx.textAlign='left'}
  if(S.flash>0){ctx.fillStyle=`rgba(93,242,255,${S.flash*0.35})`;ctx.fillRect(0,0,W,H)}ctx.restore()}

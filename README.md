@@ -47,7 +47,7 @@ Autopilot plays the whole piece by itself. Press any movement key to take over, 
 |---|---|---|---|
 | 0 to 19 | 1978 arcade | Space Invaders on a phosphor screen | Words descend like a crawl, you shoot them |
 | 19 to 37 | 1991 16-bit | Autorun console platformer on a CRT, stomp walkers, dodge flyers | Word pickups along the platforms |
-| 37 to 56 | 1995 Saturn 3D | Arcade speedway race in Three.js, overtake traffic | Words float above the cars you pass |
+| 37 to 56 | 1995 Saturn 3D | Arcade speedway race in Three.js, overtake traffic | Each line is an overhead gantry; take it by driving under it in the lit lane |
 | 56 to 75 | 2013 mobile | One-thumb flapping game on a phone, ghosts take over in the bridge | Words on signs in the pipe gaps |
 | 75 to 96 | Now | Agents build a future city left to right while you run it | Neon signs to light, then words on the finale boss |
 
