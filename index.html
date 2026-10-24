@@ -17,7 +17,7 @@ canvas#c{width:100%;height:90.9%;display:block;image-rendering:pixelated;backgro
 .tag{position:absolute;font-size:clamp(7px,1.05vw,12px);letter-spacing:.5px;text-shadow:0 0 6px #000,0 0 2px #000;white-space:nowrap}
 #era{display:none}
 #clock{right:2%;top:3.5%;color:var(--dim);text-align:right}
-#lyric{left:5%;right:5%;bottom:14%;text-align:center;font-size:clamp(7px,1.15vw,13px);line-height:1.7;color:#cfd3dc;opacity:.85;text-shadow:0 0 14px #000,0 0 4px #000,0 2px 0 #000;white-space:normal;transition:opacity .2s}
+#lyric{left:5%;right:5%;bottom:18.5%;text-align:center;font-size:clamp(7px,1.15vw,13px);line-height:1.7;color:#cfd3dc;opacity:.85;text-shadow:0 0 14px #000,0 0 4px #000,0 2px 0 #000;white-space:normal;transition:opacity .2s}
 #auto{left:2%;bottom:13.5%;color:var(--dim);font-size:clamp(6px,.85vw,10px)}
 #help{right:2%;bottom:10.5%;color:var(--dim);font-size:clamp(5px,.7vw,8px);text-align:right}
 #bar{position:absolute;left:0;right:0;bottom:0;height:9.1%;background:var(--panel);display:flex;align-items:center;gap:1.5%;padding:0 2%;box-sizing:border-box;pointer-events:auto}
@@ -35,7 +35,10 @@ button.on{border-color:var(--accent);color:var(--accent)}
 #rotate small{color:var(--dim);font-size:.7em}
 @keyframes turn{0%,20%{transform:rotate(0)}60%,100%{transform:rotate(90deg)}}
 @media (orientation:portrait) and (pointer:coarse){body:not(.pok) #rotate{display:flex}}
-@media (pointer:coarse){button{font-size:clamp(6px,1.2vw,9px);padding:.8em .6em}#time{display:none}#help{font-size:clamp(5px,.9vw,8px)}#auto{font-size:clamp(6px,1vw,9px)}.tag{font-size:clamp(7px,1.3vw,12px)}#lyric{font-size:clamp(8px,1.6vw,14px)}}
+@media (max-width:1000px){.mark span{display:none}}
+@media (pointer:coarse){button{font-size:clamp(6px,1.2vw,9px);padding:.8em .6em}#time{display:none}#help{font-size:clamp(5px,.9vw,8px);left:42%;white-space:normal;line-height:1.6}#auto{font-size:clamp(6px,1vw,9px)}.tag{font-size:clamp(7px,1.3vw,12px)}#clock{font-size:clamp(6px,1vw,9px)}#lyric{font-size:clamp(8px,1.6vw,14px)}#scrub{height:60%}}
+/* portrait "play small": the frame is only ~240px tall, so the control bar leaves the frame and becomes a thumb-sized fixed bar */
+@media (orientation:portrait) and (pointer:coarse){#wrap{aspect-ratio:16/9}canvas#c{height:100%}#help{display:none}#bar{position:fixed;top:auto;bottom:env(safe-area-inset-bottom,0px);height:auto;flex-wrap:wrap;justify-content:center;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px))}button{font-size:9px;padding:1em .8em}#scrub{flex:1 1 100%;height:22px;order:9}}
 </style>
 </head>
 <body>

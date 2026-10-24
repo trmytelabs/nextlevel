@@ -6,3 +6,4 @@ node_modules
 tools/test/shots/
 tools/test/report*.json
 tools/test/full.log
+out/

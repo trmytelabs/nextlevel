@@ -30,7 +30,7 @@ export const MUSIC={
   else{ // finale: everything at once
    osc('sawtooth',NOTE(root),t0,BEAT*0.45,0.12,{lp:700,lpEnd:220});fm(NOTE(root),t0,BEAT*0.5,0.1,2,120);osc('square',NOTE(root+12*(q%2)),t0,BEAT*0.4,0.04,{lp:1500});
    if(q===0)pad(chord,t0,BAR,0.07,'sawtooth',2200);if(q===0&&t>=bar(89))for(const n of chord)for(const d of[-14,0,14])osc('sawtooth',NOTE(n+12),t0,BEAT*1.8,0.03,{detune:d,lp:3000,lpEnd:1200});
-   if(drop)osc('sawtooth',NOTE(45),t0,BEAT*3,0.14,{lp:400,lpEnd:3000})}},
+   if(drop&&q===0)osc('sawtooth',NOTE(45),t0,BAR,0.14,{lp:400,lpEnd:3000})}}, // one riser per bar; firing it on every beat stacked three 0.14 saws on top of the full finale mix
  eighth(n8:number,t:number,era:number,active:boolean){if(!clickOn||!active)return;const {AC}=getAC();if(!AC)return;const t0=AC.currentTime+0.01,step=n8%8,barI=Math.floor(n8/8),lead=LEAD[barI%4],chord=CHORDS[barI%4];
   const bridge=t>=bar(66.5)&&t<bar(75),outro=t>=bar(94);if(outro||bridge)return;
   if(era===0){osc('square',NOTE(lead[step]),t0,BEAT*0.35,0.045,{lp:3000})}

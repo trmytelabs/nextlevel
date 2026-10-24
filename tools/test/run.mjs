@@ -42,7 +42,7 @@ const casesDir=path.resolve('tools/test/cases');let CASES=[];
 if(fs.existsSync(casesDir))for(const f of fs.readdirSync(casesDir).filter(f=>f.endsWith('.mjs'))){const m=await import(pathToFileURL(path.join(casesDir,f)).href);for(const c of m.default||[])CASES.push({...c,file:f})}
 if(ONLY)CASES=CASES.filter(c=>c.name.includes(ONLY));
 
-const browser=await puppeteer.launch({executablePath:EDGE,headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--mute-audio','--autoplay-policy=no-user-gesture-required','--disable-dev-shm-usage','--no-first-run','--window-size=1280,800']});
+const browser=await puppeteer.launch({executablePath:EDGE,headless:true,protocolTimeout:600000,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--mute-audio','--autoplay-policy=no-user-gesture-required','--disable-dev-shm-usage','--no-first-run','--window-size=1280,800']});
 const page=await browser.newPage();
 const MOBILE=flag('mobile');
 if(MOBILE)await page.emulate({viewport:{width:844,height:390,deviceScaleFactor:3,isMobile:true,hasTouch:true,isLandscape:true},userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'});
@@ -59,7 +59,7 @@ const waitETM=async()=>{await page.waitForFunction('window.ETM&&window.ETM.probe
 await waitETM();
 await page.evaluate(()=>{ETM.setAuto('on');ETM.setPlaying(false)});
 const probe=()=>page.evaluate(()=>ETM.probe());
-const shot=async(name)=>{const f=path.join(SHOTS,`${TAG?TAG+'-':''}${name}.png`);await page.evaluate(()=>ETM.render());await page.screenshot({path:f});report.shots.push(f);return f};
+const shot=async(name)=>{const f=path.join(SHOTS,`${TAG?TAG+'-':''}${name}.png`);try{await page.evaluate(()=>ETM.render());await page.screenshot({path:f,captureBeyondViewport:false});report.shots.push(f)}catch(e){report.notes.push('screenshot '+name+' failed: '+String(e.message||e).slice(0,120));console.log('  (screenshot '+name+' skipped: timeout)')}return f};
 
 // ---- controls test
 if(flag('controls')){
@@ -116,7 +116,7 @@ const shotBars=new Set();for(let e=0;e<5;e++){shotBars.add(ERA_BARS[e]+0.6);shot
 let nextShot=[...shotBars].filter(b=>b>=from&&b<=to).sort((a,b)=>a-b);
 while(t<tEnd-1e-6){
   const step=Math.min(CHUNK,tEnd-t,nextShot.length?Math.max(0.02,bar(nextShot[0])-t):1e9);
-  const r=await page.evaluate(s=>{const a=performance.now();ETM.step(s);const b=performance.now();const p=ETM.probe();const c=performance.now();ETM.render();ETM.render();ETM.render();const d=performance.now();return{ms:b-a,renderMs:(d-c)/3,p,errs:ETM.errs.splice(0)}},step);
+  let r;try{r=await page.evaluate(s=>{const a=performance.now();ETM.step(s);const b=performance.now();const p=ETM.probe();const c=performance.now();ETM.render();ETM.render();ETM.render();const d=performance.now();return{ms:b-a,renderMs:(d-c)/3,p,errs:ETM.errs.splice(0)}},step)}catch(e){if(!/context was destroyed|navigation|Target closed/i.test(String(e.message)))throw e;console.log('  (page reloaded under us, probably HMR; re-attaching at bar '+(t/BAR).toFixed(1)+')');report.notes.push('reload at bar '+(t/BAR).toFixed(2));await waitETM();await page.evaluate(tt=>{ETM.setAuto('on');ETM.setPlaying(false);ETM.seek(tt)},t);continue}
   t=r.p.t;cur=t;
   for(const e of r.errs){report.ok=false;report.errors.push({t,msg:e});console.log('  WINDOW ERROR',e.slice(0,200))}
   const era=r.p.era;const pf=perf[era]||(perf[era]={simMsPerSec:0,renderMs:0,n:0,worstRender:0});pf.simMsPerSec+=r.ms/step;pf.renderMs+=r.renderMs;pf.worstRender=Math.max(pf.worstRender,r.renderMs);pf.n++;

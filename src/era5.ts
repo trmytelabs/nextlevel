@@ -54,7 +54,7 @@ function fire(t){const p=S.player;if(t-S.lastFire<0.14)return;S.lastFire=t;S.bul
 function burst(x,y,c,n,sp){for(let i=0;i<n;i++)S.parts.push({x,y,vx:(Math.random()-.5)*sp,vy:(Math.random()-.8)*sp,l:0.5+Math.random()*0.4,c})}
 function targetsAhead(p,cam){const out=[];const k0=Math.floor(p.x/CW);for(let k=k0;k<=k0+3;k++){const c=chunk(k);for(const d of c.drones)d.alive.forEach((al,i)=>{if(al)out.push({x:d.x+i*36+8,y:d.y+8,kind:'drone'})})}
  for(const s of S.signs)if(!s.lit&&s.x>p.x)out.push({x:s.x,y:s.y-6,kind:'sign'});
- if(S.boss&&!S.boss.dead&&S.boss.fillT<=S.t){const b=S.boss;for(const q of b.plates)if(q.alive)out.push({x:cam+b.sx+q.c*14+7,y:b.sy+q.r*14+7,kind:'plate'})}return out}
+ if(S.boss&&!S.boss.dead&&S.boss.fillT<=S.t){const b=S.boss;for(const q of b.plates)if(q.alive)out.push({x:cam+b.sx+q.c*14+7,y:b.sy+q.r*14+7,kind:'plate',word:!!q.word})}return out}
 function jobTarget(a,t,cam){const j=a.job;const pr=clamp((t-j.start)/(j.end-j.start),0,1);
  if(j.kind==='wire'){const c=chunk(j.k);const pl=c.plats[j.p??0]||c.plats[0]||{x0:c.x0,x1:c.x0+CW,y:GY};const fx=pl.x0+pr*(pl.x1-pl.x0);a.tx=fx-18;a.ty=pl.y-96;a.beam={x:fx,y:pl.y+6};if(Math.random()<0.7)S.parts.push({x:fx,y:pl.y+Math.random()*14,vx:(Math.random()-.5)*50,vy:-40-Math.random()*90,l:0.35,c:a.col})}
  else if(j.kind==='paint'){const c=chunk(j.k);const fx=c.x0+pr*CW;const pl=platAt(Math.min(fx,c.x0+CW-1))||{y:GY};a.tx=fx;a.ty=pl.y-120;a.beam={x:fx,y:pl.y+6};if(Math.random()<0.7)S.parts.push({x:fx,y:pl.y+Math.random()*14,vx:(Math.random()-.5)*50,vy:-40-Math.random()*90,l:0.35,c:a.col})}
@@ -75,17 +75,17 @@ function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;const cam=camAt(t);tic
   if(auto){const tg=targetsAhead(p,cam);
    if(p.ground){if(cur&&p.x>cur.x1-46){const nxt=allPlats(p.x+120).find(q=>q.x0>=cur.x1-2&&q.x0<cur.x1+230);if(nxt||!cur.pad)jump=true}
     const c=chunk(Math.floor(p.x/CW));if(c.gate&&!c.gate.hit){const d=c.gate.x-p.x;if(c.gate.low&&d>0&&d<70)jump=true;if(!c.gate.low&&d>-30&&d<90)jump=false}
-    else if(tg.some(q=>q.x-p.x>40&&q.x-p.x<260&&q.y<p.y-40&&q.y>p.y-150))jump=true;
-    else if(S.boss&&!S.boss.dead&&t>=bar(89)&&Math.floor(t/BEAT)%4===0&&(t%BEAT)<dt*2)jump=true}
-   else if(dbl&&p.jumps===1&&p.vy>60&&tg.some(q=>q.x-p.x>0&&q.x-p.x<300&&q.y<p.y-120))jump=true}
+    else if(tg.some(q=>q.x-p.x>40&&q.x-p.x<260&&q.y<p.y-40&&q.y>p.y-150)||S.signs.some(sg=>!sg.lit&&sg.x-p.x>20&&sg.x-p.x<90&&sg.y<p.y-50))jump=true;
+    else if(S.boss&&!S.boss.dead&&t>=bar(89.2)&&(t%BEAT)<dt*2&&S.boss.plates.some(q=>q.alive&&q.r<=6&&(q.word||!S.boss.plates.some(z=>z.alive&&z.word))))jump=true}
+   else if(dbl&&p.jumps===1&&p.vy>60&&tg.some(q=>q.x-p.x>0&&q.x-p.x<300&&q.y<p.y-(q.kind==='plate'?60:120)))jump=true}
   else jump=inp.upEdge;
   if(jump){if(p.ground){p.vy=jv;p.ground=false;p.jumps=1;blip(660,0.07,0.07)}else if(dbl&&p.jumps===1){p.vy=jv*0.9;p.jumps=2;burst(p.x,p.y,CYAN,10,160);blip(880,0.07,0.07)}}
   if(!p.ground){const oy=p.y;p.vy+=g*dt;p.y+=p.vy*dt;if(p.vy>0)for(const q of allPlats(p.x)){if(p.x>=q.x0-4&&p.x<=q.x1+4&&oy<=q.y+0.01&&p.y>=q.y){p.y=q.y;p.vy=0;p.ground=true;p.jumps=0;S.landFx={x:p.x,y:p.y,t};hat(false);break}}}
   if(p.y>H+80){const nxt=allPlats(p.x+200).filter(q=>q.x0>p.x&&!q.pad).sort((a,b)=>a.x0-b.x0)[0]||{x0:p.x+60,y:GY};p.x=nxt.x0+24;p.off=clamp(p.x-cam-PX,-150,150);p.x=cam+PX+p.off;p.y=nxt.y-220;p.vy=0;p.ground=false;p.jumps=1;S.score=Math.max(0,S.score-50);S.combo=0;S.flash=0.35;S.flashCol='255,60,80'}
   const gc=chunk(Math.floor(p.x/CW));if(gc.gate){const gt=gc.gate;if(Math.abs(p.x-gt.x)<10&&!gt.hit&&!gt.passed){const blocked=gt.low?p.y>GY-46:(p.y-40)<GY-92;if(blocked){gt.hit=true;p.stun=0.5;S.score=Math.max(0,S.score-30);S.combo=0;S.flash=0.3;S.flashCol='255,60,80';blip(110,0.2,0.15)}else{gt.passed=true;S.score+=40;S.combo++;blip(1320,0.08,0.08)}}}
   for(const o of gc.orbs)if(!o.got&&Math.abs(o.x-p.x)<16&&Math.abs(o.y-(p.y-20))<24){o.got=t;S.score+=10;S.combo++;blip([523,659,784,1046][Math.floor(o.x/60)%4],0.1,0.08)}
-  for(const s of S.signs)if(!s.lit&&Math.abs(s.x-p.x)<34&&Math.abs(s.y-(p.y-26))<40)litSign(s,t);
-  const wantFire=auto?(S.autoFire&&canFire):(inp.fire&&canFire);if(wantFire)fire(t);S.autoFire=false;
+  for(const s of S.signs)if(!s.lit&&Math.abs(s.x-p.x)<34&&Math.abs(s.y-(p.y-26))<46)litSign(s,t);
+  const tgA=auto&&canFire&&t-S.lastFire>=0.14?targetsAhead(p,cam):[],hasWord=tgA.some(q=>q.word);const aligned=tgA.some(q=>q.x>p.x+20&&q.x-p.x<520&&(!hasWord||q.kind!=='plate'||q.word)&&Math.abs(q.y-(p.y-22))<(q.kind==='plate'?9:22));const wantFire=auto?((S.autoFire||aligned)&&canFire):(inp.fire&&canFire);if(wantFire)fire(t);S.autoFire=false;
   p.stun=Math.max(0,p.stun-dt);p.trail.push({x:p.x,y:p.y-18,l:0.35});if(p.trail.length>18)p.trail.shift()}
  else if(t<bar(76.5)){p.x=cam+PX;p.y=-80}
  for(const q of p.trail)q.l-=dt;p.trail=p.trail.filter(q=>q.l>0);
@@ -99,10 +99,10 @@ function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;const cam=camAt(t);tic
  for(const q of S.parts){q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=200*dt;q.l-=dt}if(S.parts.length>400)S.parts.splice(0,S.parts.length-400);S.parts=S.parts.filter(q=>q.l>0);
  S.signs=S.signs.filter(s=>s.x>cam-200);S.flash=Math.max(0,S.flash-dt);
  for(const a of S.agents){if(a.job&&t>=a.job.end)a.job=null;
-  if(t>=bar(94)){a.tx=cam-300-a.i*40;a.ty=120+a.i*20;a.beam=null;a.alpha=Math.max(0,1-(t-bar(94))/(BAR*0.8));a.status='RETURNING'}
+  if(t>=bar(94)){a.tx=cam+W+500+a.i*60;a.ty=-260-a.i*24;a.beam=null;a.alpha=Math.max(0,1-(t-bar(94))/(BAR*0.8));a.status='RETURNING'}
   else if(a.job)jobTarget(a,t,cam);else{a.beam=null;idle(a,cam,t)}
   const ox=a.x,k=1-Math.pow(0.00005,dt);a.x+=(a.tx-a.x)*k;a.y+=(a.ty-a.y)*k;a.vx=lerp(a.vx,(a.x-ox)/Math.max(dt,0.001),0.2)}
- if(S.boss){const b=S.boss;b.sx=b.x+Math.sin(t*0.7)*26;b.sy=b.y+Math.sin(t*2)*16;if(!b.dead&&(t>=bar(94)||b.plates.every(q=>!q.alive))){b.dead=true;b.deadT=t;for(const q of b.plates)if(q.alive)burst(cam+b.sx+q.c*14+7,b.sy+q.r*14+7,GRN,2,200)}}}
+ if(S.boss){const b=S.boss;b.sx=b.x+Math.sin(t*0.7)*26;b.sy=b.y+Math.sin(t*2)*16;if(!b.dead&&(t>=bar(94)||b.plates.every(q=>!q.alive))){b.dead=true;b.deadT=t;for(const q of b.plates)if(q.alive&&q.word){S.words++;S.line.push(q.word);S.score+=100}for(const q of b.plates)if(q.alive)burst(cam+b.sx+q.c*14+7,b.sy+q.r*14+7,GRN,2,200)}}}
 function litSign(s,t){s.lit=t;S.words++;S.score+=50;S.combo++;S.line.push(s.text);burst(s.x,s.y-6,YEL,12,160);blip(1760,0.1,0.1)}
 function onBeat(b,t,auto){if(t<s5)return;S.beatT=t;const cam=camAt(t),p=S.player,q=b%4;
  if(t>=bar(75.5)&&t<bar(94)){const idle=S.agents.filter(a=>!a.job&&a.role!=='R');for(let i=0;i<2&&idle.length;i++){const a=idle.splice(Math.floor(hash(b*7+i)*idle.length),1)[0];const k0=Math.floor(cam/CW);const ks=[];for(let k=k0;k<=k0+3;k++)if(t>=fill(k)+PAINT)ks.push(k);if(!ks.length)break;const c=chunk(ks[Math.floor(hash(b*3+i)*ks.length)]);const pcs=[...c.plats.map(pl=>({x:(pl.x0+pl.x1)/2,y:pl.y})),...c.towers.map(tw=>({x:tw.x+tw.w/2,y:HZ-tw.h})),...c.lamps.map(l=>({x:l.x,y:GY-70}))];if(!pcs.length)continue;const pc=pcs[Math.floor(hash(b*11+i)*pcs.length)];a.job={kind:'inspect',start:t,end:t+BAR*0.25,x:pc.x,y:pc.y};a.status=['OPTIMIZING','LOD PASS','LIGHT BAKE','COLLISION FIX'][Math.floor(hash(b*5+i)*4)]}}
@@ -110,7 +110,7 @@ function onBeat(b,t,auto){if(t<s5)return;S.beatT=t;const cam=camAt(t),p=S.player
  if(S.boss&&!S.boss.dead&&(q===0||q===2)&&t>=bar(89.5)&&t<bar(94)){const bo=S.boss,sx=cam+bo.sx+77,sy=bo.sy+112;for(let i=-1;i<=1;i++){const dx=p.x-sx,dy=p.y-20-sy,ang=Math.atan2(dy,dx)+i*0.22;S.bolts.push({x:sx,y:sy,vx:Math.cos(ang)*230,vy:Math.sin(ang)*230})}}}
 function on8th(n,t,auto){if(t<bar(79)||t>=bar(94)||!auto||!S.player)return;const p=S.player,cam=camAt(t);const tg=targetsAhead(p,cam);if(tg.some(q=>q.x>p.x+20&&q.x-p.x<520&&Math.abs(q.y-(p.y-22))<(q.kind==='plate'?8:22)))S.autoFire=true}
 function onLine(words,t){if(t<s5-TRANS)return;if(t>=bar(88.25)){S.bossWords.push(...words);if(S.boss)for(const w of words)bossWord(w);return}
- const k=Math.max(0,Math.round(t/BAR)-73);chunk(k);chunk(k+1);words.forEach((w,i)=>{const x=k*CW+30+i*((2*CW-60)/Math.max(1,words.length-1||1));const pl=platAt(x);const y=(pl?pl.y:GY)-104-(i%3)*34;S.signs.push({x,y,text:w,lit:0})})}
+ const k=Math.max(0,Math.round(t/BAR)-73);chunk(k);chunk(k+1);words.forEach((w,i)=>{const x=k*CW+30+i*((2*CW-60)/Math.max(1,words.length-1||1));const pl=platAt(x);const y=(pl?pl.y:GY)-72-(i%3)*18;S.signs.push({x,y,text:w,lit:0})})}
 
 // ---------------- 3D agent models ----------------
 const v3sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],v3dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],v3cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];

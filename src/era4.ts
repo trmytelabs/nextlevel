@@ -1,4 +1,4 @@
-import {ERAS,TRANS,BAR,BEAT,bar,W,H,hash,clamp,lerp,smooth,blip,noise} from './core';
+import {ERAS,TRANS,BAR,BEAT,bar,W,H,LYRICS,hash,clamp,lerp,smooth,blip,noise} from './core';
 
 // ---------- ERA 4: mobile. A phone on a desk running a one-thumb flapping game ----------
 export const E4=(()=>{
@@ -12,29 +12,30 @@ const ROLES=[['#4df0ff','GEOMETRY'],['#ff5be0','TEXTURE'],['#ffe14d','LIGHTING']
 const NOTES=[[56.6,'FLAP!','Game Center connected',0],[58,'★ 4.8','Rate FLAP! on the store',1],[60.5,'▲ 1,204','players online right now',0],[62.5,'◉ Best','New personal best!',1],[65,'♥ 7 days','Daily streak kept',0],[67,'ghost_01','joined your run',1],[69,'+12','ghosts are watching',0],[71,'swarm','a hundred hands appeared',1],[73,'handoff','session moved to agents',0]];
 let S:any;
 const pipeX=(k,t)=>PIPE0+k*SPACING-Math.max(0,t-s4)*V;
-const gapY=k=>84+hash(k*3.7+0.5)*(GROUND-170);
-function init(t){S={bird:{y:GAH/2,vy:0,alive:true,deadT:-9,flapT:-9,inv:0},score:0,best:0,counted:new Set(),words:new Map(),line:[],got:0,ghosts:[],agents:[],ripples:[],flash:0,started:false,parts:[]};
+const gapY=k=>178+81*Math.sin(k*0.7)+25*(hash(k*3.7+0.5)-0.5);   // 84..272, step between neighbours <= ~80 px
+function init(t){S={bird:{y:GAH/2,vy:0,alive:true,deadT:-9,flapT:-9,inv:0},score:0,best:0,counted:new Set(),words:new Map(),line:[],got:0,ghosts:[],agents:[],ripples:[],flash:0,started:false,parts:[],total:0,signs:0,deaths:0,agentsOut:0};
  const k0=firstPipe(t);for(let k=0;k<k0;k++)S.counted.add(k)}
 const firstPipe=t=>{let k=0;while(pipeX(k,t)+PWD<BX-10)k++;return k};
 function flap(t){const b=S.bird;b.vy=FLAP;b.flapT=t;S.started=true;S.ripples.push({t});blip(880,0.05,0.08)}
-function autoFlap(y,vy,k,t,lastFlap){const c=gapY(k);return y>c+16&&vy>-80&&t-lastFlap>0.1}
-function onLine(words,t){if(t<s4-TRANS||t>=s5)return;let k=firstPipe(t)+1;for(const w of words){S.words.set(k,w);k++}}
+function autoFlap(y,vy,k,t,lastFlap){let c=gapY(k);if(pipeX(k,t)+PWD/2<BX)c+=clamp(gapY(k+1)-c,0,20);return y>c+16&&vy>-80&&t-lastFlap>0.1}
+function onLine(words,t){if(t<s4||t>=s5)return;const cur=LYRICS.filter(l=>bar(l[0])<=t+0.01).pop();if(cur&&bar(cur[0])<s4)return;const nx=LYRICS.find(l=>bar(l[0])>t+0.01),tn=Math.min(nx?bar(nx[0]):s5,s5),n=Math.max(1,firstPipe(tn)-firstPipe(t));S.total+=words.length;
+ for(let j=0,k=firstPipe(t)+1;j<n;j++){const a=Math.floor(j*words.length/n),b=Math.floor((j+1)*words.length/n);if(b>a)S.words.set(k++,words.slice(a,b).join(' '))}S.signs=S.words.size}
 function update(dt,t,inp,auto){if(t<s4-TRANS||t>=s5)return;const b=S.bird;
  if(t>=s4){const k=firstPipe(t);
-  if(b.alive){const want=auto?autoFlap(b.y,b.vy,k,t,b.flapT):(inp.upEdge||inp.fire);if(want)flap(t);
+  if(b.alive){const want=auto?(!S.started||autoFlap(b.y,b.vy,k,t,b.flapT)):(inp.upEdge||inp.fire);if(want)flap(t);
    if(S.started){b.vy+=G*dt;b.y+=b.vy*dt}else b.y=GAH/2+Math.sin(t*4)*6;
    if(b.y<8){b.y=8;b.vy=0}
    // collisions
    b.inv=Math.max(0,b.inv-dt);let hit=b.y>GROUND-12;if(!hit&&b.inv<=0)for(let i=k;i<k+2;i++){const px=pipeX(i,t);if(BX+10>px&&BX-10<px+PWD){const c=gapY(i);if(b.y-9<c-GAP/2||b.y+9>c+GAP/2)hit=true}}
-   if(hit){b.alive=false;b.deadT=t;b.vy=-150;S.flash=0.3;S.best=Math.max(S.best,S.score);noise(0.15,0.4,900);blip(110,0.25,0.15)}
-   for(let i=k-1;i<k+1;i++){if(i<0||S.counted.has(i))continue;if(pipeX(i,t)+PWD<BX-10){S.counted.add(i);S.score++;const w=S.words.get(i);if(w){S.line.push(w);S.got++;S.words.delete(i);blip(1568,0.08,0.1)}else blip(1046,0.06,0.08)}}}
-  else{b.vy+=G*dt;b.y=Math.min(GROUND-12,b.y+b.vy*dt);if(t-b.deadT>BAR){b.alive=true;b.y=GAH/2;b.vy=0;b.inv=BEAT;S.score=0;for(let i=0;i<=k;i++)S.counted.add(i)}}
+   if(hit){b.alive=false;b.deadT=t;b.vy=-150;S.deaths++;S.flash=0.3;S.best=Math.max(S.best,S.score);noise(0.15,0.4,900);blip(110,0.25,0.15)}
+   for(let i=k-1;i<k+1;i++){if(i<0||S.counted.has(i))continue;if(pipeX(i,t)+PWD<BX-10){S.counted.add(i);S.score++;const w=S.words.get(i);if(w){S.line.push(w);S.got+=w.split(' ').length;S.words.delete(i);S.signs=S.words.size;blip(1568,0.08,0.1)}else blip(1046,0.06,0.08)}}}
+  else{b.vy+=G*dt;b.y=Math.min(GROUND-12,b.y+b.vy*dt);if(t-b.deadT>BEAT*2){b.alive=true;b.y=gapY(k);b.vy=0;b.inv=BEAT;S.score=0;for(let i=0;i<=k;i++){S.counted.add(i);S.words.delete(i)}S.signs=S.words.size}}
   // ghosts: perfect players that appear during the bridge
-  const n=t>=bar(66.5)?Math.min(14,Math.floor((t-bar(66.5))/(BEAT*2))+1):0;while(S.ghosts.length<n){const i=S.ghosts.length;S.ghosts.push({i,y:GAH/2,xo:-(i+1)*13-8,col:ROLES[i%5][0],ph:i*1.7});S.ripples.push({t,ghost:true,i})}
+  const n=t>=bar(73)?0:t>=bar(66.5)?Math.min(14,Math.floor((t-bar(66.5))/(BEAT*2))+1):0;while(S.ghosts.length<n){const i=S.ghosts.length;S.ghosts.push({i,y:GAH/2,xo:-(i+1)*13-8,col:ROLES[i%5][0],ph:i*1.7});S.ripples.push({t,ghost:true,i})}
   for(const g of S.ghosts){const kg=firstPipe(t+(-g.xo)/V);const target=gapY(kg)-6+Math.sin(t*5+g.ph)*5;g.y=lerp(g.y,target,1-Math.pow(0.002,dt));if(Math.floor((t+g.ph)/(BEAT*2))!==Math.floor((t+g.ph-dt)/(BEAT*2)))S.ripples.push({t,ghost:true,i:g.i})}
   // ghosts become agents and leave the phone to the right
-  if(t>=bar(73)&&S.agents.length===0)S.ghosts.forEach((g,i)=>S.agents.push({x:SX+BX+g.xo,y:GY0+g.y,tx:W+120+i*26,ty:70+(i%5)*40+Math.floor(i/5)*22,col:g.col,name:ROLES[i%5][1],born:t+i*0.06}));
-  for(const a of S.agents){if(t<a.born)continue;const k2=1-Math.pow(0.004,dt);a.x+=(a.tx-a.x)*k2;a.y+=(a.ty-a.y)*k2}
+  if(t>=bar(73)&&S.agents.length===0)for(let i=0;i<14;i++){const g=S.ghosts[i]||{xo:-(i+1)*13-8,y:gapY(k),col:ROLES[i%5][0]};S.agents.push({x:SX+BX+g.xo,y:GY0+g.y,tx:W+120+i*26,ty:70+(i%5)*40+Math.floor(i/5)*22,col:g.col,name:ROLES[i%5][1],born:t+i*0.06})}
+  S.agentsOut=0;for(const a of S.agents){if(t<a.born)continue;const k2=1-Math.pow(0.004,dt);a.x+=(a.tx-a.x)*k2;a.y+=(a.ty-a.y)*k2;if(a.x>W)S.agentsOut++}
   if(t>=bar(73))S.ghosts=[]}
  S.flash=Math.max(0,S.flash-dt);S.ripples=S.ripples.filter(r=>t-r.t<0.5)}
 function onBeat(_b,_t,_auto){}
@@ -84,7 +85,7 @@ function drawGame(ctx,t,pulse){const b=S.bird,run=Math.max(0,t-s4);ctx.save();ct
  const k0=firstPipe(t);for(let k=Math.max(0,k0-1);k<k0+3;k++){const x=pipeX(k,t);if(x>GW+10||x+PWD<-10)continue;const c=gapY(k);
   for(const top of[true,false]){const y0=top?-10:c+GAP/2,y1=top?c-GAP/2:GROUND+10;const pgc=ctx.createLinearGradient(x,0,x+PWD,0);pgc.addColorStop(0,'#5fb83a');pgc.addColorStop(0.35,'#8fe06a');pgc.addColorStop(1,'#4e9f30');ctx.fillStyle=pgc;ctx.fillRect(x,y0,PWD,y1-y0);ctx.strokeStyle='#2f6a1c';ctx.lineWidth=2;ctx.strokeRect(x,y0,PWD,y1-y0);
    const cy=top?y1-22:y0;ctx.fillStyle=pgc;ctx.fillRect(x-4,cy,PWD+8,22);ctx.strokeRect(x-4,cy,PWD+8,22)}
-  const w=S.words.get(k);if(w){ctx.font="7px 'Press Start 2P',monospace";const tw=w.length*7+12;ctx.fillStyle='rgba(255,255,255,.92)';rrect(ctx,x+PWD/2-tw/2,c-9,tw,18,5);ctx.fill();ctx.strokeStyle='#2f6a1c';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='#2f4a1c';ctx.textAlign='center';ctx.fillText(w,x+PWD/2,c+3);ctx.textAlign='left';ctx.strokeStyle='rgba(47,106,28,.6)';ctx.beginPath();ctx.moveTo(x+PWD/2,c-GAP/2);ctx.lineTo(x+PWD/2,c-9);ctx.stroke()}}
+  const w=S.words.get(k);if(w){const fs=w.length>12?6:7;ctx.font=fs+"px 'Press Start 2P',monospace";const tw=w.length*fs+12;ctx.fillStyle='rgba(255,255,255,.92)';rrect(ctx,x+PWD/2-tw/2,c-9,tw,18,5);ctx.fill();ctx.strokeStyle='#2f6a1c';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='#2f4a1c';ctx.textAlign='center';ctx.fillText(w,x+PWD/2,c+3);ctx.textAlign='left';ctx.strokeStyle='rgba(47,106,28,.6)';ctx.beginPath();ctx.moveTo(x+PWD/2,c-GAP/2);ctx.lineTo(x+PWD/2,c-9);ctx.stroke()}}
  // ground
  ctx.fillStyle='#ddd894';ctx.fillRect(0,GROUND,GW,GAH-GROUND);ctx.fillStyle='#73c84e';ctx.fillRect(0,GROUND,GW,8);ctx.fillStyle='#5aa83a';ctx.fillRect(0,GROUND+8,GW,2);ctx.fillStyle='#c9c07a';for(let i=-1;i<GW/14+1;i++){const x=i*14-((run*V)%14);ctx.beginPath();ctx.moveTo(x,GROUND+10);ctx.lineTo(x+7,GROUND+10);ctx.lineTo(x+14,GAH);ctx.lineTo(x+7,GAH);ctx.fill()}
  // ghosts
@@ -98,7 +99,7 @@ function drawGame(ctx,t,pulse){const b=S.bird,run=Math.max(0,t-s4);ctx.save();ct
   const mg=ctx.createRadialGradient(GW/2-48,GAH*0.3+62,2,GW/2-48,GAH*0.3+62,20);mg.addColorStop(0,'#ffe9a0');mg.addColorStop(1,S.score>=10?'#e0b020':'#b08050');ctx.fillStyle=mg;ctx.beginPath();ctx.arc(GW/2-48,GAH*0.3+62,20,0,7);ctx.fill();ctx.font="6px 'Press Start 2P',monospace";ctx.textAlign='center';ctx.fillStyle='#fff';if(Math.floor(t*2)%2===0)ctx.fillText('TAP TO RETRY',GW/2,GAH*0.3+100);ctx.restore()}
  ctx.textAlign='left';
  // collected lyric line
- if(S.line.length){ctx.font="6px 'Press Start 2P',monospace";ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,.9)';ctx.strokeStyle='rgba(47,58,68,.8)';ctx.lineWidth=2;const s=S.line.slice(-7).join(' ');ctx.strokeText(s,GW/2,GROUND-8);ctx.fillText(s,GW/2,GROUND-8);ctx.textAlign='left'}
+ if(S.line.length){ctx.font="6px 'Press Start 2P',monospace";ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,.9)';ctx.strokeStyle='rgba(47,58,68,.8)';ctx.lineWidth=2;let s='';for(let i=S.line.length-1;i>=0&&s.length+S.line[i].length<36;i--)s=S.line[i]+(s?' '+s:'');ctx.strokeText(s,GW/2,GROUND-8);ctx.fillText(s,GW/2,GROUND-8);ctx.textAlign='left'}
  ctx.restore()}
 function drawBird(ctx,x,y,rot,t,tint,alpha,seed){ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(rot);
  const body=tint||'#f7d33c',dark=tint?hexa(tint,0.9):'#d9a51c';ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(0,0,12,9,0,0,7);ctx.fill();ctx.strokeStyle=tint?'rgba(255,255,255,.6)':'#5a4010';ctx.lineWidth=1.5;ctx.stroke();
