@@ -33,7 +33,7 @@ function dodge(t){const sh=S.ship,th:any[]=[];for(const ln of S.lines)for(const 
 function onBeat(_b,t){if(t>=ERAS[1].start)return;S.pulse=1;if(t>=shatterT&&!S.debris)shatter()}
 function on8th(_n,t,auto){if(auto&&t<shatterT){const tx=target(t);if(tx!==null&&Math.abs(tx-(S.ship.x+9))<16)fire()}}
 function update(dt,t,inp,auto){if(t>=ERAS[1].start)return;S.cool-=dt;S.pulse=Math.max(0,S.pulse-dt*3);const sh=S.ship;
- for(const st of S.stars){st.d+=st.sp*(10+st.d*0.25)*dt;if(st.d>LW*0.95){st.d=4+Math.random()*20;st.a=Math.random()*Math.PI*2}}
+ for(const st of S.stars){st.d+=st.sp*(10+st.d*0.25)*dt;if(st.d>LW*0.95){st.d=4+S.rng()*20;st.a=S.rng()*Math.PI*2}}
  sh.inv=Math.max(0,sh.inv-dt);if(sh.dead&&t-sh.deadT>0.7){sh.dead=false;sh.inv=2.6;sh.x=LW/2-9}
  if(t<shatterT&&!sh.dead){let dx=0;if(auto){const tx=target(t);if(tx!==null)dx=clamp((tx-9-sh.x)*5,-220,220)*dt;const sx=dodge(t);if(sx!==null)dx=clamp((sx-sh.x)*8,-260,260)*dt}else{if(inp.left)dx=-180*dt;if(inp.right)dx=180*dt;if(inp.fire)fire()}sh.x=clamp(sh.x+dx,6,LW-24)}
  else if(t>=shatterT){if(!S.debris)shatter();sh.x=lerp(sh.x,80/320*LW-9,1-Math.pow(0.02,dt));sh.y=lerp(sh.y,GROUND-10,1-Math.pow(0.02,dt))}
@@ -41,7 +41,7 @@ function update(dt,t,inp,auto){if(t>=ERAS[1].start)return;S.cool-=dt;S.pulse=Mat
   for(const ln of S.lines){const zb=zOf(ln,t);const row=ln.bh-(z-zb)/ROWD;if(row<0||row>=ln.bh)continue;const u=(b.x-VPX)/sc+BW/2-ln.xo;
    for(const w of ln.words){if(w.dead||u<w.bx||u>=w.bx+w.w||row<w.by||row>=w.by+w.h)continue;
     const R=clamp(Math.round(7/sc),3,14);const n=chip(w,Math.floor(u-w.bx),Math.floor(row-w.by),R);if(!n)continue;
-    b.hit=true;S.chips++;S.score+=Math.min(50,n);blip(1200+Math.random()*400,0.04,0.08);for(let i=0;i<8;i++)S.pops.push({x:b.x,y:b.y,vx:(S.rng()-.5)*120,vy:-S.rng()*90,l:.5});
+    b.hit=true;S.chips++;S.score+=Math.min(50,n);blip(1200+S.rng()*400,0.04,0.08);for(let i=0;i<8;i++)S.pops.push({x:b.x,y:b.y,vx:(S.rng()-.5)*120,vy:-S.rng()*90,l:.5});
     if(w.left<w.total*0.16){w.dead=true;S.kills++;if(w.left+n===w.total)S.oneShot++;S.score+=100;noise(0.08,0.3,2000);const d=w.img.data;for(let py=0;py<w.h;py+=2)for(let px=0;px<w.w;px+=2){if(d[(py*w.w+px)*4+3]===0)continue;const sp=toScreen(ln,w.bx+px,w.by+py,t);S.pops.push({x:sp.x,y:sp.y,vx:(S.rng()-.5)*160,vy:(S.rng()-.9)*140,l:.7})}}
     break}if(b.hit)break}}
  if(!sh.dead&&sh.inv<=0&&t<shatterT){let hitW:any=null,hitL:any=null;outer:for(const ln of S.lines){for(const w of ln.words){if(w.dead)continue;const spb=toScreen(ln,w.bx+w.w/2,w.by+w.h,t),spt=toScreen(ln,w.bx+w.w/2,w.by,t);if(spb.z<1.5||spb.y<sh.y-1||spt.y>sh.y+9)continue;

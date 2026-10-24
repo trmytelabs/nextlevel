@@ -18,13 +18,12 @@ function piece(b:any,i:number){const kind=KINDS[Math.floor(hash(b.li*13+b.k*5)*K
 function log(text:string,col:string){S.log.unshift({text,col});if(S.log.length>4)S.log.pop()}
 function init(t){S={t,dist:Math.max(0,t-s5)*SPD,blocks:plan(),hits:0,misses:0,whiffs:0,spawned:0,score:0,combo:0,maxCombo:0,mult:1,line:[],lineLi:-1,built:[],log:[],slashL:-9,slashR:-9,flash:0,copilot:{status:'LINKING',since:t,pi:-1},tunnel:0,shake:0,hands:{L:{c:0.6,r:0.9},R:{c:2.4,r:0.9}},hint:0};
  // everything already past the hit plane counts as cut (autopilot history), so the arena behind you exists after a seek
- let n=0;for(const b of S.blocks){if(b.hitT<t){b.hit=b.hitT;b.active=true;n++;S.hits++;S.combo++;S.spawned++;S.built.push(piece(b,S.built.length))}}S.maxCombo=S.combo;S.mult=1+Math.min(3,Math.floor(S.combo/8));S.score=S.hits*100;
- for(const p of S.built)p.x=xAt(p.t)+30;if(S.built.length){S.copilot.pi=S.built.length-1;S.copilot.status='BUILDING'}}
+ for(const b of S.blocks){if(b.hitT<t){b.active=true;S.spawned++;cut(b,b.hitT,true)}}if(S.built.length){S.copilot.pi=S.built.length-1;S.copilot.status='BUILDING';S.copilot.since=t}S.log=[]}
 const xAt=(t:number)=>Math.max(0,Math.min(t,OUT+1.2)-s5)*SPD; // world x of the player at time t; you coast to a stop in the outro so the arena you built stays around you
-function cut(b:any,t:number){b.hit=t;S.hits++;S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.mult=1+Math.min(3,Math.floor(S.combo/8));S.score+=100*S.mult;S.flash=Math.max(S.flash,0.18);
+function cut(b:any,t:number,silent=false){b.hit=t;S.hits++;S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.mult=1+Math.min(3,Math.floor(S.combo/8));S.score+=100*S.mult;if(!silent)S.flash=Math.max(S.flash,0.18);
  if(b.li!==S.lineLi){S.lineLi=b.li;S.line=[]}S.line.push(b.word);if(b.echo&&S.line.length>5)S.line.shift();
- if(b.k%2===0||b.echo){const p=piece(b,S.built.length);p.x=S.dist+30+hash(b.li*7+b.k)*6;S.built.push(p);b.pieceI=p.i;b.cutN=S.hits;S.copilot.pi=p.i;S.copilot.status=(b.echo?'REMIXING ':['PLACING','GENERATING','COMPILING','TEXTURING'][Math.floor(hash(b.li*3+b.k)*4)]+' ')+p.kind.toUpperCase();S.copilot.since=t;log('AI > '+p.kind.toUpperCase()+' FROM "'+b.word.toUpperCase()+'"',b.side==='L'?MAG:CYAN);}else b.pieceI=-1;
- blip(b.side==='L'?880:1175,0.08,0.1);blip(b.side==='L'?1319:1760,0.12,0.06)}
+ if(b.k%2===0||b.echo){const p=piece(b,S.built.length);p.x=xAt(b.hitT)+30+hash(b.li*7+b.k)*6;S.built.push(p);b.pieceI=p.i;b.cutN=S.hits;S.copilot.pi=p.i;S.copilot.status=(b.echo?'REMIXING ':['PLACING','GENERATING','COMPILING','TEXTURING'][Math.floor(hash(b.li*3+b.k)*4)]+' ')+p.kind.toUpperCase();S.copilot.since=t;log('AI > '+p.kind.toUpperCase()+' FROM "'+b.word.toUpperCase()+'"',b.side==='L'?MAG:CYAN);}else b.pieceI=-1;
+ if(!silent){blip(b.side==='L'?880:1175,0.08,0.1);blip(b.side==='L'?1319:1760,0.12,0.06)}}
 function slash(side:'L'|'R',t:number){if(side==='L')S.slashL=t;else S.slashR=t;let best:any=null,bd=WIN;for(const b of S.blocks){if(!b.active||b.hit||b.missed||b.side!==side)continue;const d=Math.abs(b.hitT-t);if(d<bd){bd=d;best=b}}if(best)cut(best,t);else{S.whiffs++;noise(0.05,0.12,3000)}}
 function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;S.dist=xAt(t);S.tunnel=t>=TUNNEL?clamp((t-TUNNEL)/(BAR*0.5),0,1):0;S.flash=Math.max(0,S.flash-dt);S.shake=Math.max(0,S.shake-dt);
  for(const b of S.blocks){if(!b.active&&t>=b.hitT-LEAD&&t<b.hitT+0.5){b.active=true;S.spawned++}}

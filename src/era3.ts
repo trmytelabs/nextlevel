@@ -11,7 +11,7 @@ const CARCOL=[0x2f6fe8,0xf2c230,0x2fb85a,0xffffff,0xff7a1a,0x8a3ad8,0x20c8c0,0xe
 let S:any;
 function frame(s:number){const u=(((s%L)+L)%L)/L;const p=curve.getPointAt(u),T=curve.getTangentAt(u);const u2=(((s+4)%L)+L)%L/L;const T2=curve.getTangentAt(u2);const cr=T.x*T2.z-T.z*T2.x;const bank=clamp(-cr*2.2,-0.42,0.42); // cr<0 in the (left-handed) turns: bank>0 lifts the outside edge
  const up0=new THREE.Vector3(0,1,0),right0=new THREE.Vector3().crossVectors(T,up0).normalize();const right=right0.clone().multiplyScalar(Math.cos(bank)).add(up0.clone().multiplyScalar(Math.sin(bank)));const up=up0.clone().multiplyScalar(Math.cos(bank)).sub(right0.clone().multiplyScalar(Math.sin(bank)));return{p,T,right,up,bank,curv:cr}}
-function init(t){const r=rngf(31);S={s:Math.max(0,t-start)*SPEED,x:0,vx:0,speedK:1,shake:0,flash:0,score:0,words:0,spawned:0,missed:0,line:[],passes:0,bumps:0,cars:[],lap:0,lyr:[]};
+function init(t){const r=rngf(31);S={s:Math.max(0,t-(start-TRANS))*SPEED,x:0,vx:0,speedK:1,shake:0,flash:0,score:0,words:0,spawned:0,missed:0,line:[],passes:0,bumps:0,cars:[],lap:0,lyr:[]};
  for(let i=0;i<NCARS;i++){const x=LANES[Math.floor(r()*4)];S.cars.push({i,s:S.s+30+i*26+r()*8,x,tx:x,sp:SPEED*(0.9+r()*0.05),col:CARCOL[i%CARCOL.length],word:null,ahead:true,ph:r()*6,changeT:1+r()*3})}}
 function rel(c){let d=c.s-S.s;d=((d+L/2)%L+L)%L-L/2;return d}
 // each word is placed so it reaches the player `gap` seconds after the previous one (closing speed SPEED-WSP), in a lane at most one over from the last word, so a lane change is always possible between words
