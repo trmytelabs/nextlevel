@@ -34,7 +34,7 @@ export default [
  {name:'E4.2 autopilot: deaths <= 3, auto-retry within 1 s',era:4,bar:56,fn:async(p,h,page)=>{const {samples:S}=await replay(page,p);
   const deaths=[];for(let i=1;i<S.length;i++)if(S[i-1].e4.bird.alive&&!S[i].e4.bird.alive)deaths.push(S[i]);
   const n=at(S,74.9).e4.deaths;if(n>3)return `${n} deaths in the era (at bars ${deaths.map(s=>s.bar.toFixed(2)).join(', ')})`;
-  for(const d of deaths){const back=S.find(s=>s.t>d.t&&s.e4.bird.alive);if(!back)return `no respawn after death at bar ${d.bar.toFixed(2)}`;const dt=back.t-(BEAT-back.e4.bird.inv)-d.e4.bird.deadT; // inv counts down from BEAT at the respawn frame, so this is exact despite 0.1 s sampling
+  for(const d of deaths){const back=S.find(s=>s.t>d.t&&s.e4.bird.alive);if(!back)return `no respawn after death at bar ${d.bar.toFixed(2)}`;const dt=back.e4.bird.bornT-d.e4.bird.deadT; // bornT is stamped at the respawn frame, so this is exact despite 0.1 s sampling
    if(dt>1.0)return `respawn took ${dt.toFixed(2)} s after death at bar ${d.bar.toFixed(2)}`;if(!back.e4.started)return 'bird not started after respawn'}
   return true}},
  {name:'E4.3 words collected >= 70%',era:4,bar:56,fn:async(p,h,page)=>{const {samples:S}=await replay(page,p);const e=at(S,74.9).e4,want=lyricWords();
@@ -47,4 +47,9 @@ export default [
   const q=at(S,75.0);if(q.era!==4)return 'era index not 5 at bar 75';
   const bad=S.filter(s=>s.e4.bad&&s.e4.bad.length);if(bad.length)return 'NaN in e4 at bar '+bad[0].bar.toFixed(2)+': '+bad[0].e4.bad.join(',');
   return true}},
+ {name:'E4.5 seek == play: a seek mid-era plans the lines already started, no double dispatch',era:4,bar:56,fn:async(p,h,page)=>{const {samples:S}=await replay(page,p);
+  const R=at(S,60.3),ref=R.e4;const r=await page.evaluate(t=>{ETM.seek(t);const a=ETM.raw.e4(),s0={total:a.total,got:a.got,signs:a.words.size};ETM.setPlaying(true);ETM.step(0.3);ETM.setPlaying(false);const b=ETM.raw.e4();return{s0,total:b.total,signs:b.words.size}},R.t);
+  await page.evaluate(t=>ETM.seek(t),p.t);
+  if(r.s0.total!==ref.total)return `after seek(60.3) S.total ${r.s0.total}, play-through ${ref.total}`;if(r.s0.got!==ref.got)return `after seek(60.3) S.got ${r.s0.got}, play-through ${ref.got}`;
+  if(r.s0.signs<1)return 'no signs on the pipes right after a seek';if(r.total!==r.s0.total)return `HUD re-dispatch after seek changed S.total ${r.s0.total} -> ${r.total}`;return true}},
 ];
