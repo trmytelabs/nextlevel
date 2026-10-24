@@ -1,7 +1,42 @@
+# Morning report (2026-10-24, written ~1:40 AM)
+
+**Play it:** https://claude.ai/artifact/BtigJtQXJGtrXoycKL3Xvm (version 7). On the phone: open the link, turn the phone
+sideways, hold the left/right edge to move, tap the top half to jump, tap the bottom half to fire. The FX button (or G)
+switches to the light graphics tier; phones default to it. Sound is off until you press SOUND (phones need a tap first).
+
+**What changed overnight**
+- Title card (your name, "For the Deputy's Maximalists", thesis lines) over bars 0–2 and an end card at bar 95.
+- A generative Web Audio score that changes with each era (square-wave arcade → FM 16-bit → rave → EDM plucks → everything
+  at once), with a soft limiter. It mutes itself once a real Suno track exists at `public/song.mp3`.
+- Phone support: rotate card in portrait, safe-area insets, touch-zone hints, smaller control bar, PWA manifest + icons
+  (Add to Home Screen works), Open Graph preview image, graphics quality tier.
+- Finale: pivoted runner with cape trails, agent thruster ribbons, labels that no longer pile up, cinematic camera for
+  the bar-75 drop / bar-89 boss / outro, mood lighting that shifts with the rules, a three-layer skyline, tower crowns,
+  signs and boss word plates that the autopilot can actually reach (they were above jump height before).
+- Six verification agents ran per era; their fixes landed (era 1 pixel-exact dodge, era 2 landing oracle, era 3 word
+  pacing and banking, era 4 word distribution, phone CSS). A headless test harness (`node tools/test/run.mjs`) now drives
+  the whole three minutes in Edge with software WebGL: **69 cases pass, 0 page errors**, words are collected in every era
+  under autopilot (e2 56/77, e3 70/87, e4 54/54, e5 81 + boss). `.github/workflows/test.yml` runs it on every push.
+- `node tools/test/record.mjs` records an MP4 of the autopilot run (ffmpeg installed, user scope). See `out/run.mp4`.
+- Repo: everything is committed and pushed on `scaffold-vite` (PR #1 still open, see below).
+
+**Needs you (a few minutes)**
+1. Merge PR #1 and make the repo public + enable Pages: the permission classifier blocked me from doing both. From a
+   terminal: `gh pr merge 1 --repo trmytelabs/maximalist --merge`, then
+   `gh repo edit trmytelabs/maximalist --visibility public --accept-visibility-change-consequences`, then
+   `gh api -X POST repos/trmytelabs/maximalist/pages -f build_type=workflow`. The site then deploys to
+   https://trmytelabs.github.io/maximalist/ on every push to main. A custom domain is a CNAME record pointing at
+   `trmytelabs.github.io` plus `public/CNAME` containing the domain.
+2. Suno: make the track from `LYRICS.md`, drop it at `public/song.mp3`, then nudge `[ ]` and tap-sync `T` / save `Y`.
+3. Verse 5 still has the placeholder "Spawn a plan, spawn a form, spawn a fix on the fly" — give me three real examples.
+4. Confirm "IAN GINN" on the cards and the end-card credit "Built in a day with AI agents."
+
+---
+
 # Overnight run — status and hand-off
 
 Project: **Everything, Then More** — a 3-minute playable music video submitted to join the Deputy's Maximalists
-(Government of Alberta). Five eras of games (1978 arcade crawl → 1991 16-bit platformer → 1997 Saturn racer →
+(Government of Alberta). Five eras of games (1978 arcade crawl → 1991 16-bit platformer → 1995 Saturn racer →
 2013 mobile flappy → NOW: AI agents building the level ahead of the player), lyrics are gameplay, all on a 128 BPM
 clock (96 bars = 3:00). Owner: Ian Ginn. The user's standing instruction: *"Work all night to make this the best
 submission. I approve all actions. I want to wake up with something incredible. Don't stop, keep improving."*
