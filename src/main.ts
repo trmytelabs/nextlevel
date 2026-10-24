@@ -4,6 +4,7 @@ import {E2} from './era2';
 import {E3} from './era3';
 import {E4} from './era4';
 import {E5} from './era5';
+import {E5GL} from './era5gl';
 import {SONG,loadSong,songTime,songSeek,songPlay,songPause,nudge,tap,clearTaps,saveTiming} from './song';
 
 // ---------- transport, compositing, HUD ----------
@@ -30,8 +31,9 @@ function render(t,auto){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnab
  if(e===0){E1.draw(lo1.x,t);if(tr){E2.draw(lo2.x,t);blit(lo2);const ex=W*smooth(tr.p);ctx.save();ctx.beginPath();ctx.rect(ex,0,W-ex,H);ctx.clip();blit(lo1);ctx.restore();edge(ex);scan(0.55*(1-tr.p))}else{blit(lo1);scan(0.55)}}
  else if(e===1){E2.draw(lo2.x,t);if(tr){E3.draw(lo3.x,t);blit(lo3);const p=smooth(tr.p);ctx.save();ctx.globalAlpha=1-p;const hy=H*0.5;ctx.translate(W/2,hy);ctx.scale(1+p*0.6,1-p*0.98);ctx.translate(-W/2,-hy);blit(lo2);ctx.restore();scan(0.3*(1-p))}else{blit(lo2);scan(0.3)}}
  else if(e===2){E3.draw(lo3.x,t);if(tr){E4.draw(ctx,t);ctx.globalAlpha=Math.pow(1-tr.p,1.5);blit(lo3);ctx.globalAlpha=1;scan(0.07*(1-tr.p))}else{blit(lo3);scan(0.07)}}
- else if(e===3){E4.draw(ctx,t);if(tr){const p=smooth(tr.p);ctx.save();ctx.translate(W*(1-p),0);ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();E5.draw(ctx,t);ctx.restore();edge(W*(1-p))}}
- else{E5.draw(ctx,t);const q=clamp((t-ERAS[4].start)/(BAR*8),0,1);scan(0.22*q);glitch(t)}}
+ else if(e===3){E4.draw(ctx,t);if(tr){const p=smooth(tr.p);ctx.save();ctx.translate(W*(1-p),0);ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();drawE5(t);ctx.restore();edge(W*(1-p))}}
+ else{drawE5(t);const q=clamp((t-ERAS[4].start)/(BAR*8),0,1);scan(0.1*q);glitch(t)}}
+function drawE5(t){if(E5GL.ok){E5GL.render(t);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(E5GL.canvas(),0,0,W,H);ctx.restore();E5.overlay(ctx,t)}else E5.draw(ctx,t)}
 
 let lyricShown='',lineIdx=-1,captions=true;
 function toggleCaptions(){captions=!captions;lyricShown=''}
@@ -51,5 +53,5 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-las
   if(songT>=TOTAL){playing=false;ended=true;$('#play').textContent='REPLAY'}
   E1.update(dt,songT,inp,auto);E2.update(dt,songT,inp,auto);E3.update(dt,songT,inp,auto);E4.update(dt,songT,inp,auto);E5.update(dt,songT,inp,auto)}
  render(songT,auto);hud(songT,auto);clearEdges()}
-Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek,nudge,tap,clearTaps,saveTiming});loadSong();
+Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek,nudge,tap,clearTaps,saveTiming});loadSong();E5GL.init();
 seek(0);requestAnimationFrame(frame);

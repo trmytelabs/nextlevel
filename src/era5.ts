@@ -6,8 +6,8 @@ export const E5=(()=>{
 const s5=ERAS[4].start,T0=bar(77),CW=240,SPD=CW/BAR,GY=H*0.66,HZ=H*0.70,PX=300;
 const RULES=[[77,'RUN + JUMP','< >  SPEED     ^  JUMP'],[79,'WEAPON ONLINE','SPACE  FIRE'],[83,'DOUBLE JUMP','^  AGAIN  MID-AIR'],[86,'LOW GRAVITY','FLOAT  BETWEEN  BEATS'],[89,'BOSS COMPILED','SHOOT  THE  WORDS']];
 const DRONE=['..X..X..','.XXXXXX.','XX.XX.XX','XXXXXXXX','.X.XX.X.','X......X'];
-const PAINT=BAR*0.35,POWER=BAR*0.3;
-const wire=k=>k<=3?bar(75+k*0.5):bar(k+73.2),fill=k=>wire(k)+BAR*0.6,lit=k=>fill(k)+BAR*0.4,lightsOn=k=>lit(k)+POWER*0.5;
+const PAINT=BAR*0.3,POWER=BAR*0.2;
+const wire=k=>k<=3?bar(75.3+k*0.35):bar(k+74.45),fill=k=>wire(k)+BAR*0.35,lit=k=>fill(k)+BAR*0.2,lightsOn=k=>lit(k)+POWER*0.4;
 const camAt=t=>Math.max(0,t-T0)*SPD;
 const CYAN='#4df0ff',MAG='#ff5be0',YEL='#ffe14d',ORG='#ff9a3c',GRN='#5bff5b';
 const RGB={[CYAN]:'rgb(77,240,255)',[MAG]:'rgb(255,91,224)',[YEL]:'rgb(255,225,77)',[ORG]:'rgb(255,154,60)',[GRN]:'rgb(91,255,91)','#fff':'rgb(255,255,255)'};
@@ -37,27 +37,29 @@ function makeBoss(t){const plates=[];for(let r=0;r<8;r++)for(let c=0;c<11;c++)if
 function bossWord(w){const b=S.boss;if(!b)return;const free=b.plates.filter(p=>p.alive&&!p.word&&!b.plates.some(q=>q.word&&Math.max(Math.abs(q.r-p.r),Math.abs(q.c-p.c))<2));const pool=free.length?free:b.plates.filter(p=>p.alive&&!p.word);if(!pool.length)return;const p=pool[Math.floor(hash(S.bossWords.length*3+w.length)*pool.length)];p.word=w}
 function tick(t,replay){const cam=camAt(t);
  for(let k=Math.max(0,Math.floor(cam/CW)-1);k<=Math.floor((cam+W)/CW)+3;k++){const c=chunk(k);const id=String(k).padStart(2,'0');
-  if(t>=wire(k)&&!S.done.has('w'+k)){S.done.add('w'+k);if(!replay){job('G',{kind:'wire',k,start:wire(k),end:fill(k)},'WIRING SECTOR '+id,true);if(c.towers.length)job('G',{kind:'wiretower',k,start:wire(k),end:fill(k)},'FRAMING TOWER '+id,false)}}
-  if(t>=fill(k)&&!S.done.has('f'+k)){S.done.add('f'+k);if(!replay){job('T',{kind:'paint',k,start:fill(k),end:fill(k)+PAINT},'PAINTING SECTOR '+id,false);if(c.speakers.length)job('A',{kind:'speaker',k,start:fill(k),end:fill(k)+PAINT},'SPEAKER '+id,false);blip(330+(k%5)*40,0.06,0.06)}}
-  if(t>=lit(k)&&!S.done.has('l'+k)){S.done.add('l'+k);if(!replay&&(c.lamps.length||c.towers.length))job('L',{kind:'power',k,start:lit(k),end:lit(k)+POWER},'POWERING SECTOR '+id,false)}}
- RULES.forEach((r,i)=>{if(t>=bar(r[0])&&!S.done.has('rule'+i)){S.done.add('rule'+i);S.rules.push(i);S.ruleT=bar(r[0]);S.ruleIdx=i;if(!replay){job('R',{kind:'rule',k:i,start:bar(r[0]),end:bar(r[0])+BAR*1.5},'RULE: '+r[1],true);blip(523,0.1);blip(784,0.2,0.1)}if(i===4)makeBoss(t)}});
+  if(t>=wire(k)&&!S.done.has('w'+k)){S.done.add('w'+k);if(!replay){c.plats.forEach((pl,pi)=>job('G',{kind:'wire',k,p:pi,start:wire(k),end:fill(k)},'BUILDING PLATFORM '+id,pi===0&&k%3===0));c.towers.forEach((tw,ti)=>job('G',{kind:'wiretower',k,p:ti,start:wire(k),end:fill(k)},'RAISING TOWER '+id,false))}}
+  if(t>=fill(k)&&!S.done.has('f'+k)){S.done.add('f'+k);if(!replay){job('T',{kind:'paint',k,start:fill(k),end:fill(k)+PAINT},'TEXTURING '+id,false);if(c.speakers.length)job('A',{kind:'speaker',k,start:fill(k),end:fill(k)+PAINT},'INSTALLING AUDIO '+id,false);blip(330+(k%5)*40,0.06,0.06)}}
+  if(t>=lit(k)&&!S.done.has('l'+k)){S.done.add('l'+k);if(!replay&&(c.lamps.length||c.towers.length))job('L',{kind:'power',k,start:lit(k),end:lit(k)+POWER},'WIRING LIGHTS '+id,false)}}
+ RULES.forEach((r,i)=>{if(t>=bar(r[0])&&!S.done.has('rule'+i)){S.done.add('rule'+i);S.rules.push(i);S.ruleT=bar(r[0]);S.ruleIdx=i;if(!replay){job('R',{kind:'rule',k:i,start:bar(r[0]),end:bar(r[0])+BAR*1.5},'WRITING RULE: '+r[1],true);blip(523,0.1);blip(784,0.2,0.1)}if(i===4)makeBoss(t)}});
  if(t>=bar(88.25)&&!S.done.has('boss')){S.done.add('boss');if(!S.boss)makeBoss(t);if(!replay){for(const a of S.agents)if(a.role!=='R'){a.job={kind:'boss',start:bar(88.25),end:bar(89.2),seed:a.i};a.status='COMPILING BOSS'}log('SWARM > COMPILE BOSS.EXE',GRN)}}
  if(t>=bar(94)&&!S.done.has('retreat')){S.done.add('retreat');log('SWARM > DISENGAGE',CYAN)}}
 function init(t){S={chunks:new Map(),signs:[],bullets:[],bolts:[],parts:[],agents:[],log:[],line:[],score:0,words:0,combo:0,rules:[],ruleT:-9,ruleIdx:-1,boss:null,flash:0,flashCol:'255,91,224',done:new Set(),bossWords:[],lastFire:-9,landFx:null,shots:0,beatT:-9};
  S.player={x:PX,off:0,y:-80,vy:0,ground:false,jumps:0,stun:0,trail:[]};
- for(let i=0;i<10;i++){const role='GTGLTGATGR'[i],R=WD.ROLE[role];S.agents.push({i,role,col:R.c,rgb:R.rgb,x:-160-i*40,y:90+i*26,vx:0,tx:0,ty:0,job:null,status:'ARRIVING',beam:null,panel:null,ph:i*1.3,alpha:1,lastT:-1})}
+ for(let i=0;i<18;i++){const role='GTGLGTGAGTGLGTGRGG'[i],R=WD.ROLE[role];S.agents.push({i,role,col:R.c,rgb:R.rgb,x:-160-i*40,y:90+i*26,vx:0,tx:0,ty:0,job:null,status:'ARRIVING',beam:null,panel:null,ph:i*1.3,alpha:1,lastT:-1})}
  const cam=camAt(t);for(let k=0;k<=Math.floor((cam+W)/CW)+3;k++)chunk(k);
  const p=S.player;p.x=cam+PX;if(t>=bar(76.9)){const pl=platAt(p.x);p.y=pl?pl.y:GY;p.ground=true}
  tick(t,true);for(const a of S.agents){idle(a,cam,t);a.x=a.tx;a.y=a.ty}}
-function idle(a,cam,t){if(a.role==='R'){a.tx=S.player.x+44;a.ty=Math.min(S.player.y,GY)-112+Math.sin(t*1.5+a.ph)*6;a.status='ESCORT';return}const col=a.i%5,row=Math.floor(a.i/5);a.tx=cam+W-262+col*52-row*26+Math.sin(t*0.9+a.ph)*8;a.ty=128+row*74+Math.abs(col-2)*16+Math.sin(t*1.7+a.ph)*6;a.status='STANDBY'}
+function idle(a,cam,t){if(a.role==='R'){a.tx=S.player.x+44;a.ty=Math.min(S.player.y,GY)-112+Math.sin(t*1.5+a.ph)*6;a.status='ESCORT';return}const col=a.i%6,row=Math.floor(a.i/6);a.tx=cam+W-300+col*52-row*20+Math.sin(t*2.1+a.ph)*14;a.ty=110+row*60+Math.abs(col-2.5)*14+Math.sin(t*2.9+a.ph)*10;a.status='STANDBY'}
 function fire(t){const p=S.player;if(t-S.lastFire<0.14)return;S.lastFire=t;S.bullets.push({x:p.x+12,y:p.y-22,vx:640});S.shots++;blip(1046,0.05,0.08)}
 function burst(x,y,c,n,sp){for(let i=0;i<n;i++)S.parts.push({x,y,vx:(Math.random()-.5)*sp,vy:(Math.random()-.8)*sp,l:0.5+Math.random()*0.4,c})}
 function targetsAhead(p,cam){const out=[];const k0=Math.floor(p.x/CW);for(let k=k0;k<=k0+3;k++){const c=chunk(k);for(const d of c.drones)d.alive.forEach((al,i)=>{if(al)out.push({x:d.x+i*36+8,y:d.y+8,kind:'drone'})})}
  for(const s of S.signs)if(!s.lit&&s.x>p.x)out.push({x:s.x,y:s.y-6,kind:'sign'});
  if(S.boss&&!S.boss.dead&&S.boss.fillT<=S.t){const b=S.boss;for(const q of b.plates)if(q.alive)out.push({x:cam+b.sx+q.c*14+7,y:b.sy+q.r*14+7,kind:'plate'})}return out}
 function jobTarget(a,t,cam){const j=a.job;const pr=clamp((t-j.start)/(j.end-j.start),0,1);
- if(j.kind==='wire'||j.kind==='paint'){const c=chunk(j.k);const fx=c.x0+pr*CW;const pl=platAt(Math.min(fx,c.x0+CW-1))||{y:GY};a.tx=fx-(j.kind==='wire'?18:0);a.ty=pl.y-(j.kind==='wire'?96:120);a.beam={x:fx,y:pl.y+6};if(Math.random()<0.7)S.parts.push({x:fx,y:pl.y+Math.random()*14,vx:(Math.random()-.5)*50,vy:-40-Math.random()*90,l:0.35,c:a.col})}
- else if(j.kind==='wiretower'){const c=chunk(j.k),tw=c.towers[0];const ty=HZ-tw.h*pr;a.tx=tw.x+tw.w+26;a.ty=ty-30;a.beam={x:tw.x+tw.w/2,y:ty};if(Math.random()<0.5)S.parts.push({x:tw.x+Math.random()*tw.w,y:ty,vx:(Math.random()-.5)*40,vy:-30-Math.random()*60,l:0.3,c:a.col})}
+ if(j.kind==='wire'){const c=chunk(j.k);const pl=c.plats[j.p??0]||c.plats[0]||{x0:c.x0,x1:c.x0+CW,y:GY};const fx=pl.x0+pr*(pl.x1-pl.x0);a.tx=fx-18;a.ty=pl.y-96;a.beam={x:fx,y:pl.y+6};if(Math.random()<0.7)S.parts.push({x:fx,y:pl.y+Math.random()*14,vx:(Math.random()-.5)*50,vy:-40-Math.random()*90,l:0.35,c:a.col})}
+ else if(j.kind==='paint'){const c=chunk(j.k);const fx=c.x0+pr*CW;const pl=platAt(Math.min(fx,c.x0+CW-1))||{y:GY};a.tx=fx;a.ty=pl.y-120;a.beam={x:fx,y:pl.y+6};if(Math.random()<0.7)S.parts.push({x:fx,y:pl.y+Math.random()*14,vx:(Math.random()-.5)*50,vy:-40-Math.random()*90,l:0.35,c:a.col})}
+ else if(j.kind==='inspect'){a.tx=j.x+22;a.ty=j.y-54;a.beam={x:j.x,y:j.y}}
+ else if(j.kind==='wiretower'){const c=chunk(j.k),tw=c.towers[j.p??0]||c.towers[0];const ty=HZ-tw.h*pr;a.tx=tw.x+tw.w+26;a.ty=ty-30;a.beam={x:tw.x+tw.w/2,y:ty};if(Math.random()<0.5)S.parts.push({x:tw.x+Math.random()*tw.w,y:ty,vx:(Math.random()-.5)*40,vy:-30-Math.random()*60,l:0.3,c:a.col})}
  else if(j.kind==='power'){const c=chunk(j.k);const l=c.lamps[0],tw=c.towers[0];const x=l?l.x:tw.x+tw.w/2,y=l?GY-70:HZ-tw.h;a.tx=x+30;a.ty=y-60;a.beam={x,y}}
  else if(j.kind==='speaker'){const c=chunk(j.k),s=c.speakers[0];a.tx=s.x+15;a.ty=GY-110;a.beam={x:s.x+15,y:GY-21}}
  else if(j.kind==='rule'){a.tx=S.player.x+40;a.ty=Math.min(S.player.y,GY)-110;a.beam=pr<0.6?{x:S.player.x,y:S.player.y-20}:null}
@@ -99,10 +101,11 @@ function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;const cam=camAt(t);tic
  for(const a of S.agents){if(a.job&&t>=a.job.end)a.job=null;
   if(t>=bar(94)){a.tx=cam-300-a.i*40;a.ty=120+a.i*20;a.beam=null;a.alpha=Math.max(0,1-(t-bar(94))/(BAR*0.8));a.status='RETURNING'}
   else if(a.job)jobTarget(a,t,cam);else{a.beam=null;idle(a,cam,t)}
-  const ox=a.x,k=1-Math.pow(0.0005,dt);a.x+=(a.tx-a.x)*k;a.y+=(a.ty-a.y)*k;a.vx=lerp(a.vx,(a.x-ox)/Math.max(dt,0.001),0.2)}
+  const ox=a.x,k=1-Math.pow(0.00005,dt);a.x+=(a.tx-a.x)*k;a.y+=(a.ty-a.y)*k;a.vx=lerp(a.vx,(a.x-ox)/Math.max(dt,0.001),0.2)}
  if(S.boss){const b=S.boss;b.sx=b.x+Math.sin(t*0.7)*26;b.sy=b.y+Math.sin(t*2)*16;if(!b.dead&&(t>=bar(94)||b.plates.every(q=>!q.alive))){b.dead=true;b.deadT=t;for(const q of b.plates)if(q.alive)burst(cam+b.sx+q.c*14+7,b.sy+q.r*14+7,GRN,2,200)}}}
 function litSign(s,t){s.lit=t;S.words++;S.score+=50;S.combo++;S.line.push(s.text);burst(s.x,s.y-6,YEL,12,160);blip(1760,0.1,0.1)}
 function onBeat(b,t,auto){if(t<s5)return;S.beatT=t;const cam=camAt(t),p=S.player,q=b%4;
+ if(t>=bar(75.5)&&t<bar(94)){const idle=S.agents.filter(a=>!a.job&&a.role!=='R');for(let i=0;i<2&&idle.length;i++){const a=idle.splice(Math.floor(hash(b*7+i)*idle.length),1)[0];const k0=Math.floor(cam/CW);const ks=[];for(let k=k0;k<=k0+3;k++)if(t>=fill(k)+PAINT)ks.push(k);if(!ks.length)break;const c=chunk(ks[Math.floor(hash(b*3+i)*ks.length)]);const pcs=[...c.plats.map(pl=>({x:(pl.x0+pl.x1)/2,y:pl.y})),...c.towers.map(tw=>({x:tw.x+tw.w/2,y:HZ-tw.h})),...c.lamps.map(l=>({x:l.x,y:GY-70}))];if(!pcs.length)continue;const pc=pcs[Math.floor(hash(b*11+i)*pcs.length)];a.job={kind:'inspect',start:t,end:t+BAR*0.25,x:pc.x,y:pc.y};a.status=['OPTIMIZING','LOD PASS','LIGHT BAKE','COLLISION FIX'][Math.floor(hash(b*5+i)*4)]}}
  if(q===0&&t>=bar(79)&&t<bar(94)){const k0=Math.floor(cam/CW);for(let k=k0;k<=k0+4;k++){for(const d of chunk(k).drones){const idx=d.alive.findIndex(a=>a);if(idx<0)continue;const sx=d.x+idx*36+8,sy=d.y+8;if(sx-cam<W-40&&sx>p.x-40){const dx=p.x-sx,dy=p.y-20-sy,L=Math.hypot(dx,dy)||1;S.bolts.push({x:sx,y:sy,vx:dx/L*190,vy:dy/L*190})}}}}
  if(S.boss&&!S.boss.dead&&(q===0||q===2)&&t>=bar(89.5)&&t<bar(94)){const bo=S.boss,sx=cam+bo.sx+77,sy=bo.sy+112;for(let i=-1;i<=1;i++){const dx=p.x-sx,dy=p.y-20-sy,ang=Math.atan2(dy,dx)+i*0.22;S.bolts.push({x:sx,y:sy,vx:Math.cos(ang)*230,vy:Math.sin(ang)*230})}}}
 function on8th(n,t,auto){if(t<bar(79)||t>=bar(94)||!auto||!S.player)return;const p=S.player,cam=camAt(t);const tg=targetsAhead(p,cam);if(tg.some(q=>q.x>p.x+20&&q.x-p.x<520&&Math.abs(q.y-(p.y-22))<(q.kind==='plate'?8:22)))S.autoFire=true}
@@ -143,7 +146,8 @@ function draw(ctx,t){const cam=camAt(t),pulse=1-((t/BEAT)%1),p=S.player;
  // film grain
  if(!grainPat)grainPat=ctx.createPattern(grainC.c,'repeat');{const ox=Math.floor(hash(Math.floor(t*60))*256),oy=Math.floor(hash(Math.floor(t*60)+7)*256);ctx.save();ctx.globalCompositeOperation='overlay';ctx.globalAlpha=0.16;ctx.translate(-ox,-oy);ctx.fillStyle=grainPat;ctx.fillRect(ox,oy,W,H);ctx.restore()}
  const vg=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.9);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.6)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
- if(S.flash>0){ctx.fillStyle=`rgba(${S.flashCol},${S.flash*0.5})`;ctx.fillRect(0,0,W,H)}
+ overlay(ctx,t)}
+function overlay(ctx,t){const pulse=1-((t/BEAT)%1);if(S.flash>0){ctx.fillStyle=`rgba(${S.flashCol},${S.flash*0.5})`;ctx.fillRect(0,0,W,H)}
  drawHUD(ctx,t,pulse);
  if(t>=bar(94.5)){ctx.fillStyle=`rgba(0,0,0,${smooth((t-bar(94.5))/(BAR*0.5))})`;ctx.fillRect(0,0,W,H)}
  if(t>=bar(94.75)){const a=Math.min(1,(t-bar(94.75))/0.5)*(0.8+0.2*pulse);glow(ctx,W/2,H/2,40,'rgb(91,255,91)',a*0.5);ctx.fillStyle=`rgba(91,255,91,${a})`;ctx.fillRect(W/2-3,H/2-3,6,6)}
@@ -269,10 +273,12 @@ function drawAgents(ctx,cam,t,pulse){for(const a of S.agents){if(a.alpha<=0)cont
 function drawHUD(ctx,t,pulse){if(t<s5||t>=bar(94.5))return;const a=clamp((t-s5)/0.6,0,1);ctx.save();ctx.globalAlpha=a;
  ctx.fillStyle='rgba(6,8,20,.7)';rrect(ctx,16,64,204,64,4);ctx.fill();neonLine(ctx,16,64,220,64,CYAN,1,0.8);ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='#fff';ctx.fillText('SCORE '+String(S.score).padStart(6,'0'),26,84);ctx.fillStyle=YEL;ctx.fillText('WORDS '+S.words,26,100);ctx.fillStyle=S.combo>4?GRN:'#9aa';ctx.fillText('COMBO x'+S.combo,26,116);
  // build front meter
- const cam=camAt(t),front=Math.floor((cam+W)/CW)+2;ctx.font="6px 'Press Start 2P',monospace";ctx.fillStyle='#8890b0';ctx.fillText('BUILD FRONT  SECTOR '+String(Math.max(0,front)).padStart(2,'0')+'   '+S.agents.filter(x=>x.job).length+' AGENTS WORKING',26,140);
+ const cam=camAt(t);let frontX=null;for(let k=Math.floor(cam/CW);k<=Math.floor((cam+W)/CW)+3;k++){if(t<fill(k)+PAINT){const c=chunk(k);frontX=c.x0+(t<fill(k)?0:clamp((t-fill(k))/PAINT,0,1))*CW;break}}const ahead=frontX!=null?Math.max(0,(frontX-S.player.x)/SPD):0;
+ ctx.font="6px 'Press Start 2P',monospace";ctx.fillStyle='#8890b0';ctx.fillText(S.agents.filter(x=>x.job).length+' AGENTS WORKING   '+S.done.size+' BUILD STEPS',26,140);
+ if(t>=bar(76)&&t<bar(94)){ctx.textAlign='center';ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle=`rgba(77,240,255,${0.75+0.25*pulse})`;ctx.fillText('AI SWARM  ·  '+S.agents.length+' AGENTS  ·  BUILDING THE LEVEL '+ahead.toFixed(1)+'s AHEAD OF YOU',W/2,52);ctx.textAlign='left'}
  const rx=W-236,ry=H-104-S.rules.length*14;ctx.fillStyle='rgba(6,8,20,.7)';rrect(ctx,rx,ry,220,26+S.rules.length*14,4);ctx.fill();neonLine(ctx,rx,ry,rx+220,ry,GRN,1,0.8);ctx.fillStyle='#9aa';ctx.font="7px 'Press Start 2P',monospace";ctx.fillText('RULES  (written by agents)',rx+10,ry+16);S.rules.forEach((ri,i)=>{const fresh=ri===S.ruleIdx&&t-S.ruleT<BAR*2;ctx.fillStyle=fresh?GRN:'#dfe';ctx.fillText((fresh?'> ':'  ')+RULES[ri][1],rx+10,ry+32+i*14)});
  ctx.font="7px 'Press Start 2P',monospace";S.log.forEach((l,i)=>{ctx.globalAlpha=a*(1-i*0.18);ctx.fillStyle=l.col;ctx.fillText(l.text,16,H-30-i*12)});ctx.globalAlpha=a;
  if(S.ruleIdx>=0&&t-S.ruleT<BAR*1.5){const q=t-S.ruleT,s=q<0.3?smooth(q/0.3):1,fo=q>BAR*1.2?1-(q-BAR*1.2)/(BAR*0.3):1;ctx.globalAlpha=a*s*fo;const r=RULES[S.ruleIdx];ctx.textAlign='center';ctx.font="16px 'Press Start 2P',monospace";ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(W/2-240,118,480,56);neonLine(ctx,W/2-240,118,W/2+240,118,GRN,1.5,1);ctx.fillStyle=GRN;ctx.fillText('NEW RULE: '+r[1],W/2,144);ctx.font="8px 'Press Start 2P',monospace";ctx.fillStyle='#fff';ctx.fillText(r[2],W/2,164);ctx.textAlign='left'}
  if(S.line.length){ctx.globalAlpha=a;ctx.textAlign='center';ctx.font="8px 'Press Start 2P',monospace";ctx.fillStyle=YEL;ctx.fillText(S.line.slice(-10).join(' '),W/2,H*0.86);ctx.textAlign='left'}
  ctx.restore()}
-return{init,update,draw,onBeat,on8th,onLine,get S(){return S}}})();
+return{init,update,draw,overlay,onBeat,on8th,onLine,get S(){return S},K:{CW,GY,HZ,PX,SPD,PAINT,RULES,camAt,wire,fill,lit,lightsOn,chunk:(k)=>chunk(k)}}})();

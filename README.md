@@ -2,7 +2,7 @@
 
 A three-minute music video that is also a game. Five eras of play, one continuous take, locked to a 128 BPM clock. It starts as Space Invaders and ends as a swarm of AI agents building a neon future city ahead of you while you play it. The lyrics are part of the gameplay in every era.
 
-Prototype for the Maximalist team application. Canvas 2D and Web Audio, no runtime dependencies beyond one Google font. Built with Vite and TypeScript.
+Prototype for the Maximalist team application. Canvas 2D for the first four eras, Three.js (WebGL) for the finale, Web Audio for sound. Built with Vite and TypeScript.
 
 ## Run it
 
@@ -58,7 +58,8 @@ Era five is scripted and deterministic. Nothing is generated live, so every play
 - `era1.ts`, `era2.ts`, `era3.ts`: the arcade, platformer, and racer modules. The racer includes a small flat-shaded polygon renderer and the car, tree, and gate models.
 - `era4.ts`: the mobile era, a phone on a desk running a flapping game, with the ghost players that become the agents.
 - `world.ts`: shared agent roles, code snippets and colour helpers used by era 5 (the old isometric sandbox lives here too, unused).
-- `era5.ts`: the agents era. `RULES` is the rule schedule, `genChunk` decides what each sector contains, `wire`, `fill`, and `lit` set how far ahead the agents build, and `agentModel` is the 3D drone.
+- `era5gl.ts`: the WebGL renderer for era 5 (Three.js): lit geometry, fog, bloom, 3D agent drones, player and boss. It reads the era 5 simulation state each frame; if WebGL is unavailable the 2D renderer in `era5.ts` is used instead.
+- `era5.ts`: the agents era simulation and 2D fallback renderer. `RULES` is the rule schedule, `genChunk` decides what each sector contains, `wire`, `fill`, and `lit` set how far ahead the agents build, and `agentModel` is the 3D drone.
 - `main.ts`: transport, compositing, transitions, bloom, and HUD.
 
 Each era exposes the same `init / update / draw / onBeat / on8th / onLine` surface, and `seek(t)` rebuilds every era's state from scratch at any time, which is what the scrubber uses.
