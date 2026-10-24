@@ -13,6 +13,10 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      # Git bash on Windows rewrites arguments like /maximalist/ into C:/Program Files/Git/maximalist/; turn that off
+      MSYS_NO_PATHCONV: '1'
+      MSYS2_ARG_CONV_EXCL: '*'
     steps:
       - uses: actions/checkout@v4
       - name: Put Git bash on the PATH (self-hosted Windows runner)
