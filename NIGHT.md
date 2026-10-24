@@ -17,7 +17,9 @@ switches to the light graphics tier; phones default to it. Sound is off until yo
   pacing and banking, era 4 word distribution, phone CSS). A headless test harness (`node tools/test/run.mjs`) now drives
   the whole three minutes in Edge with software WebGL: **69 cases pass, 0 page errors**, words are collected in every era
   under autopilot (e2 56/77, e3 70/87, e4 54/54, e5 81 + boss). `.github/workflows/test.yml` runs it on every push.
-- `node tools/test/record.mjs` records an MP4 of the autopilot run (ffmpeg installed, user scope). See `out/run.mp4`.
+- `node tools/test/record.mjs` records an MP4 of the autopilot run (ffmpeg installed, user scope). Recorded: `out/run.mp4`
+  (1280 wide, 138 MB) and `out/run-960.mp4` (36 MB, sent to you in chat). Mux the song later with
+  `ffmpeg -i out/run.mp4 -i public/song.mp3 -c:v copy -c:a aac -shortest out/run-with-song.mp4`.
 - Repo: everything is committed and pushed on `scaffold-vite` (PR #1 still open, see below).
 
 **Needs you (a few minutes)**
