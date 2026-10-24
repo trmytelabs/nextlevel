@@ -1,3 +1,9 @@
-Thumbs.db
-.DS_Store
 *.log
+.DS_Store
+Thumbs.db
+dist
+node_modules
+tools/test/shots/
+tools/test/report*.json
+tools/test/full.log
+out/

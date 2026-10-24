@@ -1,0 +1,27 @@
+"""Prepare dist/ for publishing as a claude.ai artifact.
+1) run `npx vite build --base ./` first (or pass --build to run it here)
+2) strips the html skeleton from dist/index.html -> dist/artifact.html (the artifact host wraps the page itself)
+3) base64-encodes dist/models/*.glb -> dist/models/*.glb.txt (artifacts cannot serve .glb) and prints the files map
+Usage: python tools/artifact_prep.py [--build]
+"""
+import os,re,sys,base64,json,subprocess
+ROOT=os.path.abspath(os.path.join(os.path.dirname(__file__),'..'));DIST=os.path.join(ROOT,'dist')
+if '--build' in sys.argv:
+    subprocess.check_call('npx vite build --base ./',shell=True,cwd=ROOT)
+html=open(os.path.join(DIST,'index.html'),encoding='utf-8').read()
+body=re.sub(r'(?is)<!doctype[^>]*>|</?html[^>]*>|</?head[^>]*>|</?body[^>]*>|<meta[^>]*>','',html)
+body=body.replace(':root{',':root{color-scheme:dark;',1)
+open(os.path.join(DIST,'artifact.html'),'w',encoding='utf-8').write(body.strip()+'\n')
+files={}
+assets=os.path.join(DIST,'assets')
+for f in sorted(os.listdir(assets)):files['assets/'+f]='assets/'+f
+mdir=os.path.join(DIST,'models')
+if os.path.isdir(mdir):
+    for f in sorted(os.listdir(mdir)):
+        if f.endswith('.glb'):
+            b=open(os.path.join(mdir,f),'rb').read();open(os.path.join(mdir,f+'.txt'),'w').write(base64.b64encode(b).decode())
+            files['models/'+f+'.txt']={'from':'models/'+f+'.txt','contentType':'text/plain'}
+for f in ['manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','og.png','favicon-32.png']:
+    if os.path.exists(os.path.join(DIST,f)):files[f]=f
+print('artifact.html written;',len(files),'files. Publish with root=dist, file_path=dist/artifact.html and files=')
+print(json.dumps(files,indent=0))
