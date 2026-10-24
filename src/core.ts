@@ -77,6 +77,11 @@ addEventListener('keydown',e=>{const k=e.key;if(k==='p'||k==='P'||k==='Escape'){
  if(k===' '){fireEdge=true;e.preventDefault()}if(k==='ArrowUp'||k==='w'||k==='W'){jumpEdge=true;mv.y-=1}if(k==='ArrowDown'||k==='s'||k==='S')mv.y+=1;if(k==='ArrowLeft'||k==='a'||k==='A')mv.x-=1;if(k==='ArrowRight'||k==='d'||k==='D')mv.x+=1;
  if(k.startsWith('Arrow')||k===' '||'wasdWASD'.includes(k)){lastInputReal=performance.now();if(k.startsWith('Arrow'))e.preventDefault()}});
 addEventListener('keyup',e=>{keys[e.key]=false});
+// touch: hold the left or right edge to move, tap the upper middle to jump, tap the lower middle to fire
+const tz=new Map<number,string>();cv.style.touchAction='none';
+cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;const r=cv.getBoundingClientRect();const fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;lastInputReal=performance.now();let z='';if(fx<0.28){z='L';keys.ArrowLeft=true;mv.x-=1}else if(fx>0.72){z='R';keys.ArrowRight=true;mv.x+=1}else if(fy<0.5){jumpEdge=true;mv.y-=1}else{fireEdge=true}tz.set(e.pointerId,z);e.preventDefault()},{passive:false});
+const tup=e=>{const z=tz.get(e.pointerId);if(z==='L')keys.ArrowLeft=false;if(z==='R')keys.ArrowRight=false;tz.delete(e.pointerId)};cv.addEventListener('pointerup',tup);cv.addEventListener('pointercancel',tup);cv.addEventListener('pointerleave',tup);
+if(matchMedia('(pointer: coarse)').matches){const h=$('#help');if(h)h.textContent='HOLD LEFT / RIGHT EDGE TO MOVE · TAP UPPER MIDDLE TO JUMP · TAP LOWER MIDDLE TO FIRE'}
 export function readInput(){return{left:!!(keys.ArrowLeft||keys.a||keys.A),right:!!(keys.ArrowRight||keys.d||keys.D),up:!!(keys.ArrowUp||keys.w||keys.W),down:!!(keys.ArrowDown||keys.s||keys.S),fire:fireEdge,jump:jumpEdge||fireEdge,upEdge:jumpEdge,mv:{x:mv.x,y:mv.y}}}
 
 // ---------- audio (optional click track) ----------
