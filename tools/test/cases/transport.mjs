@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 const BAR=60/128*4;
 // LYRICS from src/core.ts (the page does not expose them). [bar, "line"] per row.
-const LYRICS=fs.readFileSync(new URL('../../../src/core.ts',import.meta.url),'utf8').split('\n').map(l=>l.match(/^\[([\d.]+),"(.*)"\],?\]?;?$/)).filter(Boolean).map(m=>[+m[1],m[2]]);
+const LYRICS=fs.readFileSync(new URL('../../../src/core.ts',import.meta.url),'utf8').replace(/\r/g,'').split('\n').map(l=>l.match(/^\[([\d.]+),"(.*)"\],?\]?;?$/)).filter(Boolean).map(m=>[+m[1],m[2]]);
 // seek a little before `t` and step onto it so the HUD (which only updates in step/frame) reflects exactly t
 const at=(page,t)=>page.evaluate(t=>{ETM.seek(Math.max(0,t-0.5));ETM.step(Math.min(t,0.5)+0.05);return ETM.now()},t);
 const lyric=page=>page.$eval('#lyric',e=>[e.textContent,e.style.opacity]);
