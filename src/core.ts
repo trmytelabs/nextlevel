@@ -18,7 +18,7 @@ export let lastTouch=-1e9;
 export const ERAS=[
  {name:'1978 · ARCADE',start:bar(0)},
  {name:'1991 · 16-BIT',start:bar(19)},
- {name:'1997 · SATURN 3D',start:bar(37)},
+ {name:'1995 · SATURN 3D',start:bar(37)},
  {name:'2013 · MOBILE',start:bar(56)},
  {name:'NOW · AGENTS',start:bar(75)}];
 export const TRANS=BAR*1.5;

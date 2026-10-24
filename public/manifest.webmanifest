@@ -1,0 +1,15 @@
+{
+  "name": "Everything, Then More",
+  "short_name": "Maximalist",
+  "description": "A three-minute playable music video: five eras of games, one desk at the GoA. Ian Ginn for the Deputy's Maximalists.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#07070b",
+  "theme_color": "#07070b",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

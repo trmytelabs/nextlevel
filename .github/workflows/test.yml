@@ -1,0 +1,36 @@
+name: Headless verification
+
+on:
+  push:
+    branches: [main, scaffold-vite]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit -p .
+      - run: npx vite build --base /maximalist/
+      - name: Serve the build
+        run: (npx vite preview --port 5174 --strictPort &) && npx wait-on http://localhost:5174/maximalist/ -t 60000
+      - name: Controls + phone layout
+        env: { EDGE: /usr/bin/google-chrome }
+        run: node tools/test/run.mjs --controls --from 0 --to 4 --tag ctl && node tools/test/run.mjs --mobile --from 0 --to 4 --tag mob
+      - name: Full three-minute autopilot run
+        env: { EDGE: /usr/bin/google-chrome }
+        run: node tools/test/run.mjs --tag full --chunk 2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification
+          path: |
+            tools/test/report*.json
+            tools/test/shots/

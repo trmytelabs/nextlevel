@@ -2,7 +2,7 @@
 
 A three-minute music video that is also a game. Five eras of play, one continuous take, locked to a 128 BPM clock. It starts as Space Invaders and ends as a swarm of AI agents building a neon future city ahead of you while you play it. The lyrics are part of the gameplay in every era.
 
-Prototype for the Maximalist team application. Canvas 2D for the first four eras, Three.js (WebGL) for the finale, Web Audio for sound. Built with Vite and TypeScript.
+Ian Ginn's submission to join the Deputy's Maximalists (Government of Alberta): five eras of games for how far the tools came, and how far one desk came with them. Canvas 2D for the first four eras, Three.js (WebGL) for the finale, Web Audio for sound. Built with Vite and TypeScript.
 
 ## Run it
 
@@ -32,11 +32,14 @@ GitHub Pages is only available on private repos with a paid plan; on the free pl
 | M | Sound (synthesized click track and SFX) |
 | Q | Autopilot mode: when idle / on / off |
 | L | Lyric captions on / off |
+| G | Graphics tier high / low (reloads at the same bar; phones default to low) |
 | 1 to 5 | Jump to an era |
 | [ / ] | Nudge the song offset by 50 ms (when a track is loaded) |
 | T / U / Y | Tap a lyric line start, clear taps, download `timing.json` |
 
 Autopilot plays the whole piece by itself. Press any movement key to take over, and it returns after two idle seconds.
+
+**On a phone** (landscape): hold the left or right edge of the screen to move, tap the upper middle to jump, tap the lower middle to fire. A rotate card appears in portrait. The page is installable (Add to Home Screen) via `public/manifest.webmanifest`.
 
 ## The five eras
 
@@ -44,7 +47,7 @@ Autopilot plays the whole piece by itself. Press any movement key to take over, 
 |---|---|---|---|
 | 0 to 19 | 1978 arcade | Space Invaders on a phosphor screen | Words descend like a crawl, you shoot them |
 | 19 to 37 | 1991 16-bit | Autorun console platformer on a CRT, stomp walkers, dodge flyers | Word pickups along the platforms |
-| 37 to 56 | 1997 Saturn 3D | Arcade speedway race in Three.js, overtake traffic | Words float above the cars you pass |
+| 37 to 56 | 1995 Saturn 3D | Arcade speedway race in Three.js, overtake traffic | Words float above the cars you pass |
 | 56 to 75 | 2013 mobile | One-thumb flapping game on a phone, ghosts take over in the bridge | Words on signs in the pipe gaps |
 | 75 to 96 | Now | Agents build a future city left to right while you run it | Neon signs to light, then words on the finale boss |
 
@@ -66,6 +69,10 @@ Era five is scripted and deterministic. Nothing is generated live, so every play
 Each era exposes the same `init / update / draw / onBeat / on8th / onLine` surface, and `seek(t)` rebuilds every era's state from scratch at any time, which is what the scrubber uses.
 
 TypeScript is deliberately loose (`strict` off) so the port from the single-file prototype stayed mechanical.
+
+## Verify
+
+`node tools/test/run.mjs` drives the deterministic simulation through `window.ETM` in headless Edge/Chrome (software WebGL) and checks invariants (no page errors, no NaN state, era boundaries, the run reaching 3:00) plus the case files in `tools/test/cases/`. Flags: `--era N`, `--from/--to` (bars), `--controls` (keyboard + touch mapping), `--mobile` (iPhone landscape layout + portrait rotate card), `--q low`. Screenshots land in `tools/test/shots/`, the report in `tools/test/report*.json`. The spec is `tools/test/CASES.md`. `.github/workflows/test.yml` runs it on every push.
 
 ## Status
 
