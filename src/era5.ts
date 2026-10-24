@@ -50,7 +50,7 @@ function init(t){S={chunks:new Map(),signs:[],bullets:[],bolts:[],parts:[],agent
  const p=S.player;p.x=cam+PX;if(t>=bar(76.9)){const pl=platAt(p.x);p.y=pl?pl.y:GY;p.ground=true}
  tick(t,true);for(const a of S.agents){idle(a,cam,t);a.x=a.tx;a.y=a.ty}}
 function idle(a,cam,t){if(a.role==='R'){a.tx=S.player.x+44;a.ty=Math.min(S.player.y,GY)-112+Math.sin(t*1.5+a.ph)*6;a.status='ESCORT';return}const col=a.i%6,row=Math.floor(a.i/6);a.tx=cam+W-300+col*52-row*20+Math.sin(t*2.1+a.ph)*14;a.ty=110+row*60+Math.abs(col-2.5)*14+Math.sin(t*2.9+a.ph)*10;a.status='STANDBY'}
-function fire(t){const p=S.player;if(t-S.lastFire<0.14)return;S.lastFire=t;S.bullets.push({x:p.x+12,y:p.y-22,vx:640});S.shots++;blip(1046,0.05,0.08)}
+function fire(t){const p=S.player;if(t-S.lastFire<(S.boss&&!S.boss.dead?0.1:0.14))return;S.lastFire=t;S.bullets.push({x:p.x+12,y:p.y-22,vx:640});S.shots++;blip(1046,0.05,0.08)}
 function burst(x,y,c,n,sp){for(let i=0;i<n;i++)S.parts.push({x,y,vx:(Math.random()-.5)*sp,vy:(Math.random()-.8)*sp,l:0.5+Math.random()*0.4,c})}
 function targetsAhead(p,cam){const out=[];const k0=Math.floor(p.x/CW);for(let k=k0;k<=k0+3;k++){const c=chunk(k);for(const d of c.drones)d.alive.forEach((al,i)=>{if(al)out.push({x:d.x+i*36+8,y:d.y+8,kind:'drone'})})}
  for(const s of S.signs)if(!s.lit&&s.x>p.x)out.push({x:s.x,y:s.y-6,kind:'sign'});
@@ -77,7 +77,7 @@ function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;const cam=camAt(t);tic
     const c=chunk(Math.floor(p.x/CW));if(c.gate&&!c.gate.hit){const d=c.gate.x-p.x;if(c.gate.low&&d>0&&d<70)jump=true;if(!c.gate.low&&d>-30&&d<90)jump=false}
     else if(tg.some(q=>q.x-p.x>40&&q.x-p.x<260&&q.y<p.y-40&&q.y>p.y-150)||S.signs.some(sg=>!sg.lit&&sg.x-p.x>20&&sg.x-p.x<90&&sg.y<p.y-50))jump=true;
     else if(S.boss&&!S.boss.dead&&t>=bar(89.2)&&(t%BEAT)<dt*2&&S.boss.plates.some(q=>q.alive&&q.r<=6&&(q.word||!S.boss.plates.some(z=>z.alive&&z.word))))jump=true}
-   else if(dbl&&p.jumps===1&&p.vy>60&&tg.some(q=>q.x-p.x>0&&q.x-p.x<300&&q.y<p.y-(q.kind==='plate'?60:120)))jump=true}
+   else if(dbl&&p.jumps===1&&p.vy>60&&tg.some(q=>q.x-p.x>0&&q.x-p.x<(q.kind==='plate'?520:300)&&q.y<p.y-(q.kind==='plate'?60:120)))jump=true}
   else jump=inp.upEdge;
   if(jump){if(p.ground){p.vy=jv;p.ground=false;p.jumps=1;blip(660,0.07,0.07)}else if(dbl&&p.jumps===1){p.vy=jv*0.9;p.jumps=2;burst(p.x,p.y,CYAN,10,160);blip(880,0.07,0.07)}}
   if(!p.ground){const oy=p.y;p.vy+=g*dt;p.y+=p.vy*dt;if(p.vy>0)for(const q of allPlats(p.x)){if(p.x>=q.x0-4&&p.x<=q.x1+4&&oy<=q.y+0.01&&p.y>=q.y){p.y=q.y;p.vy=0;p.ground=true;p.jumps=0;S.landFx={x:p.x,y:p.y,t};hat(false);break}}}
@@ -85,7 +85,7 @@ function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;const cam=camAt(t);tic
   const gc=chunk(Math.floor(p.x/CW));if(gc.gate){const gt=gc.gate;if(Math.abs(p.x-gt.x)<10&&!gt.hit&&!gt.passed){const blocked=gt.low?p.y>GY-46:(p.y-40)<GY-92;if(blocked){gt.hit=true;p.stun=0.5;S.score=Math.max(0,S.score-30);S.combo=0;S.flash=0.3;S.flashCol='255,60,80';blip(110,0.2,0.15)}else{gt.passed=true;S.score+=40;S.combo++;blip(1320,0.08,0.08)}}}
   for(const o of gc.orbs)if(!o.got&&Math.abs(o.x-p.x)<16&&Math.abs(o.y-(p.y-20))<24){o.got=t;S.score+=10;S.combo++;blip([523,659,784,1046][Math.floor(o.x/60)%4],0.1,0.08)}
   for(const s of S.signs)if(!s.lit&&Math.abs(s.x-p.x)<34&&Math.abs(s.y-(p.y-26))<46)litSign(s,t);
-  const tgA=auto&&canFire&&t-S.lastFire>=0.14?targetsAhead(p,cam):[],hasWord=tgA.some(q=>q.word);const aligned=tgA.some(q=>q.x>p.x+20&&q.x-p.x<520&&(!hasWord||q.kind!=='plate'||q.word)&&Math.abs(q.y-(p.y-22))<(q.kind==='plate'?(q.word?12:9):22));const wantFire=auto?((S.autoFire||aligned)&&canFire):(inp.fire&&canFire);if(wantFire)fire(t);S.autoFire=false;
+  const tgA=auto&&canFire&&t-S.lastFire>=0.1?targetsAhead(p,cam):[],hasWord=tgA.some(q=>q.word);const aligned=tgA.some(q=>q.x>p.x+20&&q.x-p.x<520&&(!hasWord||q.kind!=='plate'||q.word)&&Math.abs(q.y-(p.y-22))<(q.kind==='plate'?(q.word?12:9):22));const wantFire=auto?((S.autoFire||aligned)&&canFire):(inp.fire&&canFire);if(wantFire)fire(t);S.autoFire=false;
   p.stun=Math.max(0,p.stun-dt);p.trail.push({x:p.x,y:p.y-18,l:0.35});if(p.trail.length>18)p.trail.shift()}
  else if(t<bar(76.5)){p.x=cam+PX;p.y=-80}
  for(const q of p.trail)q.l-=dt;p.trail=p.trail.filter(q=>q.l>0);
