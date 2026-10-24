@@ -36,6 +36,8 @@ switches to the light graphics tier; phones default to it. Sound is off until yo
   `ffmpeg -i out/run.mp4 -i public/song.mp3 -c:v copy -c:a aac -shortest out/run-with-song.mp4`.
 - Repo: everything is committed and pushed on `scaffold-vite` (PR #1 still open, see below).
 
+**Latest verification (after the racer/finale rewrite):** full run 60 cases pass, 0 errors; phone layout 16/16; era 5 suite 10/10. New MP4 recorded (`out/run.mp4`, `out/run-phone.mp4`).
+
 **Needs you (a few minutes)**
 1. Merge PR #1 and make the repo public + enable Pages: the permission classifier blocked me from doing both. From a
    terminal: `gh pr merge 1 --repo trmytelabs/maximalist --merge`, then
