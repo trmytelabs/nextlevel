@@ -4,6 +4,15 @@
 sideways, hold the left/right edge to move, tap the top half to jump, tap the bottom half to fire. The FX button (or G)
 switches to the light graphics tier; phones default to it. Sound is off until you press SOUND (phones need a tap first).
 
+**Agent round (13 agents, cut off by the usage limit; what landed)**
+- Vite chunk split: app 114 KB + Three.js 669 KB (cached separately). Era-module code review in `REVIEW-ERAS.md`; its
+  three high-severity findings are fixed (seeded starfield in era 1, finale seek now replays the live cut path, racer start
+  aligned with its update window, no point light per block). `patchnotes.ca` landing page in `site/` with
+  `deploy/landing-deploy.md`. Visual-regression tooling in `tools/test/visual/` (pixelmatch; see its README).
+- Blender car script rewritten by the asset agent; all 13 cars regenerated (`tools/blender/previews/`). Artifact v13.
+- Not finished (agents died early): play-test fixes for eras 1-5, the transport code review, README polish, the Suno brief
+  rewrite and SUBMISSION.md, PERF.md. Re-run those as needed.
+
 **Round after you played it (applied)**
 - Invulnerability after any death is longer: arcade 2.6 s, platformer 2.6 s (2 s after a hit), flappy four beats.
 - Racer: track 7 → 11 wide, full-resolution antialiased render, CC0 Poly Haven textures (asphalt with normal map, grass,
