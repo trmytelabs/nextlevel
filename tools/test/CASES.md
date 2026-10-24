@@ -50,7 +50,7 @@ puppeteer page if a case needs to drive input (`page.keyboard`, `page.touchscree
 - E3.2 lyric words fly in over the cars (h 22 → 3.2) and are collected by lane; `words` ≥ 70% of dispatched words.
 - E3.3 overtakes happen (`passes` increases), bumps are bounded (`bumps` < 25 for the era), position stays within 1..13.
 - E3.4 the player stays on the road: |x| ≤ 0.9 at all probes.
-- E3.5 HUD shows POS / SCORE / WORDS / KM/H / LAP (overlay text present; screenshot).
+- E3.5 HUD shows POS / SCORE / LINES / KM/H / LAP (overlay text present; screenshot).
 - E3.6 the chase camera never clips through the track; screenshots at bars 37.6, 46.5, 55.6 look like Daytona (stands, pits, banked turns).
 
 ## Era 4 — 2013 mobile / flappy (`src/era4.ts`)  bars 56–75
