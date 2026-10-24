@@ -1,0 +1,42 @@
+{
+	email admin@__DOMAIN__
+}
+
+__DOMAIN__ {
+	root * __SITE_DIR__
+	encode zstd gzip
+	file_server
+
+	# Single-page app under /maximalist/ paths is not needed: the build uses base "/" on the server.
+	handle_errors {
+		rewrite * /index.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# Three.js + Web Audio + Google Fonts; no inline scripts in the built page.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+
+	@static path *.js *.css *.png *.glb *.mp3 *.woff2
+	header @static Cache-Control "public, max-age=31536000, immutable"
+	@html path / /index.html /manifest.webmanifest
+	header @html Cache-Control "no-cache"
+
+	log {
+		output file /var/log/caddy/nextlevel.log {
+			roll_size 20mb
+			roll_keep 5
+		}
+	}
+}
+
+www.__DOMAIN__ {
+	redir https://__DOMAIN__{uri} permanent
+}

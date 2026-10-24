@@ -1,0 +1,70 @@
+name: Deploy to the server
+
+# Continuous deployment: after "Headless verification" succeeds on main, build with base "/" and rsync dist/ to the
+# VPS over SSH as the restricted `deploy` user. Caddy on the server terminates HTTPS.
+# Secrets (repo settings -> Secrets and variables -> Actions):
+#   DEPLOY_HOST   e.g. nextlevel.example.com or the server IP
+#   DEPLOY_USER   deploy
+#   DEPLOY_SSH_KEY   the private key matching the deploy user's authorized_keys line
+#   DEPLOY_KNOWN_HOSTS   output of `ssh-keyscan -H <host>`
+on:
+  workflow_run:
+    workflows: ["Headless verification"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ vars.DEPLOY_ENABLED == 'true' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') }}
+    runs-on: [self-hosted, windows, maximalist]
+    defaults:
+      run:
+        shell: bash
+    environment:
+      name: production
+      url: https://${{ secrets.DEPLOY_HOST }}/
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Put Git bash on the PATH (self-hosted Windows runner)
+        shell: cmd
+        run: echo C:\Program Files\Git\bin>>%GITHUB_PATH%
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit -p .
+      - name: Build for the root of the domain
+        run: npx vite build --base /
+      - name: Install the deploy key
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$KEY" > "$HOME/.ssh/nextlevel_deploy" && chmod 600 "$HOME/.ssh/nextlevel_deploy"
+          printf '%s\n' "$KNOWN" > "$HOME/.ssh/known_hosts_nextlevel"
+      - name: Sync dist/ to the server
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          rsync -az --delete --no-perms --no-owner --no-group \
+            -e "ssh -i $HOME/.ssh/nextlevel_deploy -o UserKnownHostsFile=$HOME/.ssh/known_hosts_nextlevel -o StrictHostKeyChecking=yes" \
+            dist/ "$USER@$HOST:/"
+      - name: Smoke test the live site
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          curl -sSf -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" "https://$HOST/"
+          curl -sSI "https://$HOST/" | grep -i "strict-transport-security"
+      - name: Remove the deploy key
+        if: always()
+        run: rm -f "$HOME/.ssh/nextlevel_deploy"
