@@ -1,4 +1,6 @@
-# Everything, Then More — lyrics and Suno brief
+# Next Level — lyrics and Suno brief
+
+(Working title was "Everything, Then More", which stays as the chorus hook.)
 
 A playable music video submitted to join the Deputy's Maximalists. Five eras of games tell three stories at once: how far the technology came, how far the tools at work came, and how far I came learning to use AI in my work, from doing everything by hand to directing a hundred agents.
 
@@ -10,7 +12,7 @@ The song ages forward the same way the game does. Each era has its own sound, an
 
 | Bars | Time | Era | Story | Sound |
 |---|---|---|---|---|
-| 0–19 | 0:00–0:36 | Arcade | Before AI. One form, one desk, by hand. | 8-bit chiptune. Square-wave lead, triangle bass, noise-channel hats, no real drums. Mono, dry, a little lonely. A four-note descending march under everything. |
+| 0–19 | 0:00–0:36 | Arcade | First prompts. The tool is basic, so am I. | 8-bit chiptune. Square-wave lead, triangle bass, noise-channel hats, no real drums. Mono, dry, a little lonely. A four-note descending march under everything. |
 | 19–37 | 0:36–1:09 | 16-bit | The box talks back. Teaching myself to ask. | Colour arrives with the chorus. FM synth bass, bright PCM drums, Genesis / SNES brass stabs, chimes on the offbeats. Crunchy and joyful. |
 | 37–56 | 1:09–1:45 | Saturn 3D | Bringing it to work at the speed of light. | 90s breakbeat rave. Amen-style breaks, hoover and supersaw stabs, filtered pads, reverb opens up. Half-time on the verse, full-time on the chorus. |
 | 56–75 | 1:45–2:20 | Mobile | AI in my hand, evolving every week. | Bright 2013 EDM pop. Clean plucks, sidechained chords, trap hi-hat rolls, phone pings and taps as percussion. The bridge thins to a heartbeat and one voice. |
@@ -39,14 +41,14 @@ Section tags are in Suno's bracket format. The bracketed sound notes steer the a
 (instrumental, 4 seconds)
 
 [Verse 1 – chiptune, half-spoken, sparse]
-One form, one desk, one line to hold
-Green text on glass in a room gone cold
-Type, print, file, that's how I learned
-A stack of them waiting, and I waited my turn
+One prompt, one box, one line to hold
+Green text on glass, half right, half wrong
+Ask, read, retry, that's how I learned
+It made things up, I caught it, and I took my turn
 
 [Pre-Chorus – march speeds up, noise hats enter]
 But I wanted it faster
-I wanted something new
+And it kept getting new
 
 [Chorus – 16-bit FM synthpop bursts in, full colour, chanted]
 Turn it all the way up, then a little bit more
@@ -66,7 +68,7 @@ I was learning in weeks what took years to come
 Brought it back to my desk at the speed of light
 Fog at the edge where the backlog quits
 Foot to the floor and the floor is a pipeline
-A thousand problems, and I'm solving them tonight
+Every meeting, every thread, I know what matters tonight
 
 [Chorus – full-time rave, hoover stabs, big reverb]
 Turn it all the way up, then a little bit more
@@ -78,7 +80,7 @@ I don't do a little, I do everything, then some
 
 [Verse 4 – 2013 EDM pop, sidechained, phone pings as percussion]
 Now the whole toolbox fits in my hand
-One thumb, one prompt, and it's solved again
+One thumb, one prompt, and I'm prepared again
 Every week I'm evolving, I don't slow down
 Wherever I ask is a place I can go
 
@@ -92,9 +94,9 @@ And a hundred hands appeared
 
 [Verse 5 – fast, stacked, glitch edits on the beat]
 A hundred little hands and they all learned from mine
-Maximalist by trade, I don't wait in line
-Spawn a plan, spawn a form, spawn a fix on the fly
-I point at the problem, it's solved by the time I blink
+Maximalist at heart, I don't wait in line
+Brief the room, plan the sprint, code the fix on the fly
+I point at the problem, then I question what it thinks
 
 [Final Chorus – biggest moment, chiptune lead on top of everything]
 Turn it all the way up, then a little bit more
@@ -105,7 +107,7 @@ Deputy, I'm ready, make me a Maximalist
 [Instrumental – everything strips away layer by layer]
 
 [Outro – single square wave, dry, spoken]
-One desk. One job.
+Imagine what we could build.
 Ready when you are. Press start.
 ```
 
@@ -115,12 +117,12 @@ Lines land on these bars in the game. Use it to check a generation against the t
 
 | Bar | Time | Line |
 |---|---|---|
-| 2 | 0:03 | One form, one desk, one line to hold |
-| 4 | 0:07 | Green text on glass in a room gone cold |
-| 6 | 0:11 | Type, print, file, that's how I learned |
-| 8 | 0:15 | A stack of them waiting, and I waited my turn |
+| 2 | 0:03 | One prompt, one box, one line to hold |
+| 4 | 0:07 | Green text on glass, half right, half wrong |
+| 6 | 0:11 | Ask, read, retry, that's how I learned |
+| 8 | 0:15 | It made things up, I caught it, and I took my turn |
 | 12 | 0:22 | But I wanted it faster |
-| 14 | 0:26 | I wanted something new |
+| 14 | 0:26 | And it kept getting new |
 | 19 | 0:35 | Turn it all the way up, then a little bit more (16-bit begins) |
 | 21 | 0:39 | That's the only setting I've been looking for |
 | 23 | 0:43 | Turn it all the way up, let the whole thing run |
@@ -133,14 +135,14 @@ Lines land on these bars in the game. Use it to check a generation against the t
 | 38 | 1:11 | Brought it back to my desk at the speed of light |
 | 40 | 1:15 | Fog at the edge where the backlog quits |
 | 42 | 1:18 | Foot to the floor and the floor is a pipeline |
-| 44 | 1:22 | A thousand problems, and I'm solving them tonight |
+| 44 | 1:22 | Every meeting, every thread, I know what matters tonight |
 | 47 | 1:28 | Turn it all the way up, then a little bit more |
 | 49 | 1:31 | That's the only setting I've been looking for |
 | 51 | 1:35 | Turn it all the way up, let the whole thing run |
 | 53 | 1:39 | I don't do a little, I do everything, then some |
 | 56 | 1:45 | (mobile begins) |
 | 57 | 1:46 | Now the whole toolbox fits in my hand |
-| 59 | 1:50 | One thumb, one prompt, and it's solved again |
+| 59 | 1:50 | One thumb, one prompt, and I'm prepared again |
 | 61 | 1:54 | Every week I'm evolving, I don't slow down |
 | 63 | 1:58 | Wherever I ask is a place I can go |
 | 66.5 | 2:04 | Wait, who's drafting that? |
@@ -148,14 +150,14 @@ Lines land on these bars in the game. Use it to check a generation against the t
 | 69.5 | 2:10 | I said what I needed out loud |
 | 71 | 2:13 | And a hundred hands appeared |
 | 75 | 2:20 | A hundred little hands and they all learned from mine (agents begin) |
-| 77 | 2:24 | Maximalist by trade, I don't wait in line |
-| 79 | 2:28 | Spawn a plan, spawn a form, spawn a fix on the fly |
-| 81 | 2:31 | I point at the problem, it's solved by the time I blink |
+| 77 | 2:24 | Maximalist at heart, I don't wait in line |
+| 79 | 2:28 | Brief the room, plan the sprint, code the fix on the fly |
+| 81 | 2:31 | I point at the problem, then I question what it thinks |
 | 83 | 2:35 | Turn it all the way up, then a little bit more |
 | 85 | 2:39 | Every tool I ever learned is in here |
 | 87 | 2:43 | Turn it all the way up, let the whole thing run |
 | 89 | 2:46 | Deputy, I'm ready, make me a Maximalist |
-| 94 | 2:56 | One desk. One job. |
+| 94 | 2:56 | Imagine what we could build. |
 | 95 | 2:58 | Ready when you are. Press start. |
 
 ## Still open

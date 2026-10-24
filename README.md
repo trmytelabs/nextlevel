@@ -1,4 +1,6 @@
-# Everything, Then More
+# Next Level
+
+*"Everything, Then More" is the chorus; Next Level is the title.*
 
 A three-minute music video that is also a game. Five eras of play, one continuous take, locked to a 128 BPM clock. It starts as Space Invaders and ends as a VR rhythm game where an AI co-pilot builds the arena out of every word you cut. The lyrics are part of the gameplay in every era.
 

@@ -18,7 +18,7 @@ const CYAN=0x4df0ff,MAG=0xff5be0,YEL=0xffe14d,ORG=0xff9a3c,GRN=0x5bff5b;
 const COLZ=(c:number)=>(c-1.5)*0.62,ROWY=(r:number)=>0.95+r*0.55,HIT=1.3; // hit plane is HIT units ahead of the camera
 let ok=false,renderer:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.PerspectiveCamera,composer:EffectComposer,bloom:UnrealBloomPass;
 let skyM:THREE.Mesh,starsM:THREE.Points,sunL:THREE.DirectionalLight,hemiL:THREE.HemisphereLight,skyA:THREE.Group,skyB:THREE.Group,floorG:THREE.Group,cutLine:THREE.Mesh;
-let blocks:any[]=[],halves:any[]=[],pieces:any[]=[],rings:THREE.Mesh[]=[],sabers:any,copilot:any,sparks:any,texCache=new Map<string,THREE.Texture>();
+let blocks:any[]=[],halves:any[]=[],pieces:any[]=[],rings:THREE.Mesh[]=[],sabers:any,copilot:any,sparks:any,texCache=new Map<string,THREE.Texture>(),arrivals:THREE.Mesh[]=[],flights:any[]=[];
 const geo={box:new THREE.BoxGeometry(1,1,1),sph:new THREE.SphereGeometry(1,16,12),cyl:new THREE.CylinderGeometry(1,1,1,16),plane:new THREE.PlaneGeometry(1,1),cube:new RoundedBoxGeometry(0.5,0.5,0.5,2,0.06),half:new RoundedBoxGeometry(0.5,0.5,0.24,2,0.05)};
 const edgesCube=new THREE.EdgesGeometry(geo.cube);
 const mat={body:new THREE.MeshStandardMaterial({color:0x0e1330,metalness:0.75,roughness:0.35}),dark:new THREE.MeshStandardMaterial({color:0x1a2040,metalness:0.6,roughness:0.5}),shell:new THREE.MeshStandardMaterial({color:0x4a5696,metalness:0.8,roughness:0.3}),
@@ -78,6 +78,8 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:!LOW,alpha:false
   for(let i=0;i<56;i++)blocks.push(makeBlock());for(let i=0;i<24;i++)halves.push(makeHalf());for(let i=0;i<100;i++)pieces.push(makePiece());
   for(let i=0;i<26;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(3.3,0.1,8,40),emissive(ORG,1.6));r.rotation.y=Math.PI/2;r.visible=false;scene.add(r);rings.push(r)}
   sabers={L:makeSaber(MAG),R:makeSaber(CYAN)};copilot=makeCopilot();sparks=makeSparks();
+  for(let i=0;i<14;i++){const m=new THREE.Mesh(geo.sph,new THREE.MeshBasicMaterial({color:i%3?GRN:0xffffff,toneMapped:false}));m.scale.setScalar(0.07);m.visible=false;scene.add(m);arrivals.push(m)}
+  for(let i=0;i<6;i++){const sp=textSprite('·','#ffffff',34,'rgba(0,0,0,0)');sp.visible=false;sp.scale.set(2.2,0.42,1);scene.add(sp);flights.push({sp,word:'',t0:-9,from:new THREE.Vector3(),to:new THREE.Vector3(),pi:-1,done:true})}
   ok=true}catch(e){console.warn('WebGL era 5 unavailable, using 2D renderer',e);ok=false}}
 // ---- camera + mood ----
 const V=()=>new THREE.Vector3();const cinP=V(),cinL=V(),altP=V(),altL=V();
@@ -91,7 +93,7 @@ function mood(t:number){const b=t/BAR;let i=0;while(i<MOOD.length-2&&b>=MOOD[i+1
 // ---- per-frame updates ----
 let lastT=0;
 function updateBlocks(S:any,t:number,cam:number,dt:number){let bi=0;for(const b of S.blocks){if(!b.active)continue;const x=cam+HIT+(b.hitT-t)*SPD;if(x<cam-2||x>cam+60)continue;
-  if(b.hit){if(!b._split){b._split=true;if(t-b.hit<0.3){const col=b.side==='L'?MAG:CYAN;for(const sgn of[-1,1]){const h=halves.find(h=>h.life<=0)||halves[0];h.m.visible=true;h.m.position.set(cam+HIT,ROWY(b.row),COLZ(b.col)+sgn*0.13);(h.m.material as any).emissive.setHex(col);h.vx=4+Math.random()*3;h.vy=1.5+Math.random()*2;h.vz=sgn*(2.5+Math.random()*2);h.rx=(Math.random()-0.5)*14;h.rz=(Math.random()-0.5)*14;h.life=0.55;h.m.scale.setScalar(1)}spark(cam+HIT,ROWY(b.row),COLZ(b.col),col,26,7);spark(cam+HIT,ROWY(b.row),COLZ(b.col),0xffffff,10,4)}}continue}
+  if(b.hit){if(!b._split){b._split=true;if(t-b.hit<0.3){const col=b.side==='L'?MAG:CYAN;for(const sgn of[-1,1]){const h=halves.find(h=>h.life<=0)||halves[0];h.m.visible=true;h.m.position.set(cam+HIT,ROWY(b.row),COLZ(b.col)+sgn*0.13);(h.m.material as any).emissive.setHex(col);h.vx=4+Math.random()*3;h.vy=1.5+Math.random()*2;h.vz=sgn*(2.5+Math.random()*2);h.rx=(Math.random()-0.5)*14;h.rz=(Math.random()-0.5)*14;h.life=0.55;h.m.scale.setScalar(1)}spark(cam+HIT,ROWY(b.row),COLZ(b.col),col,26,7);spark(cam+HIT,ROWY(b.row),COLZ(b.col),0xffffff,10,4);if(b.cutN<=6&&b.pieceI>=0){const p=S.built[b.pieceI],f=flights[b.cutN%6];if(p&&f){f.word=b.word;f.pi=b.pieceI;f.t0=t;f.done=false;f.from.set(cam+HIT,ROWY(b.row)+0.3,COLZ(b.col));f.to.set(p.x,pieceTop(p),pieceZ(p));setSpriteText(f.sp,b.word.toUpperCase(),b.side==='L'?'#ff9af0':'#9af4ff',34,'rgba(0,0,0,0)');f.sp.visible=true}}}}continue}
   if(bi>=blocks.length)break;const o=blocks[bi++];o.g.visible=true;o.g.position.set(x,ROWY(b.row)+Math.sin(t*3+b.k)*0.02,COLZ(b.col));if(o.word!==b.word||o.side!==b.side){o.word=b.word;o.side=b.side;(o.face.material as any).map=wordTex(b.word);(o.face.material as any).needsUpdate=true;const col=b.side==='L'?MAG:CYAN;(o.cube.material as any).emissive.setHex(col);o.glow.color.setHex(col)}
   const near=clamp(1-(x-cam)/20,0,1);(o.cube.material as any).emissiveIntensity=b.missed?0.3:0.55+near*0.5;o.glow.intensity=b.missed?0:near*0.8;o.g.rotation.y=b.missed?(t-b.missed)*3:Math.sin(t*2+b.k)*0.08;o.g.scale.setScalar(b.missed?Math.max(0.01,1-(t-b.missed)*1.6):1)}
  for(;bi<blocks.length;bi++)blocks[bi].g.visible=false;
@@ -105,7 +107,7 @@ function updateSabers(S:any,t:number){const fwd=new THREE.Vector3();camera.getWo
 function updatePieces(S:any,t:number,cam:number){for(const o of pieces)o.g.visible=false;const from=Math.max(0,S.built.length-pieces.length);
  for(let i=from;i<S.built.length;i++){const p=S.built[i],o=pieces[i%pieces.length];if(p.x<cam-(t>=OUT?70:12)||p.x>cam+90)continue;o.g.visible=true;o.g.position.set(p.x,0,0);const sideZ=p.side==='L'?-1:1;
   if(o.kind!==p.kind||o.word!==p.word||o.side!==p.side){o.kind=p.kind;o.word=p.word;o.side=p.side;o.arch.visible=p.kind==='arch';o.pillar.visible=p.kind==='pillar';o.panel.visible=p.kind==='panel';o.beam.visible=p.kind==='beam';o.ring.visible=p.kind==='ring';o.em.emissive.setHex(p.side==='L'?MAG:CYAN);o.pillar.position.z=3.4*sideZ;o.panel.position.z=3.0*sideZ;o.panel.rotation.y=sideZ<0?Math.PI/2:-Math.PI/2;(o.pp.material as any).map=wordTex(p.word,p.side==='L'?'#ff9af0':'#9af4ff');(o.pp.material as any).needsUpdate=true}
-  const q=clamp((t-p.t)/0.35,0,1),s=q<1?lerp(0,1.15,q)-(q>0.6?(q-0.6)/0.4*0.15:0):1;o.g.scale.setScalar(Math.max(0.001,s));const nearF=clamp((p.x-cam)/7,0.12,1);o.em.emissiveIntensity=(1.0+0.4*(1-((t/BEAT)%1))+(q<1?1.5*(1-q):0))*nearF;if(p.kind==='ring')o.ring.rotation.x=t*0.6+p.i}}
+  const q=clamp((t-p.t)/0.35,0,1),s=q<1?lerp(0,1.15,q)-(q>0.6?(q-0.6)/0.4*0.15:0):1;o.g.scale.setScalar(Math.max(0.001,s));const nearF=clamp((p.x-cam)/7,0.12,1);const fl=p._flash?clamp(1-(t-p._flash)/0.5,0,1):0;o.em.emissiveIntensity=(1.0+0.4*(1-((t/BEAT)%1))+(q<1?1.5*(1-q):0)+fl*3)*nearF;if(p.kind==='ring')o.ring.rotation.x=t*0.6+p.i}}
 function updateCopilot(S:any,t:number,cam:number,dt:number){const c=copilot;let tx=cam+9,ty=2.8,tz=0;const p=S.built[S.copilot.pi];const busy=p&&S.copilot.status!=='STANDING BY'&&S.copilot.status!=='ARENA COMPLETE';if(busy){tx=p.x;ty=p.kind==='pillar'?4.6:p.kind==='panel'?3.4:p.kind==='beam'?4.9:3.2;tz=(p.kind==='pillar'||p.kind==='panel')?(p.side==='L'?-2.6:2.6):0}
  if(t>=OUT){tx=cam+16;ty=6+(t-OUT)*1.5;tz=0}
  const k=1-Math.pow(0.02,dt);c.x+=(tx-c.x)*k;c.y+=(ty-c.y)*k;c.z+=(tz-c.z)*k;if(Math.abs(tx-c.x)>30){c.x=tx;c.y=ty;c.z=tz}
@@ -113,6 +115,9 @@ function updateCopilot(S:any,t:number,cam:number,dt:number){const c=copilot;let 
  if(S.copilot.status!==c.lastStatus){c.lastStatus=S.copilot.status;setSpriteText(c.status,S.copilot.status,'#ffffff',24,'rgba(0,0,0,0)')}
  const working=busy&&t-S.copilot.since<BEAT*1.5&&t<OUT;c.beam.visible=!!working;if(working){const by=p.kind==='pillar'?2:p.kind==='panel'?2.4:p.kind==='beam'?4.3:1.5,bz=(p.kind==='pillar'||p.kind==='panel')?(p.side==='L'?-3.2:3.2):0;const a=c.g.position,b=new THREE.Vector3(p.x,by,bz);const m=a.clone().add(b).multiplyScalar(0.5);c.beam.position.copy(m);c.beam.scale.set(0.03,a.distanceTo(b),0.03);c.beam.lookAt(b);c.beam.rotateX(Math.PI/2);(c.beam.material as any).opacity=0.25+0.35*Math.random();if(Math.random()<0.5)spark(b.x,b.y,b.z,GRN,2,2.5)}
  trailPush(c.trail,c.g.position.x-0.1,c.g.position.y,c.g.position.z,c.g.visible)}
+const pieceTop=(p:any)=>p.kind==='pillar'?4.3:p.kind==='panel'?2.6:p.kind==='beam'?4.5:p.kind==='ring'?3.4:2.9;const pieceZ=(p:any)=>(p.kind==='pillar'||p.kind==='panel')?(p.side==='L'?-3.2:3.2):0;
+function updateFlights(S:any,t:number){for(const f of flights){if(f.done)continue;const q=clamp((t-f.t0)/0.7,0,1);const e=q*q*(3-2*q);f.sp.position.lerpVectors(f.from,f.to,e);f.sp.position.y+=Math.sin(q*Math.PI)*1.2;f.sp.scale.set(2.2*(1-q*0.4),0.42*(1-q*0.4),1);(f.sp.material as any).opacity=q<0.85?1:(1-q)/0.15;if(q>=1){f.done=true;f.sp.visible=false;const p=S.built[f.pi];if(p){p._flash=t;spark(f.to.x,f.to.y,f.to.z,p.side==='L'?MAG:CYAN,30,5)}}}}
+function updateArrivals(S:any,t:number,cam:number){const on=t>=s5&&t<bar(76.4);arrivals.forEach((m,i)=>{m.visible=on;if(!on)return;const q=clamp((t-s5-i*0.05)/(bar(76.3)-s5),0,1),e=q*q*(3-2*q);const sx=cam-2+i*0.3,sy=1.2+(i%4)*0.6,sz=6+(i%5)*0.8;m.position.set(lerp(sx,copilot.g.position.x,e)+Math.sin(t*5+i)*(1-e)*0.3,lerp(sy,copilot.g.position.y,e)+Math.cos(t*4+i)*(1-e)*0.3,lerp(sz,copilot.g.position.z,e));m.scale.setScalar(0.07*(1-e*0.6))})}
 function updateRings(S:any,t:number,cam:number){const on=t>=TUNNEL&&t<OUT+1;const n0=Math.floor(cam/4)+1;rings.forEach((r,i)=>{const x=(n0+i)*4;r.visible=on&&x>cam-2;if(!r.visible)return;r.position.set(x,1.9,0);r.rotation.x=t*0.9+i*0.4;const q=clamp((t-TUNNEL)/BAR-(x-cam)/120,0,1);r.scale.setScalar(Math.max(0.01,q));(r.material as any).emissiveIntensity=(0.8+0.9*(1-((t/BEAT)%1)))*clamp((x-cam)/8,0.1,1)})}
 export const E5GL={init,get ok(){return ok},canvas:()=>renderer.domElement,
  render(t:number){if(!ok)return;const S=E5.S;if(!S)return;const dt=clamp(t-lastT,0,0.05);lastT=t;const cam=S.dist,pulse=1-((t/BEAT)%1);
@@ -120,7 +125,7 @@ export const E5GL={init,get ok(){return ok},canvas:()=>renderer.domElement,
   const cell=1400/220;floorG.position.x=Math.floor(cam/cell)*cell;const k=Math.floor((cam-60)/SKYW);skyA.position.set(k*SKYW-60,0,0);skyB.position.set((k+1)*SKYW-60,0,0);
   cutLine.position.set(cam+HIT,0.03,0);(cutLine.material as any).opacity=0.35+0.4*pulse;
   skyM.position.copy(camera.position);starsM.position.copy(camera.position);const sun=(skyM as any).userData.sun;sun.position.set(camera.position.x+330,camera.position.y+30,-120);sunL.position.set(cam+16,42,24);sunL.target.position.set(cam+8,0,0);
-  updateBlocks(S,t,cam,dt);updateSabers(S,t);updatePieces(S,t,cam);updateCopilot(S,t,cam,dt);updateRings(S,t,cam);
+  updateBlocks(S,t,cam,dt);updateSabers(S,t);updatePieces(S,t,cam);updateCopilot(S,t,cam,dt);updateArrivals(S,t,cam);updateFlights(S,t);updateRings(S,t,cam);
   bloom.strength=0.4+0.15*pulse+(S.flash>0?0.15:0);mood(t);composer.render()}};
 
 (window as any).__E5GL={pieces:()=>pieces,camera:()=>camera,S:()=>E5.S};

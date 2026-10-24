@@ -23,7 +23,7 @@ function init(t){S={t,dist:Math.max(0,t-s5)*SPD,blocks:plan(),hits:0,misses:0,wh
 const xAt=(t:number)=>Math.max(0,Math.min(t,OUT+1.2)-s5)*SPD; // world x of the player at time t; you coast to a stop in the outro so the arena you built stays around you
 function cut(b:any,t:number){b.hit=t;S.hits++;S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.mult=1+Math.min(3,Math.floor(S.combo/8));S.score+=100*S.mult;S.flash=Math.max(S.flash,0.18);
  if(b.li!==S.lineLi){S.lineLi=b.li;S.line=[]}S.line.push(b.word);if(b.echo&&S.line.length>5)S.line.shift();
- const p=piece(b,S.built.length);p.x=S.dist+30+hash(b.li*7+b.k)*6;S.built.push(p);S.copilot.pi=p.i;S.copilot.status=(b.echo?'REMIXING ':['PLACING','GENERATING','COMPILING','TEXTURING'][Math.floor(hash(b.li*3+b.k)*4)]+' ')+p.kind.toUpperCase();S.copilot.since=t;log('AI > '+p.kind.toUpperCase()+' FROM "'+b.word.toUpperCase()+'"',b.side==='L'?MAG:CYAN);
+ const p=piece(b,S.built.length);p.x=S.dist+30+hash(b.li*7+b.k)*6;S.built.push(p);b.pieceI=p.i;b.cutN=S.hits;S.copilot.pi=p.i;S.copilot.status=(b.echo?'REMIXING ':['PLACING','GENERATING','COMPILING','TEXTURING'][Math.floor(hash(b.li*3+b.k)*4)]+' ')+p.kind.toUpperCase();S.copilot.since=t;log('AI > '+p.kind.toUpperCase()+' FROM "'+b.word.toUpperCase()+'"',b.side==='L'?MAG:CYAN);
  blip(b.side==='L'?880:1175,0.08,0.1);blip(b.side==='L'?1319:1760,0.12,0.06)}
 function slash(side:'L'|'R',t:number){if(side==='L')S.slashL=t;else S.slashR=t;let best:any=null,bd=WIN;for(const b of S.blocks){if(!b.active||b.hit||b.missed||b.side!==side)continue;const d=Math.abs(b.hitT-t);if(d<bd){bd=d;best=b}}if(best)cut(best,t);else{S.whiffs++;noise(0.05,0.12,3000)}}
 function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;S.dist=xAt(t);S.tunnel=t>=TUNNEL?clamp((t-TUNNEL)/(BAR*0.5),0,1):0;S.flash=Math.max(0,S.flash-dt);S.shake=Math.max(0,S.shake-dt);
@@ -43,7 +43,7 @@ function overlay(ctx,t){if(t<s5-TRANS*0.3)return;const pulse=1-((t/BEAT)%1);ctx.
  if(S.flash>0){ctx.fillStyle=`rgba(255,255,255,${S.flash*0.35})`;ctx.fillRect(0,0,W,H)}
  // headset on: two lenses open and merge into one view
  if(t<bar(76.3)){const q=clamp((t-s5)/(bar(76.3)-s5),0,1);const e=q*q*(3-2*q);const r=lerp(H*0.22,H*1.4,e),dx=lerp(W*0.23,0,e);ctx.fillStyle='#000';ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(W/2-dx,H/2,r,0,Math.PI*2,true);ctx.fill();ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(W/2+dx,H/2,r,0,Math.PI*2,true);ctx.fill('evenodd');
-  if(q<0.75){ctx.globalAlpha=1-q/0.75;ctx.fillStyle='#8a8aa0';ctx.font="8px 'Press Start 2P',monospace";ctx.textAlign='center';ctx.fillText('HEADSET ON  ·  CO-PILOT LINKED  ·  ROOM SCALE OK',W/2,H*0.93);ctx.textAlign='left';ctx.globalAlpha=1}}
+  if(q<0.75){ctx.globalAlpha=1-q/0.75;ctx.fillStyle='#8a8aa0';ctx.font="8px 'Press Start 2P',monospace";ctx.textAlign='center';ctx.fillText('HEADSET ON  ·  CO-PILOT LINKED  ·  14 HANDS',W/2,H*0.93);ctx.textAlign='left';ctx.globalAlpha=1}}
  // score block
  ctx.fillStyle='rgba(6,8,20,.7)';ctx.fillRect(16,64,222,70);ctx.fillStyle=CYAN;ctx.fillRect(16,64,222,2);ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='#fff';ctx.fillText('SCORE '+String(S.score).padStart(6,'0'),26,84);ctx.fillStyle=YEL;ctx.fillText('COMBO x'+S.combo+'   '+S.mult+'x',26,102);ctx.fillStyle='#8a8aa0';ctx.font="7px 'Press Start 2P',monospace";ctx.fillText('CUT '+S.hits+'  MISS '+S.misses+'  BEST x'+S.maxCombo,26,120);
  // mode tag

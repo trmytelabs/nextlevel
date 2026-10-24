@@ -1,10 +1,10 @@
-# Context prompt — "Everything, Then More"
+# Context prompt — "Next Level" (chorus: "Everything, Then More")
 
 Paste everything below this line into a new session (Claude, ChatGPT, a coding agent) to continue the project with full context.
 
 ---
 
-You are helping Ian Ginn finish **"Everything, Then More"**, a three-minute **playable music video** he is submitting to join the **Deputy's Maximalists**, a new program announced by the Deputy Minister of Technology and Innovation (Government of Alberta, "GoA"). The post asked people to make a music video explaining why they want to join. Ian's angle: show, through five eras of video games that he actually plays as the song runs, how far technology came, how far the tools at work came, and how far he personally came learning to use AI in his work: from doing everything by hand, to asking an AI questions, to bringing it to his desk, to AI in his pocket, to the work building the work. The ask at the end is the chorus line: *"Deputy, I'm ready, make me a Maximalist."* He is **not** claiming to already be on the team.
+You are helping Ian Ginn finish **"Next Level"** (working title was "Everything, Then More", now the chorus hook), a three-minute **playable music video** he is submitting to join the **Deputy's Maximalists**, a new program announced by the Deputy Minister of Technology and Innovation (Government of Alberta, "GoA"). The post asked people to make a music video explaining why they want to join. Ian's angle: show, through five eras of video games that he actually plays as the song runs, how far technology came, how far the tools at work came, and how far he personally came learning to use AI in his work: from doing everything by hand, to asking an AI questions, to bringing it to his desk, to AI in his pocket, to the work building the work. The ask at the end is the chorus line: *"Deputy, I'm ready, make me a Maximalist."* He is **not** claiming to already be on the team.
 
 ## The thing itself
 
@@ -19,7 +19,7 @@ You are helping Ian Ginn finish **"Everything, Then More"**, a three-minute **pl
 | 56–75 | 2013 · MOBILE | A phone on a dark desk: status bar, notifications ("7-day streak", "Rate FLAP!"), a thumb tapping | Flappy-Bird style one-thumb game: pipes every two beats, game-over card, auto-retry. The bridge (bars 66.5–75) adds ghost birds that become the AI; at bar 73 they fly out of the phone to the right. | The words are signs in the pipe gaps |
 | 75–96 | NOW · VR + AI | A VR rhythm game (Beat Saber style) with a Thumper-style tunnel finale, full Three.js: bloom, mirror floor, neon grid, synthwave sun, three-layer skyline | **Headset-on** lens transition at bar 75. Two sabers low in frame like VR hands (left = magenta = A / tap left; right = cyan = D / tap right). Word blocks fly in on the beat with the word on the face; you cut them. An **AI co-pilot** (glowing orb with a build beam and status readout) turns **every cut word into a piece of arena** ahead of you: arches, pillars, word panels, beams, rings. Bar 89: tunnel run at 1.35x, chorus words echo back faster. Bar 94: you coast to a stop and the camera cranes up over the arena you built for the end card. | The blocks are the words; the arena is built from them |
 
-- **Title card** (bars 0–2): "EVERYTHING, THEN MORE / IAN GINN / FOR THE DEPUTY'S MAXIMALISTS / Five eras of games. One desk at the GoA. / How far the tools came, and how far I came with them. / PRESS START · OR JUST WATCH". **End card** (bar 94.9+): title, "Built in a day with AI agents.", "IAN GINN · DEPUTY'S MAXIMALISTS", "READY WHEN YOU ARE."
+- **Title card** (bars 0–2): "NEXT LEVEL / IAN GINN / FOR THE DEPUTY'S MAXIMALISTS / My AI journey, told through five generations of games. / The tools got better. So did I. / PRESS START · OR JUST WATCH". Chapter labels at each era start: 1 · FIRST PROMPTS, 2 · LEARNING TO ASK, 3 · AT MY DESK, 4 · IN MY POCKET, 5 · DIRECTING AGENTS. **End card** (bar 94.9+): title, "Built with AI agents, asking to build with people.", "IAN GINN · FOR THE DEPUTY'S MAXIMALISTS", "Imagine what we could build together.", "READY WHEN YOU ARE."
 - **Autopilot** plays the whole piece by itself (so it works as a video); any movement key takes over, and autopilot resumes after 2 idle seconds. Modes: when idle / on / off.
 - **Sound**: a synthesized **generative score** (Web Audio) that changes with each era (square-wave arcade → FM 16-bit → rave → EDM plucks → everything stacked), plus drums and SFX, through a soft limiter. It mutes itself when a real song exists at `public/song.mp3`, and the game then runs off the audio clock with an offset nudge and tap-to-sync tool.
 - **Phone support**: landscape layout with safe-area insets, a rotate card in portrait, touch zones (hold left/right edge to move, tap top half to jump, tap bottom half to fire), touch-zone hints for the first two bars, smaller control bar, PWA manifest + icons (Add to Home Screen), Open Graph preview image, and a graphics quality tier (G key / FX button; phones default to the light tier: no reflections, no shadows, half-res bloom).
@@ -27,12 +27,12 @@ You are helping Ian Ginn finish **"Everything, Then More"**, a three-minute **pl
 ## Lyrics (locked, 40 lines; numbers are the bar each line starts)
 
 ```
-2    One form, one desk, one line to hold
-4    Green text on glass in a room gone cold
-6    Type, print, file, that's how I learned
-8    A stack of them waiting, and I waited my turn
+2    One prompt, one box, one line to hold
+4    Green text on glass, half right, half wrong
+6    Ask, read, retry, that's how I learned
+8    It made things up, I caught it, and I took my turn
 12   But I wanted it faster
-14   I wanted something new
+14   And it kept getting new
 19   Turn it all the way up, then a little bit more          (CHORUS)
 21   That's the only setting I've been looking for
 23   Turn it all the way up, let the whole thing run
@@ -44,13 +44,13 @@ You are helping Ian Ginn finish **"Everything, Then More"**, a three-minute **pl
 38   Brought it back to my desk at the speed of light
 40   Fog at the edge where the backlog quits
 42   Foot to the floor and the floor is a pipeline
-44   A thousand problems, and I'm solving them tonight
+44   Every meeting, every thread, I know what matters tonight
 47   Turn it all the way up, then a little bit more          (CHORUS)
 49   That's the only setting I've been looking for
 51   Turn it all the way up, let the whole thing run
 53   I don't do a little, I do everything, then some
 57   Now the whole toolbox fits in my hand
-59   One thumb, one prompt, and it's solved again
+59   One thumb, one prompt, and I'm prepared again
 61   Every week I'm evolving, I don't slow down
 63   Wherever I ask is a place I can go
 66.5 Wait, who's drafting that?                               (BRIDGE)
@@ -58,18 +58,18 @@ You are helping Ian Ginn finish **"Everything, Then More"**, a three-minute **pl
 69.5 I said what I needed out loud
 71   And a hundred hands appeared
 75   A hundred little hands and they all learned from mine   (FINAL VERSE)
-77   Maximalist by trade, I don't wait in line
-79   Spawn a plan, spawn a form, spawn a fix on the fly      <- PLACEHOLDER, needs Ian's three real examples
-81   I point at the problem, it's solved by the time I blink
+77   Maximalist at heart, I don't wait in line
+79   Brief the room, plan the sprint, code the fix on the fly
+81   I point at the problem, then I question what it thinks
 83   Turn it all the way up, then a little bit more          (FINAL CHORUS)
 85   Every tool I ever learned is in here
 87   Turn it all the way up, let the whole thing run
 89   Deputy, I'm ready, make me a Maximalist
-94   One desk. One job.                                       (OUTRO)
+94   Imagine what we could build.                                       (OUTRO)
 95   Ready when you are. Press start.
 ```
 
-Story arc of the lyrics: verse 1 = before AI, everything by hand (paper forms, green-screen terminals); verse 2 = the first time the "box talked back" and teaching himself to ask; verse 3 = bringing it to the desk at the speed of light, the backlog melting; verse 4 = AI in his pocket, evolving every week; bridge = the moment the work started doing itself; final verse/chorus = a hundred hands, full automation, and the ask.
+Story arc of the lyrics: verse 1 = first clumsy prompts into a basic tool, learning to check it; verse 2 = the first time the "box talked back" and teaching himself to ask; verse 3 = bringing it to the desk at the speed of light, the backlog melting; verse 4 = AI in his pocket, evolving every week; bridge = the moment the work started doing itself; final verse/chorus = a hundred hands, full automation, and the ask.
 
 The **Suno brief** lives in `LYRICS.md`: genre-evolving 128 BPM pop (8-bit chiptune intro → 16-bit FM synthpop → 90s breakbeat rave → bright 2013 EDM → hyperpop synthwave finale → one lonely square-wave note), with section tags, a bar map, and sync instructions. Ian could not sign in to Suno from his phone yet; the track is still to come.
 
@@ -119,7 +119,7 @@ Full three-minute autopilot run under the harness: 69 cases pass, 0 page errors,
 
 1. **Merge PR #1, make the repo public, enable GitHub Pages** (the coding agent's permission classifier blocked these): `gh pr merge 1 --repo trmytelabs/maximalist --merge`, `gh repo edit trmytelabs/maximalist --visibility public --accept-visibility-change-consequences`, `gh api -X POST repos/trmytelabs/maximalist/pages -f build_type=workflow`. Site then lives at https://trmytelabs.github.io/maximalist/. A custom domain = a CNAME DNS record to `trmytelabs.github.io` + `public/CNAME`.
 2. **Suno track** from `LYRICS.md` → `public/song.mp3`, then nudge `[ ]`, tap-sync `T`, save `Y` (writes `public/timing.json`).
-3. **Verse 5 line 3** needs three real examples of what Ian automated at work to replace "Spawn a plan, spawn a form, spawn a fix on the fly".
+3. (done) Verse 5 line 3 is now grounded in Ian's real work: briefing meetings, planning projects, coding his own tools.
 4. Confirm the name on the cards ("IAN GINN") and the credit line.
 5. Ideas not yet done: a Blender-rigged runner or hands model, more arena-piece variety, muxing the finished song into the MP4 (`ffmpeg -i out/run.mp4 -i public/song.mp3 -c:v copy -c:a aac -shortest out/run-with-song.mp4`), an intro/outro voice line.
 

@@ -4,6 +4,18 @@
 sideways, hold the left/right edge to move, tap the top half to jump, tap the bottom half to fire. The FX button (or G)
 switches to the light graphics tier; phones default to it. Sound is off until you press SOUND (phones need a tap first).
 
+**Editorial pass (approved, applied)**
+- Title is now **Next Level**; "Everything, Then More" stays as the chorus. Title card: "My AI journey, told through five
+  generations of games. / The tools got better. So did I." Chapter labels at each era start (FIRST PROMPTS, LEARNING TO
+  ASK, AT MY DESK, IN MY POCKET, DIRECTING AGENTS). End card: "Built with AI agents, asking to build with people." ·
+  "IAN GINN · FOR THE DEPUTY'S MAXIMALISTS" · "Imagine what we could build together." · "READY WHEN YOU ARE."
+- Eleven lyric lines changed (see EDITORIAL.md section 3): verse 1 is now first prompts and checking the tool, the
+  "magic" lines are judgment lines, bar 79 is the real work (brief the room, plan the sprint, code the fix), bar 94 is
+  "Imagine what we could build."
+- The ghost birds are co-pilot green and converge into the co-pilot orb during the headset-on; the first six cut words
+  fly to the arena piece they become.
+- CI now runs on the self-hosted runner `belt-pc-maximalist` (C:ctions-runner-maximalist, start with start-runner.cmd).
+
 **Changed after your 2 AM notes**
 - Racer: lyric words no longer stream past at half-second intervals. Each line is one Daytona-style overhead gantry
   every two bars with the racing line lit on one lane; drive under it in that lane to take the line (HUD: LINES n/m).

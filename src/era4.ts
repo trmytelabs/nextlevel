@@ -31,10 +31,10 @@ function update(dt,t,inp,auto){if(t<s4-TRANS||t>=s5)return;const b=S.bird;
    for(let i=k-1;i<k+1;i++){if(i<0||S.counted.has(i))continue;if(pipeX(i,t)+PWD<BX-10){S.counted.add(i);S.score++;const w=S.words.get(i);if(w){S.line.push(w);S.got+=w.split(' ').length;S.words.delete(i);S.signs=S.words.size;blip(1568,0.08,0.1)}else blip(1046,0.06,0.08)}}}
   else{b.vy+=G*dt;b.y=Math.min(GROUND-12,b.y+b.vy*dt);if(t-b.deadT>BEAT*2){b.alive=true;b.y=gapY(k);b.vy=0;b.inv=BEAT;S.score=0;for(let i=0;i<=k;i++){S.counted.add(i);S.words.delete(i)}S.signs=S.words.size}}
   // ghosts: perfect players that appear during the bridge
-  const n=t>=bar(73)?0:t>=bar(66.5)?Math.min(14,Math.floor((t-bar(66.5))/(BEAT*2))+1):0;while(S.ghosts.length<n){const i=S.ghosts.length;S.ghosts.push({i,y:GAH/2,xo:-(i+1)*13-8,col:ROLES[i%5][0],ph:i*1.7});S.ripples.push({t,ghost:true,i})}
+  const n=t>=bar(73)?0:t>=bar(66.5)?Math.min(14,Math.floor((t-bar(66.5))/(BEAT*2))+1):0;while(S.ghosts.length<n){const i=S.ghosts.length;S.ghosts.push({i,y:GAH/2,xo:-(i+1)*13-8,col:'#5bff5b',ph:i*1.7});S.ripples.push({t,ghost:true,i})}
   for(const g of S.ghosts){const kg=firstPipe(t+(-g.xo)/V);const target=gapY(kg)-6+Math.sin(t*5+g.ph)*5;g.y=lerp(g.y,target,1-Math.pow(0.002,dt));if(Math.floor((t+g.ph)/(BEAT*2))!==Math.floor((t+g.ph-dt)/(BEAT*2)))S.ripples.push({t,ghost:true,i:g.i})}
   // ghosts become agents and leave the phone to the right
-  if(t>=bar(73)&&S.agents.length===0)for(let i=0;i<14;i++){const g=S.ghosts[i]||{xo:-(i+1)*13-8,y:gapY(k),col:ROLES[i%5][0]};S.agents.push({x:SX+BX+g.xo,y:GY0+g.y,tx:W+120+i*26,ty:70+(i%5)*40+Math.floor(i/5)*22,col:g.col,name:ROLES[i%5][1],born:t+i*0.06})}
+  if(t>=bar(73)&&S.agents.length===0)for(let i=0;i<14;i++){const g=S.ghosts[i]||{xo:-(i+1)*13-8,y:gapY(k),col:'#5bff5b'};S.agents.push({x:SX+BX+g.xo,y:GY0+g.y,tx:W+120+i*26,ty:70+(i%5)*40+Math.floor(i/5)*22,col:g.col,name:ROLES[i%5][1],born:t+i*0.06})}
   S.agentsOut=0;for(const a of S.agents){if(t<a.born)continue;const k2=1-Math.pow(0.004,dt);a.x+=(a.tx-a.x)*k2;a.y+=(a.ty-a.y)*k2;if(a.x>W)S.agentsOut++}
   if(t>=bar(73))S.ghosts=[]}
  S.flash=Math.max(0,S.flash-dt);S.ripples=S.ripples.filter(r=>t-r.t<0.5)}

@@ -1,7 +1,7 @@
 {
-  "name": "Everything, Then More",
-  "short_name": "Maximalist",
-  "description": "A three-minute playable music video: five eras of games, one desk at the GoA. Ian Ginn for the Deputy's Maximalists.",
+  "name": "Next Level",
+  "short_name": "Next Level",
+  "description": "A three-minute playable music video: my AI journey told through five generations of games. Ian Ginn for the Deputy's Maximalists.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
