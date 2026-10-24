@@ -1,6 +1,6 @@
 # Morning report (2026-10-24, written ~1:40 AM)
 
-**Play it:** https://claude.ai/artifact/BtigJtQXJGtrXoycKL3Xvm (version 7). On the phone: open the link, turn the phone
+**Play it:** https://claude.ai/artifact/BtigJtQXJGtrXoycKL3Xvm (version 8). On the phone: open the link, turn the phone
 sideways, hold the left/right edge to move, tap the top half to jump, tap the bottom half to fire. The FX button (or G)
 switches to the light graphics tier; phones default to it. Sound is off until you press SOUND (phones need a tap first).
 
@@ -17,6 +17,10 @@ switches to the light graphics tier; phones default to it. Sound is off until yo
   pacing and banking, era 4 word distribution, phone CSS). A headless test harness (`node tools/test/run.mjs`) now drives
   the whole three minutes in Edge with software WebGL: **69 cases pass, 0 page errors**, words are collected in every era
   under autopilot (e2 56/77, e3 70/87, e4 54/54, e5 81 + boss). `.github/workflows/test.yml` runs it on every push.
+- Reviewed the recorded run frame by frame (contact sheets in `out/review/`) and fixed what it showed: agent progress
+  rings/impacts no longer bloom into discs near the camera, labels are fewer and spaced, the swarm fans out in depth and
+  around work sites, speaker rings expand and fade instead of flashing, the sun stays out of the floor reflection, the
+  outro camera cranes above the towers, and the duplicate PRESS START is gone.
 - `node tools/test/record.mjs` records an MP4 of the autopilot run (ffmpeg installed, user scope). Recorded: `out/run.mp4`
   (1280 wide, 138 MB) and `out/run-960.mp4` (36 MB, sent to you in chat). Mux the song later with
   `ffmpeg -i out/run.mp4 -i public/song.mp3 -c:v copy -c:a aac -shortest out/run-with-song.mp4`.
