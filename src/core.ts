@@ -85,14 +85,14 @@ addEventListener('keydown',e=>{const k=e.key;if(k==='p'||k==='P'||k==='Escape'){
 addEventListener('keyup',e=>{keys[e.key]=false});
 // touch: hold the left or right edge to move, tap the upper middle to jump, tap the lower middle to fire
 const tz=new Map<number,string>();cv.style.touchAction='none';
-cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;const r=cv.getBoundingClientRect();const fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;lastInputReal=performance.now();lastTouch=lastInputReal;if(clickOn)ensureAC();let z='';if(fx<0.28){z='L';keys.ArrowLeft=true;mv.x-=1}else if(fx>0.72){z='R';keys.ArrowRight=true;mv.x+=1}else if(fy<0.5){jumpEdge=true;mv.y-=1}else{fireEdge=true}tz.set(e.pointerId,z);e.preventDefault()},{passive:false});
+cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;const r=cv.getBoundingClientRect();const fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;lastInputReal=performance.now();lastTouch=lastInputReal;if(clickOn)ensureAC();let z='';if(fx<0.28){z='L';keys.ArrowLeft=true;mv.x-=1}else if(fx>0.72){z='R';keys.ArrowRight=true;mv.x+=1}else if(fy<0.5){jumpEdge=true;mv.y-=1}else{fireEdge=true;z='F'}tz.set(e.pointerId,z);e.preventDefault()},{passive:false});
 const tup=e=>{const z=tz.get(e.pointerId);if(z==='L')keys.ArrowLeft=false;if(z==='R')keys.ArrowRight=false;tz.delete(e.pointerId)};cv.addEventListener('pointerup',tup);cv.addEventListener('pointercancel',tup);cv.addEventListener('pointerleave',tup);
 if(matchMedia('(pointer: coarse)').matches){const h=$('#help');if(h)h.textContent='HOLD LEFT / RIGHT EDGE TO MOVE · TAP TOP TO JUMP · TAP BOTTOM TO FIRE'}
 // pointer (mouse or finger) position over the canvas, 0..1, for the finale's hands
 export const ptr={x:0.5,y:0.55,t:-1e9};
 const ptrSet=(e:PointerEvent)=>{const r=cv.getBoundingClientRect();if(!r.width)return;ptr.x=clamp((e.clientX-r.left)/r.width,0,1);ptr.y=clamp((e.clientY-r.top)/r.height,0,1);ptr.t=performance.now()};
 cv.addEventListener('pointermove',ptrSet);cv.addEventListener('pointerdown',ptrSet);
-export function readInput(){return{left:!!(keys.ArrowLeft||keys.a||keys.A),right:!!(keys.ArrowRight||keys.d||keys.D),up:!!(keys.ArrowUp||keys.w||keys.W),down:!!(keys.ArrowDown||keys.s||keys.S),fire:fireEdge,jump:jumpEdge||fireEdge,upEdge:jumpEdge,mv:{x:mv.x,y:mv.y}}}
+export function readInput(){return{left:!!(keys.ArrowLeft||keys.a||keys.A),right:!!(keys.ArrowRight||keys.d||keys.D),up:!!(keys.ArrowUp||keys.w||keys.W),down:!!(keys.ArrowDown||keys.s||keys.S),fire:fireEdge,fireHeld:!!keys[' ']||[...tz.values()].includes('F'),jump:jumpEdge||fireEdge,upEdge:jumpEdge,mv:{x:mv.x,y:mv.y}}}
 
 // ---------- audio (optional click track) ----------
 let AC:any=null,master:any=null,noiseBuf:any=null;export let clickOn=false;
