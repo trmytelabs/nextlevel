@@ -54,4 +54,5 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-las
   E1.update(dt,songT,inp,auto);E2.update(dt,songT,inp,auto);E3.update(dt,songT,inp,auto);E4.update(dt,songT,inp,auto);E5.update(dt,songT,inp,auto)}
  render(songT,auto);hud(songT,auto);clearEdges()}
 Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek,nudge,tap,clearTaps,saveTiming});loadSong();E5GL.init();
+(window as any).ETM={seek,step(secs){const inp={left:false,right:false,up:false,down:false,fire:false,jump:false,upEdge:false,mv:{x:0,y:0}};for(let i=0;i<secs*60;i++){const prev=songT;songT=Math.min(TOTAL,songT+1/60);const pb=Math.floor(prev/BEAT),cb=Math.floor(songT/BEAT);if(cb!==pb){beatIdx=cb;lastBeatT=songT;onBeat(cb,songT,true)}const p8=Math.floor(prev/(BEAT/2)),c8=Math.floor(songT/(BEAT/2));if(c8!==p8)on8th(c8,songT,true);hud(songT,true);E1.update(1/60,songT,inp,true);E2.update(1/60,songT,inp,true);E3.update(1/60,songT,inp,true);E4.update(1/60,songT,inp,true);E5.update(1/60,songT,inp,true)}render(songT,true);hud(songT,true)}};
 seek(0);requestAnimationFrame(frame);
