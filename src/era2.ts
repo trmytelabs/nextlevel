@@ -37,7 +37,7 @@ function update(dt,t,inp,auto){if(t<start-TRANS||t>=end)return;const p=S.pl;
  // autopilot steers in the air with the same speed control a player has (hold right = 1.25x, left = 0.8x) to reach a landing
  let mul=inp.right?1.25:inp.left?.8:1;if(auto&&mul===1&&!p.ground&&!p.dead)mul=[1,1.25,.8].find(k=>safe(p.x,p.y,p.vy,false,SPEED*k))||1;S.steer=mul;
  const sp=SPEED*mul;S.camX+=sp*dt;gen(S.camX+LW+64);p.x=S.camX+PX;p.stun=Math.max(0,p.stun-dt);S.shake=Math.max(0,S.shake-dt);
- if(p.dead){p.vy+=G*dt;p.dy+=p.vy*dt;if(t-p.deadT>0.9){const q=S.plats.find(q=>q.kind!=='pipe'&&q.x+q.w>p.x+40&&safe(p.x,q.y-120,0,false,sp));if(q){p.dead=false;p.y=q.y-120;p.vy=0;p.ground=false;p.stun=1.3;for(let i=0;i<12;i++)S.pops.push({x:p.x,y:p.y-8,vx:(hash(t*31+i)-.5)*80,vy:(hash(t*17+i)-.5)*80,l:.5});blip(880,0.08,0.08)}}}
+ if(p.dead){p.vy+=G*dt;p.dy+=p.vy*dt;if(t-p.deadT>0.9){const q=S.plats.find(q=>q.kind!=='pipe'&&q.x+q.w>p.x+40&&safe(p.x,q.y-120,0,false,sp));if(q){p.dead=false;p.y=q.y-120;p.vy=0;p.ground=false;p.stun=2.6;for(let i=0;i<12;i++)S.pops.push({x:p.x,y:p.y-8,vx:(hash(t*31+i)-.5)*80,vy:(hash(t*17+i)-.5)*80,l:.5});blip(880,0.08,0.08)}}}
  const u=under(p.x);if(!p.dead&&p.ground&&!u.find(q=>Math.abs(q.y-p.y)<1))p.ground=false;
  let want=false;
  if(auto){const cur=u.filter(q=>Math.abs(q.y-p.y)<1).sort((a,b)=>a.y-b.y)[0];
@@ -58,7 +58,7 @@ function update(dt,t,inp,auto){if(t<start-TRANS||t>=end)return;const p=S.pl;
   const fw=16,fh=f.t==='walk'?14:8,fx=f.x,fy=f.y-fh;
   if(!p.dead&&p.x+6>fx&&p.x-6<fx+fw&&p.y>fy&&p.y-22<fy+fh){
    if(p.vy>80&&p.y-fy<10){f.sq=0.001;S.score+=200;S.stomps++;p.vy=auto?([-230,-330,-160].find(v=>safe(p.x,p.y,v,false,sp))||-230):inp.jump?-330:-230;p.ground=false;/* SMW: hold jump on a stomp for a higher bounce; autopilot picks the bounce that lands */noise(0.06,0.3,1500);blip(330,0.08,0.12);for(let i=0;i<8;i++)S.pops.push({x:fx+8,y:fy+6,vx:(hash(t*13+i)-.5)*90,vy:-hash(t*29+i)*80,l:.5})}
-   else if(p.stun<=0){p.stun=1.0;S.score=Math.max(0,S.score-50);S.shake=0.3;p.vy=-160;p.ground=false;blip(110,0.25,0.15)}}}
+   else if(p.stun<=0){p.stun=2.0;S.score=Math.max(0,S.score-50);S.shake=0.3;p.vy=-160;p.ground=false;blip(110,0.25,0.15)}}}
  for(const c of S.coins){if(!p.dead&&!c.got&&p.x>c.x-6&&p.x<c.x+c.w+6&&p.y>c.y-8&&p.y-24<c.y+2){c.got=0.001;S.coinsGot++;S.score+=10;S.line.push(c.text);blip(1320,0.06)}if(c.got)c.got+=dt}
  S.coins=S.coins.filter(c=>c.x+c.w>S.camX-50&&c.got<0.4);for(const q of S.plats)q.f=Math.max(0,q.f-dt);p.sq=Math.max(0,p.sq-dt);
  for(const q of S.pops){q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=300*dt;q.l-=dt}S.pops=S.pops.filter(q=>q.l>0)}

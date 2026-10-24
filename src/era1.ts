@@ -34,7 +34,7 @@ function onBeat(_b,t){if(t>=ERAS[1].start)return;S.pulse=1;if(t>=shatterT&&!S.de
 function on8th(_n,t,auto){if(auto&&t<shatterT){const tx=target(t);if(tx!==null&&Math.abs(tx-(S.ship.x+9))<16)fire()}}
 function update(dt,t,inp,auto){if(t>=ERAS[1].start)return;S.cool-=dt;S.pulse=Math.max(0,S.pulse-dt*3);const sh=S.ship;
  for(const st of S.stars){st.d+=st.sp*(10+st.d*0.25)*dt;if(st.d>LW*0.95){st.d=4+Math.random()*20;st.a=Math.random()*Math.PI*2}}
- sh.inv=Math.max(0,sh.inv-dt);if(sh.dead&&t-sh.deadT>0.7){sh.dead=false;sh.inv=1.2;sh.x=LW/2-9}
+ sh.inv=Math.max(0,sh.inv-dt);if(sh.dead&&t-sh.deadT>0.7){sh.dead=false;sh.inv=2.6;sh.x=LW/2-9}
  if(t<shatterT&&!sh.dead){let dx=0;if(auto){const tx=target(t);if(tx!==null)dx=clamp((tx-9-sh.x)*5,-220,220)*dt;const sx=dodge(t);if(sx!==null)dx=clamp((sx-sh.x)*8,-260,260)*dt}else{if(inp.left)dx=-180*dt;if(inp.right)dx=180*dt;if(inp.fire)fire()}sh.x=clamp(sh.x+dx,6,LW-24)}
  else if(t>=shatterT){if(!S.debris)shatter();sh.x=lerp(sh.x,80/320*LW-9,1-Math.pow(0.02,dt));sh.y=lerp(sh.y,GROUND-10,1-Math.pow(0.02,dt))}
  for(const b of S.bul){b.y-=330*dt;if(b.hit||b.y<=VPY+1)continue;const z=F/(b.y-VPY),sc=F2/z;
