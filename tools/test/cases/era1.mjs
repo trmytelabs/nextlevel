@@ -38,7 +38,7 @@ export default [
  {name:'E1.1d shatter screenshot bar 17.2',era:1,bar:17.2,fn:async(p,h,page)=>{await page.screenshot({path:'tools/test/shots/era1-bar17.2-shatter.png'});return (p.e1['debris#']>0&&p.e1['lines#']===0)||`at bar ${p.bar.toFixed(2)} debris#=${p.e1['debris#']} lines#=${p.e1['lines#']}`}},
 
  {name:'E1.2 every lyric line with bar<19 becomes crawl words',era:1,bar:'end',fn:async(p,h,page)=>{
-  const exp=await page.evaluate(async()=>{try{const m=await import(new URL('src/core.ts',location.href).href);return m.LYRICS.filter(l=>l[0]<19).map(l=>l[1].split(' ').length)}catch(e){return String(e)}});
+  const exp=(await import('node:fs')).readFileSync(new URL('../../../src/core.ts',import.meta.url),'utf8').replace(/\r/g,'').split('\n').map(l=>l.match(/^\[([\d.]+),"(.*)"\],?\]?;?$/)).filter(Boolean).map(m=>[+m[1],m[2]]).filter(l=>l[0]<19).map(l=>l[1].split(' ').length);
   if(typeof exp==='string')return 'could not import core.ts: '+exp;
   const n=exp.reduce((a,b)=>a+b,0);
   return (p.e1.seq===exp.length&&p.e1.words===n)||`${p.e1.seq} lines / ${p.e1.words} words reached the crawl, expected ${exp.length} / ${n}`}},
