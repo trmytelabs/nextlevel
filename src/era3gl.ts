@@ -5,7 +5,7 @@ import {E3} from './era3';
 
 // ---------- ERA 3 renderer: Saturn-era arcade racer in the spirit of Daytona USA's speedway course ----------
 const {ROADW,L,curve}=E3.K;
-let ok=false,renderer:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.PerspectiveCamera,cars:any[]=[],playerCar:any,reels:THREE.Mesh[]=[],texCache=new Map<string,THREE.Texture>();
+let ok=false,renderer:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.PerspectiveCamera,cars:any[]=[],playerCar:any,reels:THREE.Mesh[]=[],texCache=new Map<string,THREE.Texture>(),lyrSprites=new Map<string,THREE.Sprite>();
 function canvasTex(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d')!);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.magFilter=THREE.NearestFilter;return t}
 function textSprite(text,color,bg='rgba(8,8,16,.75)'){const key=text+'|'+color+'|'+bg;let tex=texCache.get(key);if(!tex){tex=canvasTex(512,128,x=>{x.font="40px 'Press Start 2P',monospace";const tw=Math.min(500,x.measureText(text).width+32);x.fillStyle=bg;x.fillRect(256-tw/2,20,tw,88);x.strokeStyle=color;x.lineWidth=4;x.strokeRect(256-tw/2,20,tw,88);x.fillStyle=color;x.textAlign='center';x.textBaseline='middle';x.fillText(text,256,64)});texCache.set(key,tex)}const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));sp.scale.set(6,1.5,1);return sp}
 const flat=(color,extra={})=>new THREE.MeshLambertMaterial({color,flatShading:true,...extra} as any);
@@ -108,7 +108,10 @@ function place(car,s,x,t){const f=E3.frame(s);const p=f.p.clone().add(f.right.cl
 export const E3GL={init,get ok(){return ok},canvas:()=>renderer.domElement,
  render(t:number){if(!ok)return;const S=E3.S;if(!S)return;
   place(playerCar,S.s,S.x,t);playerCar.g.rotateZ(-S.vx*0.08);playerCar.g.position.y+=Math.abs(Math.sin(t*22))*0.012;
-  S.cars.forEach((c,i)=>{const o=cars[i];if(!o)return;place(o,c.s,c.x,t+c.ph);if(c.word!==o.lastWord){o.lastWord=c.word;if(c.word){const sp=textSprite(c.word,'#ffe066');o.label.material=sp.material;o.label.scale.set(Math.max(3,c.word.length*0.75+1),1.5,1)}o.label.visible=!!c.word}if(c.word)o.label.position.y=3.3+Math.sin(t*3+c.ph)*0.15});
+  S.cars.forEach((c,i)=>{const o=cars[i];if(!o)return;place(o,c.s,c.x,t+c.ph)});
+  // lyric words swoop in over the pack and hover above roof height until you drive under them
+  const seen=new Set<string>();for(const w of S.lyr){if(t<w.t0)continue;seen.add(w.id);let sp=lyrSprites.get(w.id);if(!sp){sp=textSprite(w.text,'#ffe066','rgba(8,8,16,.6)');sp.material.depthTest=true;scene.add(sp);lyrSprites.set(w.id,sp)}const f=E3.frame(w.s);const gotA=w.got?clamp((t-w.got)/1.2,0,1):0;const h=w.h+gotA*8+Math.sin(t*2.2+w.s)*0.25;sp.position.copy(f.p).add(f.right.clone().multiplyScalar(w.x*ROADW)).add(f.up.clone().multiplyScalar(h));const sc=Math.max(3.2,w.text.length*0.78+1.2)*(1+gotA*0.8);sp.scale.set(sc,sc/4,1);sp.material.opacity=w.got?1-gotA:w.missed?0.35:1;sp.material.color.setHex(w.got?0xffffff:w.missed?0x888888:0xffffff)}
+  for(const [id,sp] of lyrSprites){if(!seen.has(id)){scene.remove(sp);lyrSprites.delete(id)}}
   for(const r of reels)r.rotation.x+=0.02;
   const f=E3.frame(S.s-10.5),fp=E3.frame(S.s);const camPos=f.p.clone().add(f.right.clone().multiplyScalar(S.x*ROADW*0.5)).add(f.up.clone().multiplyScalar(3.8));if(S.shake>0)camPos.add(new THREE.Vector3((Math.random()-.5)*0.3*S.shake,(Math.random()-.5)*0.3*S.shake,0));camera.position.copy(camPos);const look=fp.p.clone().add(fp.T.clone().multiplyScalar(16)).add(fp.up.clone().multiplyScalar(1.0));camera.up.copy(f.up);camera.lookAt(look);
   renderer.render(scene,camera)}};
