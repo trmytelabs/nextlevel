@@ -74,7 +74,7 @@ function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;const cam=camAt(t);tic
   const cur=platAt(p.x);let jump=false;
   if(auto){const tg=targetsAhead(p,cam);
    if(p.ground){if(cur&&p.x>cur.x1-46){const nxt=allPlats(p.x+120).find(q=>q.x0>=cur.x1-2&&q.x0<cur.x1+230);if(nxt||!cur.pad)jump=true}
-    const c=chunk(Math.floor(p.x/CW));if(c.gate&&!c.gate.hit){const d=c.gate.x-p.x;if(c.gate.low&&d>0&&d<70)jump=true;if(!c.gate.low&&d>-30&&d<90)jump=false}
+    if(S.bolts.some(bo=>bo.vx<0&&bo.x-p.x>10&&bo.x-p.x<90&&bo.y>p.y-70&&bo.y<p.y+8))jump=true;const c=chunk(Math.floor(p.x/CW));if(c.gate&&!c.gate.hit){const d=c.gate.x-p.x;if(c.gate.low&&d>0&&d<70)jump=true;if(!c.gate.low&&d>-30&&d<90)jump=false}
     else if(tg.some(q=>q.x-p.x>40&&q.x-p.x<260&&q.y<p.y-40&&q.y>p.y-150)||S.signs.some(sg=>!sg.lit&&sg.x-p.x>20&&sg.x-p.x<90&&sg.y<p.y-50))jump=true;
     else if(S.boss&&!S.boss.dead&&t>=bar(89.2)&&(t%BEAT)<dt*2&&S.boss.plates.some(q=>q.alive&&q.r<=6&&(q.word||!S.boss.plates.some(z=>z.alive&&z.word))))jump=true}
    else if(dbl&&p.jumps===1&&p.vy>60&&tg.some(q=>q.x-p.x>0&&q.x-p.x<(q.kind==='plate'?520:300)&&q.y<p.y-(q.kind==='plate'?60:120)))jump=true}
