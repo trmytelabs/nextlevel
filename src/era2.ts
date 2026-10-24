@@ -28,11 +28,12 @@ function gen(to){while(S.genX<to){const r=S.rng;
  S.genX=x+w;S.lastTop=top}
  S.plats=S.plats.filter(p=>p.x+p.w>S.camX-400);S.foes=S.foes.filter(f=>f.x>S.camX-120)}
 function init(t){S={rng:rngf(21),plats:[],coins:[],foes:[],line:[],genX:0,lastTop:LH-48,score:0,coinsGot:0,stomps:0,camX:Math.max(0,t-start)*SPEED,pops:[],shake:0};gen(S.camX+LW+64);
- const px=S.camX+PX;const p=S.plats.filter(q=>q.kind!=='pipe'&&px>=q.x&&px<=q.x+q.w)[0]||S.plats[0];S.pl={x:px,y:p.y,vy:0,ground:true,sq:0,stun:0,face:1}}
+ const px=S.camX+PX;const p=S.plats.filter(q=>q.kind!=='pipe'&&px>=q.x&&px<=q.x+q.w)[0]||S.plats[0];S.pl={x:px,y:p.y,vy:0,ground:true,sq:0,stun:0,face:1,dead:false,deadT:-9,dy:0,deadX:0}}
 function onLine(words,t){if(t<start-TRANS||t>=end)return;let x=S.camX+LW-30;gen(x+700);S.coins=S.coins.filter(c=>c.got||c.x>S.camX-50);S.line=[];words.forEach((w,i)=>{const wd=w.length*6;const pl=S.plats.filter(q=>q.kind!=='pipe'&&x+wd/2>=q.x&&x+wd/2<=q.x+q.w)[0];const top=pl?pl.y:S.lastTop;S.coins.push({x,y:top-30-(i%2)*14,w:wd,text:w,got:0});x+=wd+26})}
 const under=(x)=>S.plats.filter(q=>x+2>=q.x&&x-2<=q.x+q.w);
 function update(dt,t,inp,auto){if(t<start-TRANS||t>=end)return;const sp=SPEED*(inp.right?1.25:inp.left?.8:1);S.camX+=sp*dt;gen(S.camX+LW+64);const p=S.pl;p.x=S.camX+PX;p.stun=Math.max(0,p.stun-dt);S.shake=Math.max(0,S.shake-dt);
- const u=under(p.x);if(p.ground&&!u.find(q=>Math.abs(q.y-p.y)<1))p.ground=false;
+ if(p.dead){p.vy+=G*dt;p.dy+=p.vy*dt;if(t-p.deadT>0.9){const q=S.plats.find(q=>q.kind!=='pipe'&&q.w>=4*B&&q.x+q.w>p.x+28&&p.x>=q.x+6);if(q){p.dead=false;p.y=q.y-120;p.vy=0;p.ground=false;p.stun=1.3;for(let i=0;i<12;i++)S.pops.push({x:p.x,y:p.y-8,vx:(Math.random()-.5)*80,vy:(Math.random()-.5)*80,l:.5});blip(880,0.08,0.08)}}}
+ const u=under(p.x);if(!p.dead&&p.ground&&!u.find(q=>Math.abs(q.y-p.y)<1))p.ground=false;
  let want=false;
  if(auto){const cur=u.filter(q=>Math.abs(q.y-p.y)<1).sort((a,b)=>a.y-b.y)[0];
   if(p.ground&&cur){const next=S.plats.find(q=>q.kind!=='pipe'&&q.x>cur.x&&q.x>p.x);const toEdge=cur.x+cur.w-p.x;if(toEdge<28&&next&&next.y<=cur.y+B*2)want=true;if(next&&next.y<cur.y&&next.x-p.x<40&&toEdge<48)want=true;
@@ -41,17 +42,17 @@ function update(dt,t,inp,auto){if(t<start-TRANS||t>=end)return;const sp=SPEED*(i
    const fly=S.foes.find(f=>f.alive&&!f.sq&&f.t==='fly'&&f.x>p.x-8&&f.x-p.x<40&&f.y>p.y-40&&f.y<p.y);if(fly&&!want)want=false;
    if(!want&&S.coins.some(c=>!c.got&&c.x+c.w/2>p.x&&c.x+c.w/2-p.x<34&&c.y<p.y-26))want=true}}
  else if(inp.jump)want=true;
- if(want&&p.ground){p.vy=JV;p.ground=false;blip(660,0.08)}
- if(!p.ground){const oy=p.y;p.vy+=G*dt;p.y+=p.vy*dt;if(p.vy>0)for(const q of u){if(oy<=q.y+0.01&&p.y>=q.y){p.y=q.y;p.vy=0;p.ground=true;q.f=0.25;p.sq=0.15;hat(false);break}}}
- if(p.y>LH+30){const next=S.plats.find(q=>q.kind!=='pipe'&&q.x>p.x)||S.plats[S.plats.length-1];p.y=next.y-40;p.vy=0;S.camX=next.x+8-PX;p.x=S.camX+PX}
+ if(!p.dead&&want&&p.ground){p.vy=JV;p.ground=false;blip(660,0.08)}
+ if(!p.dead&&!p.ground){const oy=p.y;p.vy+=G*dt;p.y+=p.vy*dt;if(p.vy>0)for(const q of u){if(oy<=q.y+0.01&&p.y>=q.y){p.y=q.y;p.vy=0;p.ground=true;q.f=0.25;p.sq=0.15;hat(false);break}}}
+ if(!p.dead&&p.y>LH-14){p.dead=true;p.deadT=t;p.dy=LH-14;p.vy=-330;p.deadX=p.x-S.camX;p.ground=false;S.score=Math.max(0,S.score-50);S.shake=0.3;noise(0.12,0.3,700);blip(196,0.35,0.15)}
  // enemies
  for(const f of S.foes){if(!f.alive)continue;if(f.sq){f.sq+=dt;if(f.sq>0.4)f.alive=false;continue}
   if(f.t==='walk'){f.x+=f.dir*22*dt;if(f.x<f.x0){f.x=f.x0;f.dir=1}if(f.x>f.x1){f.x=f.x1;f.dir=-1}}else{f.y=f.base+Math.sin(t*2.2+f.ph)*18;f.x-=10*dt}
   const fw=16,fh=f.t==='walk'?14:8,fx=f.x,fy=f.y-fh;
-  if(p.x+6>fx&&p.x-6<fx+fw&&p.y>fy&&p.y-22<fy+fh){
+  if(!p.dead&&p.x+6>fx&&p.x-6<fx+fw&&p.y>fy&&p.y-22<fy+fh){
    if(p.vy>80&&p.y-fy<10){f.sq=0.001;S.score+=200;S.stomps++;p.vy=-230;p.ground=false;noise(0.06,0.3,1500);blip(330,0.08,0.12);for(let i=0;i<8;i++)S.pops.push({x:fx+8,y:fy+6,vx:(Math.random()-.5)*90,vy:-Math.random()*80,l:.5})}
    else if(p.stun<=0){p.stun=1.0;S.score=Math.max(0,S.score-50);S.shake=0.3;p.vy=-160;p.ground=false;blip(110,0.25,0.15)}}}
- for(const c of S.coins){if(!c.got&&p.x>c.x-6&&p.x<c.x+c.w+6&&Math.abs(c.y-(p.y-10))<14){c.got=0.001;S.coinsGot++;S.score+=10;S.line.push(c.text);blip(1320,0.06)}if(c.got)c.got+=dt}
+ for(const c of S.coins){if(!p.dead&&!c.got&&p.x>c.x-6&&p.x<c.x+c.w+6&&Math.abs(c.y-(p.y-10))<14){c.got=0.001;S.coinsGot++;S.score+=10;S.line.push(c.text);blip(1320,0.06)}if(c.got)c.got+=dt}
  S.coins=S.coins.filter(c=>c.x+c.w>S.camX-50&&c.got<0.4);for(const q of S.plats)q.f=Math.max(0,q.f-dt);p.sq=Math.max(0,p.sq-dt);
  for(const q of S.pops){q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=300*dt;q.l-=dt}S.pops=S.pops.filter(q=>q.l>0)}
 // ---------------- drawing ----------------
@@ -75,7 +76,7 @@ function draw(x,t){const cam=S.camX,pulse=1-((t/BEAT)%1);x.save();if(S.shake>0)x
  for(const f of S.foes){if(!f.alive)continue;const sx=Math.round(f.x-cam);if(sx<-20||sx>LW+20)continue;if(f.sq){pix(x,SQUASH,sx,Math.round(f.y-5),PAL);continue}
   if(f.t==='walk')pix(x,WALK[Math.floor(t/(BEAT/2))%2],sx,Math.round(f.y-14),PAL,1,f.dir<0);else pix(x,FLY[Math.floor(t*6)%2],sx,Math.round(f.y-8),PAL)}
  x.font="6px 'Press Start 2P',monospace";for(const c of S.coins){const sx=Math.round(c.x-cam);if(sx>LW||sx+c.w<0)continue;if(c.got){x.globalAlpha=1-c.got/0.4;x.fillStyle='#fff';x.fillText(c.text,sx,c.y-c.got*50);x.globalAlpha=1;continue}const bob=Math.sin(t*6+c.x*0.05)*2;x.fillStyle='rgba(60,30,10,.55)';x.fillRect(sx-3,c.y-8+bob,c.w+6,11);x.fillStyle=Math.floor(t/(BEAT/2))%2?'#ffd23f':'#fff2a0';x.fillText(c.text,sx,c.y+bob)}
- const p=S.pl;if(!(p.stun>0&&Math.floor(t*24)%2)){const frame=!p.ground?3:Math.floor(t/(BEAT/3))%3;x.fillStyle='rgba(0,0,0,.25)';x.fillRect(Math.round(p.x-cam-6),Math.round(p.y)-1,12,2);pix(x,RUN[frame],Math.round(p.x-cam-8),Math.round(p.y-24+(p.sq>0?2:0)),PAL)}
+ const p=S.pl;if(p.dead){if(p.dy<LH+40){x.save();x.translate(Math.round(p.deadX),Math.round(p.dy-12));x.rotate(Math.PI);pix(x,RUN[3],-8,-12,PAL);x.restore()}}else if(!(p.stun>0&&Math.floor(t*24)%2)){const frame=!p.ground?3:Math.floor(t/(BEAT/3))%3;x.fillStyle='rgba(0,0,0,.25)';x.fillRect(Math.round(p.x-cam-6),Math.round(p.y)-1,12,2);pix(x,RUN[frame],Math.round(p.x-cam-8),Math.round(p.y-24+(p.sq>0?2:0)),PAL)}
  for(const q of S.pops){x.globalAlpha=Math.min(1,q.l*2);x.fillStyle='#e0b0ff';x.fillRect(q.x-cam,q.y,2,2)}x.globalAlpha=1;
  x.restore();
  x.font="6px 'Press Start 2P',monospace";x.fillStyle='#fff';x.strokeStyle='#1c3a6a';x.lineWidth=2;x.strokeText('SCORE '+S.score,6,26);x.fillText('SCORE '+S.score,6,26);x.fillStyle='#ffd23f';x.strokeText('WORDS '+S.coinsGot,LW-76,26);x.fillText('WORDS '+S.coinsGot,LW-76,26);x.fillStyle='#e0b0ff';x.strokeText('STOMPS '+S.stomps,6,36);x.fillText('STOMPS '+S.stomps,6,36);

@@ -8,7 +8,7 @@ const F=4000,F2=27,ROWD=0.56,ZFAR=112,ZNEAR=18;
 const SHIP=['....X....','...XXX...','.XXXXXXX.','XXXXXXXXX'];
 const shatterT=bar(17);
 let S:any;
-function init(t){S={ship:{x:LW/2-9,y:GROUND-10},bul:[],lines:[],debris:null,pops:[],score:0,chips:0,cool:0,rng:rngf(7),stars:[],pulse:0,seq:0};
+function init(t){S={ship:{x:LW/2-9,y:GROUND-10,dead:false,deadT:-9,inv:0},bul:[],lines:[],debris:null,pops:[],score:0,chips:0,cool:0,rng:rngf(7),stars:[],pulse:0,seq:0};
  const r=rngf(3);for(let i=0;i<150;i++)S.stars.push({a:r()*Math.PI*2,d:r()*LW*0.9,sp:0.4+r()*0.8,b:0.3+r()*0.7});
  if(t>=shatterT)S.debris=[]}
 function makeWord(text){const c=mk(4,4);c.x.font=`${FS}px 'Press Start 2P',monospace`;const w=Math.ceil(c.x.measureText(text).width)+6,h=FS+8;c.c.width=w;c.c.height=h;c.x.imageSmoothingEnabled=false;c.x.font=`${FS}px 'Press Start 2P',monospace`;c.x.textBaseline='top';c.x.fillStyle=YEL;c.x.fillText(text,3,3);const img=c.x.getImageData(0,0,w,h);let n=0;for(let i=3;i<img.data.length;i+=4)if(img.data[i]>0)n++;return{text,c,img,w,h,total:Math.max(1,n),left:n,dead:false,bx:0,by:0}}
@@ -22,13 +22,14 @@ function compose(ln){const x=ln.tex.x;x.clearRect(0,0,BW,ln.bh);for(const w of l
 function toScreen(ln,u,row,t){const z=rowZ(ln,row,t);return{x:VPX+(u-BW/2+ln.xo)*F2/z,y:VPY+F/z,z}}
 function chip(w,mx,my,R){const d=w.img.data;let n=0;for(let yy=-R;yy<=R;yy++)for(let xx=-R;xx<=R;xx++){if(xx*xx+yy*yy>R*R)continue;const px=mx+xx,py=my+yy;if(px<0||py<0||px>=w.w||py>=w.h)continue;const i=(py*w.w+px)*4+3;if(d[i]>0){d[i]=0;n++}}if(n){w.left-=n;w.c.x.putImageData(w.img,0,0)}return n}
 function shatter(){S.debris=[];const r=rngf(99);for(const ln of S.lines){for(const w of ln.words){if(w.dead)continue;const d=w.img.data;for(let py=0;py<w.h;py+=3)for(let px=0;px<w.w;px+=3){if(d[(py*w.w+px)*4+3]===0)continue;const sp=toScreen(ln,w.bx+px,w.by+py,shatterT);if(sp.z<2||sp.y>GROUND)continue;S.debris.push({x:sp.x,y:sp.y,vx:(r()-.5)*60,vy:-r()*40,land:GROUND-2-Math.floor(r()*6)})}}}S.lines=[];S.bul=[]}
-function fire(){if(S.bul.length<3&&S.cool<=0){S.bul.push({x:S.ship.x+9,y:S.ship.y-2});S.cool=0.1;blip(880,0.05)}}
+function fire(){if(S.ship.dead)return;if(S.bul.length<3&&S.cool<=0){S.bul.push({x:S.ship.x+9,y:S.ship.y-2});S.cool=0.1;blip(880,0.05)}}
 function target(t){let best=null,bz=1e9;for(const ln of S.lines){for(const w of ln.words){if(w.dead)continue;const sp=toScreen(ln,w.bx+w.w/2,w.by+w.h/2,t);if(sp.z<3||sp.y>GROUND-4)continue;const score=sp.z-w.left/w.total*20;if(score<bz){bz=score;best=sp.x}}}return best}
 function onBeat(_b,t){S.pulse=1;if(t>=shatterT&&!S.debris)shatter()}
 function on8th(_n,t,auto){if(auto&&t<shatterT){const tx=target(t);if(tx!==null&&Math.abs(tx-(S.ship.x+9))<16)fire()}}
 function update(dt,t,inp,auto){if(t>=ERAS[1].start)return;S.cool-=dt;S.pulse=Math.max(0,S.pulse-dt*3);const sh=S.ship;
  for(const st of S.stars){st.d+=st.sp*(10+st.d*0.25)*dt;if(st.d>LW*0.95){st.d=4+Math.random()*20;st.a=Math.random()*Math.PI*2}}
- if(t<shatterT){let dx=0;if(auto){const tx=target(t);if(tx!==null)dx=clamp((tx-9-sh.x)*5,-220,220)*dt}else{if(inp.left)dx=-180*dt;if(inp.right)dx=180*dt;if(inp.fire)fire()}sh.x=clamp(sh.x+dx,6,LW-24)}
+ sh.inv=Math.max(0,sh.inv-dt);if(sh.dead&&t-sh.deadT>0.7){sh.dead=false;sh.inv=1.2;sh.x=LW/2-9}
+ if(t<shatterT&&!sh.dead){let dx=0;if(auto){const tx=target(t);if(tx!==null)dx=clamp((tx-9-sh.x)*5,-220,220)*dt}else{if(inp.left)dx=-180*dt;if(inp.right)dx=180*dt;if(inp.fire)fire()}sh.x=clamp(sh.x+dx,6,LW-24)}
  else{if(!S.debris)shatter();sh.x=lerp(sh.x,80/320*LW-9,1-Math.pow(0.02,dt));sh.y=lerp(sh.y,GROUND-10,1-Math.pow(0.02,dt))}
  for(const b of S.bul){b.y-=330*dt;if(b.hit||b.y<=VPY+1)continue;const z=F/(b.y-VPY),sc=F2/z;
   for(const ln of S.lines){const zb=zOf(ln,t);const row=ln.bh-(z-zb)/ROWD;if(row<0||row>=ln.bh)continue;const u=(b.x-VPX)/sc+BW/2-ln.xo;
@@ -37,6 +38,7 @@ function update(dt,t,inp,auto){if(t>=ERAS[1].start)return;S.cool-=dt;S.pulse=Mat
     b.hit=true;S.chips++;S.score+=Math.min(50,n);blip(1200+Math.random()*400,0.04,0.08);for(let i=0;i<8;i++)S.pops.push({x:b.x,y:b.y,vx:(S.rng()-.5)*120,vy:-S.rng()*90,l:.5});
     if(w.left<w.total*0.16){w.dead=true;S.score+=100;noise(0.08,0.3,2000);const d=w.img.data;for(let py=0;py<w.h;py+=2)for(let px=0;px<w.w;px+=2){if(d[(py*w.w+px)*4+3]===0)continue;const sp=toScreen(ln,w.bx+px,w.by+py,t);S.pops.push({x:sp.x,y:sp.y,vx:(S.rng()-.5)*160,vy:(S.rng()-.9)*140,l:.7})}}
     break}if(b.hit)break}}
+ if(!sh.dead&&sh.inv<=0&&t<shatterT)for(const ln of S.lines){for(const w of ln.words){if(w.dead)continue;const sp=toScreen(ln,w.bx+w.w/2,w.by+w.h,t);if(sp.z<2)continue;const hw=w.w*F2/sp.z/2;if(sp.y>=sh.y-2&&sp.y<=sh.y+12&&Math.abs(sp.x-(sh.x+9))<hw+8){sh.dead=true;sh.deadT=t;S.score=Math.max(0,S.score-100);noise(0.2,0.5,600);blip(80,0.4,0.2);for(let i=0;i<40;i++)S.pops.push({x:sh.x+9,y:sh.y+4,vx:(S.rng()-.5)*260,vy:(S.rng()-.9)*220,l:.8,g:true});w.dead=true;const d=w.img.data;for(let py=0;py<w.h;py+=2)for(let px=0;px<w.w;px+=2){if(d[(py*w.w+px)*4+3]===0)continue;const q=toScreen(ln,w.bx+px,w.by+py,t);S.pops.push({x:q.x,y:q.y,vx:(S.rng()-.5)*160,vy:(S.rng()-.9)*140,l:.7})}break}}if(sh.dead)break}
  S.bul=S.bul.filter(b=>!b.hit&&b.y>-10);
  S.lines=S.lines.filter(ln=>zOf(ln,t)+ln.bh*ROWD>2&&ln.words.some(w=>!w.dead));
  for(const p of S.pops){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=160*dt;p.l-=dt}S.pops=S.pops.filter(p=>p.l>0);
@@ -54,9 +56,9 @@ function draw(x,t){x.fillStyle='#000';x.fillRect(0,0,LW,LH);x.imageSmoothingEnab
   for(let y=yTop;y<=yBot;y++){const z=F/(y-VPY);const row=ln.bh-(z-zb)/ROWD;if(row<0||row>=ln.bh)continue;const sc=F2/z,dw=BW*sc;x.drawImage(ln.tex.c,0,Math.floor(row),BW,1,VPX+ln.xo*sc-dw/2,y,dw,1.05)}}
  x.globalAlpha=1;
  for(const b of S.bul){x.fillStyle='rgba(255,255,255,.35)';x.fillRect(b.x-2,b.y-2,5,12);x.fillStyle='#fff';x.fillRect(b.x-0.5,b.y,2,8)}
- for(const p of S.pops){x.globalAlpha=Math.min(1,p.l*2);x.fillStyle=YEL;x.fillRect(p.x,p.y,2,2)}x.globalAlpha=1;
+ for(const p of S.pops){x.globalAlpha=Math.min(1,p.l*2);x.fillStyle=p.g?'#5bff5b':YEL;x.fillRect(p.x,p.y,2,2)}x.globalAlpha=1;
  if(S.debris){x.fillStyle=YEL;for(const d of S.debris)x.fillRect(d.x,d.y,2,2)}
- pix(x,SHIP,Math.round(S.ship.x),Math.round(S.ship.y),'#5bff5b',2);
+ if(!S.ship.dead&&!(S.ship.inv>0&&Math.floor(t*20)%2))pix(x,SHIP,Math.round(S.ship.x),Math.round(S.ship.y),'#5bff5b',2);
  x.fillStyle='#5bff5b';x.fillRect(0,GROUND+8,LW,2);
  x.font="8px 'Press Start 2P',monospace";x.fillStyle=YEL;x.fillText('SCORE '+String(S.score).padStart(6,'0'),8,34);x.textAlign='right';x.fillText('CHIPS '+S.chips,LW-8,34);x.textAlign='left'}
 return{init,onBeat,on8th,onLine,update,draw,SHIP}})();
