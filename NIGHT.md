@@ -1,8 +1,18 @@
 # Morning report (2026-10-24, written ~1:40 AM)
 
-**Play it:** https://claude.ai/artifact/BtigJtQXJGtrXoycKL3Xvm (version 8). On the phone: open the link, turn the phone
+**Play it:** https://claude.ai/artifact/BtigJtQXJGtrXoycKL3Xvm (version 9). On the phone: open the link, turn the phone
 sideways, hold the left/right edge to move, tap the top half to jump, tap the bottom half to fire. The FX button (or G)
 switches to the light graphics tier; phones default to it. Sound is off until you press SOUND (phones need a tap first).
+
+**Changed after your 2 AM notes**
+- Racer: lyric words no longer stream past at half-second intervals. Each line is one Daytona-style overhead gantry
+  every two bars with the racing line lit on one lane; drive under it in that lane to take the line (HUD: LINES n/m).
+- Finale rebuilt as you picked (option 1 with a touch of 2): a VR saber lane. Headset-on lens transition at bar 75, two
+  sabers low in the frame like VR hands (A / tap left = left hand, D / tap right = right hand), word blocks fly in on the
+  beat with the word printed on the face, and an AI co-pilot turns every cut word into a piece of arena ahead of you
+  (arches, pillars, word panels, beams, rings) with a visible build beam and status. Bar 89 is a tunnel run at 1.35x with
+  the chorus words echoing back faster; bar 94 coasts to a stop and the camera cranes up over the arena for the end card.
+  Everything is planned from the lyric table, so seeking is deterministic. The old agent-swarm era is gone.
 
 **What changed overnight**
 - Title card (your name, "For the Deputy's Maximalists", thesis lines) over bars 0–2 and an end card at bar 95.
