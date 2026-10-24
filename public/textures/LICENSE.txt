@@ -1,0 +1,1 @@
+CC0 textures from Poly Haven (polyhaven.com): asphalt_track, grass_ground, concrete_wall_005, pine_tree_01 (twig + bark). No attribution required; credited in README.

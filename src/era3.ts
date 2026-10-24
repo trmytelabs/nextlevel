@@ -4,7 +4,7 @@ import {ERAS,TRANS,W,H,rngf,hash,clamp,lerp,blip,noise} from './core';
 // ---------- ERA 3: arcade racer. Tri-oval with banked turns, traffic to overtake, each lyric line an overhead gantry you drive under ----------
 export const E3=(()=>{
 const start=ERAS[2].start,end=ERAS[3].start;
-const ROADW=7,SPEED=72,WSP=SPEED*0.5,NCARS=12,LANES=[-0.62,-0.21,0.21,0.62]; // words drift at half speed so the pack sweeps past them and they arrive one at a time
+const ROADW=11,SPEED=72,WSP=SPEED*0.5,NCARS=12,LANES=[-0.62,-0.21,0.21,0.62]; // words drift at half speed so the pack sweeps past them and they arrive one at a time
 const PTS=[[0,0,0],[230,0,0],[330,0,-50],[355,0,-150],[280,0,-240],[130,0,-262],[-30,0,-245],[-125,0,-165],[-110,0,-55]].map(p=>new THREE.Vector3(p[0],p[1],p[2]));
 const curve=new THREE.CatmullRomCurve3(PTS,true,'centripetal',0.5);const L=curve.getLength();
 const CARCOL=[0x2f6fe8,0xf2c230,0x2fb85a,0xffffff,0xff7a1a,0x8a3ad8,0x20c8c0,0xe83a7a,0x1a1a22,0x9ad8ff,0xc8c020,0x6a8a3a];
