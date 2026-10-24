@@ -151,7 +151,7 @@ function overlay(ctx,t){const pulse=1-((t/BEAT)%1);if(S.flash>0){ctx.fillStyle=`
  drawHUD(ctx,t,pulse);
  if(t>=bar(94.5)){ctx.fillStyle=`rgba(0,0,0,${smooth((t-bar(94.5))/(BAR*0.5))})`;ctx.fillRect(0,0,W,H)}
  if(t>=bar(94.75)){const a=Math.min(1,(t-bar(94.75))/0.5)*(0.8+0.2*pulse);glow(ctx,W/2,H/2,40,'rgb(91,255,91)',a*0.5);ctx.fillStyle=`rgba(91,255,91,${a})`;ctx.fillRect(W/2-3,H/2-3,6,6)}
- if(t>=bar(95)&&Math.floor(t*2)%2===0){ctx.font="14px 'Press Start 2P',monospace";ctx.fillStyle=GRN;ctx.textAlign='center';ctx.fillText('PRESS START',W/2,H/2+50);ctx.textAlign='left'}}
+ if(t>=bar(95)&&Math.floor(t*2)%2===0){ctx.font="14px 'Press Start 2P',monospace";ctx.fillStyle=GRN;ctx.textAlign='center';ctx.fillText('PRESS START',W/2,H*0.90);ctx.textAlign='left'}}
 function drawScene(ctx,cam,t,pulse,p){
  // sky
  const g=ctx.createLinearGradient(0,0,0,HZ);g.addColorStop(0,'#04030d');g.addColorStop(0.5,'#180a36');g.addColorStop(0.85,'#45175e');g.addColorStop(1,'#7a2a6a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);

@@ -7,6 +7,7 @@ import {E5} from './era5';
 import {E5GL} from './era5gl';
 import {E3GL} from './era3gl';
 import {CRT} from './crt';
+import {MUSIC} from './music';
 import {SONG,loadSong,songTime,songSeek,songPlay,songPause,nudge,tap,clearTaps,saveTiming} from './song';
 
 // ---------- transport, compositing, HUD ----------
@@ -23,8 +24,8 @@ const scrub=$('#scrub');let drag=false;const sc=e=>{const r=scrub.getBoundingCli
 scrub.addEventListener('pointerdown',e=>{drag=true;sc(e)});addEventListener('pointermove',e=>{if(drag)sc(e)});addEventListener('pointerup',()=>drag=false);
 for(const e of ERAS){const m=document.createElement('div');m.className='mark';m.style.left=(e.start/TOTAL*100)+'%';m.innerHTML='<span>'+e.name.split(' · ')[1]+'</span>';scrub.appendChild(m)}
 
-function onBeat(b,t,auto){const e=eraAt(t);if(!SONG.has&&!(e===4&&t>=bar(94.5)))drums(e,b);E1.onBeat(b,t);E4.onBeat(b,t,auto);E5.onBeat(b,t,auto)}
-function on8th(n,t,auto){const e=eraAt(t);if(!SONG.has&&clickOn&&e>=1&&!(e===4&&t>=bar(94.5)))hat(e===2&&n%2===1);E1.on8th(n,t,auto);E4.on8th(n,t,auto);E5.on8th(n,t,auto)}
+function onBeat(b,t,auto){const e=eraAt(t);if(!SONG.has&&!(e===4&&t>=bar(94.5)))drums(e,b);MUSIC.beat(b,t,e,!SONG.has);E1.onBeat(b,t);E4.onBeat(b,t,auto);E5.onBeat(b,t,auto)}
+function on8th(n,t,auto){const e=eraAt(t);if(!SONG.has&&clickOn&&e>=1&&!(e===4&&t>=bar(94.5)))hat(e===2&&n%2===1);MUSIC.eighth(n,t,e,!SONG.has);E1.on8th(n,t,auto);E4.on8th(n,t,auto);E5.on8th(n,t,auto)}
 
 function glitch(t){if(t-lastBeatT<0.07&&hash(beatIdx)>0.5){for(let i=0;i<3;i++){const y=Math.floor(hash(beatIdx*7+i)*H),h=10+hash(beatIdx*13+i)*40,dx=(hash(beatIdx*17+i)-0.5)*40;ctx.drawImage(cv,0,y*dpr,W*dpr,h*dpr,dx,y,W,h)}}}
 function edge(x){const g=ctx.createLinearGradient(x-30,0,x+6,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(255,255,255,.9)');ctx.fillStyle=g;ctx.fillRect(x-30,0,36,H)}
@@ -39,6 +40,10 @@ function blitCRT(lo,t){if(CRT.ok){CRT.render(lo,t,1);ctx.save();ctx.imageSmoothi
 function drawE3(t){if(E3GL.ok){E3GL.render(t);ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(E3GL.canvas(),0,0,W,H);ctx.restore();E3.overlay(ctx,t)}else{ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font="10px 'Press Start 2P',monospace";ctx.fillText('WEBGL REQUIRED FOR THE RACER',W/2-150,H/2)}}
 function drawE5(t){if(E5GL.ok){E5GL.render(t);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(E5GL.canvas(),0,0,W,H);ctx.restore();E5.overlay(ctx,t)}else E5.draw(ctx,t)}
 
+const CARD={name:'IAN GINN',program:"FOR THE DEPUTY'S MAXIMALISTS",title:'EVERYTHING, THEN MORE',thesis:['Five eras of games. One desk at the GoA.','How far the tools came, and how far I came with them.'],credit:'Built in a day with AI agents.'};
+function cards(t){ctx.setTransform(dpr,0,0,dpr,0,0);
+ if(t<bar(2)){const a=t<0.5?t/0.5:Math.min(1,(bar(2)-t)/0.7);ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#ffe81f';ctx.font="11px 'Press Start 2P',monospace";ctx.fillText(CARD.title,W/2,H*0.30);ctx.fillStyle='#fff';ctx.font="30px 'Press Start 2P',monospace";ctx.fillText(CARD.name,W/2,H*0.44);ctx.fillStyle='#5bff5b';ctx.font="11px 'Press Start 2P',monospace";ctx.fillText(CARD.program,W/2,H*0.53);ctx.fillStyle='#cfd3dc';ctx.font="9px 'Press Start 2P',monospace";ctx.fillText(CARD.thesis[0],W/2,H*0.66);ctx.fillText(CARD.thesis[1],W/2,H*0.71);ctx.fillStyle='#8a8aa0';ctx.font="8px 'Press Start 2P',monospace";if(Math.floor(t*2)%2===0)ctx.fillText('PRESS START  ·  OR JUST WATCH',W/2,H*0.84);ctx.textAlign='left';ctx.restore()}
+ if(t>=bar(94.9)){const a=Math.min(1,(t-bar(94.9))/0.8);ctx.save();ctx.globalAlpha=a;ctx.textAlign='center';ctx.fillStyle='#ffe81f';ctx.font="12px 'Press Start 2P',monospace";ctx.fillText(CARD.title,W/2,H*0.30);ctx.fillStyle='#fff';ctx.font="9px 'Press Start 2P',monospace";ctx.fillText(CARD.credit,W/2,H*0.40);ctx.fillStyle='#cfd3dc';ctx.fillText(CARD.name+"  ·  DEPUTY'S MAXIMALISTS",W/2,H*0.47);ctx.fillStyle='#5bff5b';ctx.font="10px 'Press Start 2P',monospace";ctx.fillText('READY WHEN YOU ARE.',W/2,H*0.80);ctx.textAlign='left';ctx.restore()}}
 let lyricShown='',lineIdx=-1,captions=true;
 function toggleCaptions(){captions=!captions;lyricShown=''}
 function dispatchLine(i,t){const words=LYRICS[i][1].split(' ');E1.onLine(words,t);E2.onLine(words,t);E3.onLine(words,t);E4.onLine(words,t);E5.onLine(words,t)}
@@ -56,7 +61,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-las
   const p8=Math.floor(prev/(BEAT/2)),c8=Math.floor(songT/(BEAT/2));if(c8!==p8)on8th(c8,songT,auto);
   if(songT>=TOTAL){playing=false;ended=true;$('#play').textContent='REPLAY'}
   E1.update(dt,songT,inp,auto);E2.update(dt,songT,inp,auto);E3.update(dt,songT,inp,auto);E4.update(dt,songT,inp,auto);E5.update(dt,songT,inp,auto)}
- render(songT,auto);hud(songT,auto);clearEdges()}
+ render(songT,auto);cards(songT);hud(songT,auto);clearEdges()}
 Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek,nudge,tap,clearTaps,saveTiming});loadSong();E5GL.init();E3GL.init();CRT.init();
 (window as any).ETM={seek,step(secs){const inp={left:false,right:false,up:false,down:false,fire:false,jump:false,upEdge:false,mv:{x:0,y:0}};for(let i=0;i<secs*60;i++){const prev=songT;songT=Math.min(TOTAL,songT+1/60);const pb=Math.floor(prev/BEAT),cb=Math.floor(songT/BEAT);if(cb!==pb){beatIdx=cb;lastBeatT=songT;onBeat(cb,songT,true)}const p8=Math.floor(prev/(BEAT/2)),c8=Math.floor(songT/(BEAT/2));if(c8!==p8)on8th(c8,songT,true);hud(songT,true);E1.update(1/60,songT,inp,true);E2.update(1/60,songT,inp,true);E3.update(1/60,songT,inp,true);E4.update(1/60,songT,inp,true);E5.update(1/60,songT,inp,true)}render(songT,true);hud(songT,true)}};
 seek(0);requestAnimationFrame(frame);

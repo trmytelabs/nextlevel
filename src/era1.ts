@@ -50,7 +50,7 @@ function draw(x,t){x.fillStyle='#000';x.fillRect(0,0,LW,LH);x.imageSmoothingEnab
  const vg=x.createRadialGradient(VPX,VPY,0,VPX,VPY,70+S.pulse*20);vg.addColorStop(0,`rgba(255,232,31,${0.18+S.pulse*0.2})`);vg.addColorStop(1,'rgba(255,232,31,0)');x.fillStyle=vg;x.fillRect(VPX-100,VPY-100,200,200);
  // faint plane lines converging on the vanishing point
  x.strokeStyle='rgba(255,232,31,.06)';x.lineWidth=1;for(let i=-5;i<=5;i++){x.beginPath();x.moveTo(VPX,VPY);x.lineTo(VPX+i*130,GROUND+8);x.stroke()}
- if(t<bar(2)){const a=t<0.6?t/0.6:Math.min(1,(bar(2)-t)/0.8);x.globalAlpha=a;x.font="8px 'Press Start 2P',monospace";x.fillStyle='#4bd5ee';x.textAlign='center';x.fillText('A long time ago, at a desk far, far away....',LW/2,LH*0.42);x.textAlign='left';x.globalAlpha=1}
+ if(t>=bar(2)&&t<bar(3.8)){const a=t<bar(2)+0.5?(t-bar(2))/0.5:Math.min(1,(bar(3.8)-t)/0.8);x.globalAlpha=a;x.font="8px 'Press Start 2P',monospace";x.fillStyle='#4bd5ee';x.textAlign='center';x.fillText('A long time ago, at a desk far, far away....',LW/2,LH*0.42);x.textAlign='left';x.globalAlpha=1}
  // text blocks on the tilted plane, far to near, one screen row at a time
  const lines=S.lines.slice().sort((a,b)=>zOf(b,t)-zOf(a,t));
  for(const ln of lines){compose(ln);const zb=zOf(ln,t),a=alphaOf(ln,t);if(a<=0)continue;x.globalAlpha=a;

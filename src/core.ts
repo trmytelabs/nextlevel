@@ -87,6 +87,7 @@ export function readInput(){return{left:!!(keys.ArrowLeft||keys.a||keys.A),right
 // ---------- audio (optional click track) ----------
 let AC:any=null,master:any=null,noiseBuf:any=null;export let clickOn=false;
 export function setClickOn(v:boolean){clickOn=v}
+export function getAC(){return {AC,master}}
 export function ensureAC(){if(!AC){AC=new(window.AudioContext||(window as any).webkitAudioContext)();master=AC.createGain();master.gain.value=0.45;master.connect(AC.destination)}if(AC.state==='suspended')AC.resume()}
 export function tone(freq,dur,type:OscillatorType='square',vol=0.2,slide=0){if(!clickOn||!AC)return;const o=AC.createOscillator(),g=AC.createGain(),t0=AC.currentTime;o.type=type;o.frequency.setValueAtTime(freq,t0);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,freq+slide),t0+dur);g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(0.001,t0+dur);o.connect(g);g.connect(master);o.start();o.stop(t0+dur+0.02)}
 export function noise(dur,vol,hp){if(!clickOn||!AC)return;if(!noiseBuf){noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}const s=AC.createBufferSource();s.buffer=noiseBuf;const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=hp;const g=AC.createGain(),t0=AC.currentTime;g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(0.001,t0+dur);s.connect(f);f.connect(g);g.connect(master);s.start();s.stop(t0+dur+0.02)}
