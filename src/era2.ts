@@ -82,4 +82,4 @@ function draw(x,t){const cam=S.camX,pulse=1-((t/BEAT)%1);x.save();if(S.shake>0)x
  x.restore();
  x.font="6px 'Press Start 2P',monospace";x.fillStyle='#fff';x.strokeStyle='#1c3a6a';x.lineWidth=2;x.strokeText('SCORE '+S.score,6,26);x.fillText('SCORE '+S.score,6,26);x.fillStyle='#ffd23f';x.strokeText('WORDS '+S.coinsGot,LW-76,26);x.fillText('WORDS '+S.coinsGot,LW-76,26);x.fillStyle='#e0b0ff';x.strokeText('STOMPS '+S.stomps,6,36);x.fillText('STOMPS '+S.stomps,6,36);
  if(S.line.length){x.textAlign='center';x.fillStyle='#fff2a0';x.strokeText(S.line.join(' '),LW/2,46);x.fillText(S.line.join(' '),LW/2,46);x.textAlign='left'}}
-return{init,onLine,update,draw,DUDE:RUN,PAL}})();
+return{init,onLine,update,draw,DUDE:RUN,PAL,get S(){return S}}})();

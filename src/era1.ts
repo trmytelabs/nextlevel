@@ -63,4 +63,4 @@ function draw(x,t){x.fillStyle='#000';x.fillRect(0,0,LW,LH);x.imageSmoothingEnab
  if(!S.ship.dead&&!(S.ship.inv>0&&Math.floor(t*20)%2))pix(x,SHIP,Math.round(S.ship.x),Math.round(S.ship.y),'#5bff5b',2);
  x.fillStyle='#5bff5b';x.fillRect(0,GROUND+8,LW,2);
  x.font="8px 'Press Start 2P',monospace";x.fillStyle=YEL;x.fillText('SCORE '+String(S.score).padStart(6,'0'),8,34);x.textAlign='right';x.fillText('CHIPS '+S.chips,LW-8,34);x.textAlign='left'}
-return{init,onBeat,on8th,onLine,update,draw,SHIP}})();
+return{init,onBeat,on8th,onLine,update,draw,SHIP,get S(){return S}}})();

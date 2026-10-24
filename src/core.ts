@@ -9,6 +9,12 @@ export const hash=n=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.flo
 export const BPM=128,BEAT=60/BPM,BAR=BEAT*4,TOTAL=96*BAR;
 export const bar=n=>n*BAR;
 export const W=960,H=540;
+// ---------- device + quality tier ----------
+export const MOBILE=matchMedia('(pointer: coarse)').matches;
+const qp=new URLSearchParams(location.search).get('q');let qs='';try{qs=localStorage.getItem('etm.q')||''}catch{}
+export const QUALITY:'high'|'low'=(qp==='low'||qp==='high')?qp:(qs==='low'||qs==='high')?(qs as any):(MOBILE||(navigator.hardwareConcurrency||8)<=4)?'low':'high';
+export function setQuality(q:'high'|'low'){try{localStorage.setItem('etm.q',q)}catch{}const u=new URL(location.href);u.searchParams.set('q',q);u.searchParams.set('t',(HK.now?HK.now():0).toFixed(2));location.href=u.toString()}
+export let lastTouch=-1e9;
 export const ERAS=[
  {name:'1978 · ARCADE',start:bar(0)},
  {name:'1991 · 16-BIT',start:bar(19)},
@@ -61,7 +67,7 @@ export const LYRICS:[number,string][]=[
 [95,"Ready when you are. Press start."]];
 
 // ---------- canvas ----------
-export const cv:HTMLCanvasElement=$('#c');export const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;export const ctx=cv.getContext('2d');
+export const cv:HTMLCanvasElement=$('#c');export const dpr=QUALITY==='low'?1:Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;export const ctx=cv.getContext('2d');
 export function mk(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.imageSmoothingEnabled=false;return{c,x,w,h}}
 export const lo1=mk(480,270),lo2=mk(320,180),lo3=mk(480,270);
 export function pix(x,pat,px,py,pal,s=1,flip=false){for(let r=0;r<pat.length;r++){const row=pat[r];for(let c=0;c<row.length;c++){const ch=row[flip?row.length-1-c:c];if(ch==='.')continue;x.fillStyle=typeof pal==='string'?pal:pal[ch];x.fillRect(px+c*s,py+r*s,s,s)}}}
@@ -72,14 +78,14 @@ export function blit(lo){ctx.drawImage(lo.c,0,0,W,H)}
 // ---------- input ----------
 export const keys:any={};export let fireEdge=false,jumpEdge=false;export const mv={x:0,y:0};export let lastInputReal=-1e9;
 export function clearEdges(){fireEdge=false;jumpEdge=false;mv.x=0;mv.y=0}
-addEventListener('keydown',e=>{const k=e.key;if(k==='p'||k==='P'||k==='Escape'){HK.togglePlay();return}if(k==='m'||k==='M'){HK.toggleClick();return}if(k==='q'||k==='Q'){HK.cycleAuto();return}if(k==='l'||k==='L'){HK.toggleCaptions();return}if(k==='['){HK.nudge(-0.05);return}if(k===']'){HK.nudge(0.05);return}if(k==='t'||k==='T'){HK.tap();return}if(k==='y'||k==='Y'){HK.saveTiming();return}if(k==='u'||k==='U'){HK.clearTaps();return}if(k>='1'&&k<='5'){HK.seek(ERAS[+k-1].start);return}
+addEventListener('keydown',e=>{const k=e.key;if(k==='p'||k==='P'||k==='Escape'){HK.togglePlay();return}if(k==='m'||k==='M'){HK.toggleClick();return}if(k==='q'||k==='Q'){HK.cycleAuto();return}if(k==='l'||k==='L'){HK.toggleCaptions();return}if(k==='g'||k==='G'){HK.toggleQuality();return}if(k==='['){HK.nudge(-0.05);return}if(k===']'){HK.nudge(0.05);return}if(k==='t'||k==='T'){HK.tap();return}if(k==='y'||k==='Y'){HK.saveTiming();return}if(k==='u'||k==='U'){HK.clearTaps();return}if(k>='1'&&k<='5'){HK.seek(ERAS[+k-1].start);return}
  if(e.repeat){if(k===' ')e.preventDefault();return}keys[k]=true;
  if(k===' '){fireEdge=true;e.preventDefault()}if(k==='ArrowUp'||k==='w'||k==='W'){jumpEdge=true;mv.y-=1}if(k==='ArrowDown'||k==='s'||k==='S')mv.y+=1;if(k==='ArrowLeft'||k==='a'||k==='A')mv.x-=1;if(k==='ArrowRight'||k==='d'||k==='D')mv.x+=1;
  if(k.startsWith('Arrow')||k===' '||'wasdWASD'.includes(k)){lastInputReal=performance.now();if(k.startsWith('Arrow'))e.preventDefault()}});
 addEventListener('keyup',e=>{keys[e.key]=false});
 // touch: hold the left or right edge to move, tap the upper middle to jump, tap the lower middle to fire
 const tz=new Map<number,string>();cv.style.touchAction='none';
-cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;const r=cv.getBoundingClientRect();const fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;lastInputReal=performance.now();let z='';if(fx<0.28){z='L';keys.ArrowLeft=true;mv.x-=1}else if(fx>0.72){z='R';keys.ArrowRight=true;mv.x+=1}else if(fy<0.5){jumpEdge=true;mv.y-=1}else{fireEdge=true}tz.set(e.pointerId,z);e.preventDefault()},{passive:false});
+cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;const r=cv.getBoundingClientRect();const fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;lastInputReal=performance.now();lastTouch=lastInputReal;if(clickOn)ensureAC();let z='';if(fx<0.28){z='L';keys.ArrowLeft=true;mv.x-=1}else if(fx>0.72){z='R';keys.ArrowRight=true;mv.x+=1}else if(fy<0.5){jumpEdge=true;mv.y-=1}else{fireEdge=true}tz.set(e.pointerId,z);e.preventDefault()},{passive:false});
 const tup=e=>{const z=tz.get(e.pointerId);if(z==='L')keys.ArrowLeft=false;if(z==='R')keys.ArrowRight=false;tz.delete(e.pointerId)};cv.addEventListener('pointerup',tup);cv.addEventListener('pointercancel',tup);cv.addEventListener('pointerleave',tup);
 if(matchMedia('(pointer: coarse)').matches){const h=$('#help');if(h)h.textContent='HOLD LEFT / RIGHT EDGE TO MOVE · TAP UPPER MIDDLE TO JUMP · TAP LOWER MIDDLE TO FIRE'}
 export function readInput(){return{left:!!(keys.ArrowLeft||keys.a||keys.A),right:!!(keys.ArrowRight||keys.d||keys.D),up:!!(keys.ArrowUp||keys.w||keys.W),down:!!(keys.ArrowDown||keys.s||keys.S),fire:fireEdge,jump:jumpEdge||fireEdge,upEdge:jumpEdge,mv:{x:mv.x,y:mv.y}}}

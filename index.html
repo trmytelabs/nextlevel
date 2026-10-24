@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>Everything, Then More</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#07070b;--fg:#e8e8f0;--accent:#5bff5b;--dim:#8a8aa0;--panel:rgba(10,10,16,.82)}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:'Press Start 2P',ui-monospace,monospace;overflow:hidden}
-#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-#wrap{position:relative;aspect-ratio:16/9.9;width:min(100vw,calc(100vh*16/9.9))}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:'Press Start 2P',ui-monospace,monospace;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;overscroll-behavior:none}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);box-sizing:border-box}
+#wrap{position:relative;aspect-ratio:16/9.9;width:min(100%,calc((100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))*16/9.9));width:min(100%,calc((100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))*16/9.9))}
 canvas#c{width:100%;height:90.9%;display:block;image-rendering:pixelated;background:#000}
 #hud{position:absolute;inset:0;pointer-events:none}
 #hud .tag{pointer-events:none}
@@ -29,9 +29,17 @@ button.on{border-color:var(--accent);color:var(--accent)}
 .mark{position:absolute;top:0;bottom:0;width:1px;background:#666;pointer-events:none}
 .mark span{position:absolute;top:-1.9em;left:3px;font-size:clamp(5px,.65vw,8px);color:var(--dim);white-space:nowrap}
 #time{color:var(--dim);font-size:clamp(6px,.85vw,10px);min-width:5.5em;text-align:right}
+#bar{overflow:hidden}
+#rotate{display:none;position:fixed;inset:0;z-index:9;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:1.6em;text-align:center;font-size:clamp(9px,3.2vw,14px);line-height:1.9;color:var(--fg);padding:24px;box-sizing:border-box}
+#rotate .ph{width:34px;height:60px;border:3px solid var(--accent);border-radius:6px;animation:turn 1.8s ease-in-out infinite}
+#rotate small{color:var(--dim);font-size:.7em}
+@keyframes turn{0%,20%{transform:rotate(0)}60%,100%{transform:rotate(90deg)}}
+@media (orientation:portrait) and (pointer:coarse){body:not(.pok) #rotate{display:flex}}
+@media (pointer:coarse){button{font-size:clamp(6px,1.2vw,9px);padding:.8em .6em}#time{display:none}#help{font-size:clamp(5px,.9vw,8px)}#auto{font-size:clamp(6px,1vw,9px)}.tag{font-size:clamp(7px,1.3vw,12px)}#lyric{font-size:clamp(8px,1.6vw,14px)}}
 </style>
 </head>
 <body>
+<div id="rotate"><div class="ph"></div><div>TURN YOUR PHONE SIDEWAYS<br><small>it is a widescreen game</small></div><small>or tap here to play small</small></div>
 <div id="stage"><div id="wrap">
 <canvas id="c"></canvas>
 <div id="hud">
@@ -39,12 +47,13 @@ button.on{border-color:var(--accent);color:var(--accent)}
   <div class="tag" id="clock">BAR 1 · 1</div>
   <div class="tag" id="lyric"></div>
   <div class="tag" id="auto">AUTOPILOT ON · press any key to play</div>
-  <div class="tag" id="help">WASD / ARROWS MOVE · SPACE FIRE · Q AUTOPILOT · M SOUND · L CAPTIONS · P PAUSE · 1-5 ERA</div>
+  <div class="tag" id="help">WASD / ARROWS MOVE · SPACE FIRE · Q AUTOPILOT · M SOUND · L CAPTIONS · G FX · P PAUSE · 1-5 ERA</div>
   <div id="bar">
     <button id="play">PAUSE</button>
     <button id="restart">RESTART</button>
     <button id="click">SOUND: OFF</button>
     <button id="autoBtn">AUTOPILOT: WHEN IDLE</button>
+    <button id="qBtn" title="G: graphics quality (reloads)">FX: HIGH</button>
     <div id="scrub"><div id="prog"></div></div>
     <div id="time">0:00</div>
   </div>
