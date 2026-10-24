@@ -5,6 +5,7 @@ import {E3} from './era3';
 import {E4} from './era4';
 import {E5} from './era5';
 import {E5GL} from './era5gl';
+import {E3GL} from './era3gl';
 import {SONG,loadSong,songTime,songSeek,songPlay,songPause,nudge,tap,clearTaps,saveTiming} from './song';
 
 // ---------- transport, compositing, HUD ----------
@@ -29,10 +30,11 @@ function edge(x){const g=ctx.createLinearGradient(x-30,0,x+6,0);g.addColorStop(0
 
 function render(t,auto){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=false;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);const e=eraAt(t),tr=transAt(t);
  if(e===0){E1.draw(lo1.x,t);if(tr){E2.draw(lo2.x,t);blit(lo2);const ex=W*smooth(tr.p);ctx.save();ctx.beginPath();ctx.rect(ex,0,W-ex,H);ctx.clip();blit(lo1);ctx.restore();edge(ex);scan(0.55*(1-tr.p))}else{blit(lo1);scan(0.55)}}
- else if(e===1){E2.draw(lo2.x,t);if(tr){E3.draw(lo3.x,t);blit(lo3);const p=smooth(tr.p);ctx.save();ctx.globalAlpha=1-p;const hy=H*0.5;ctx.translate(W/2,hy);ctx.scale(1+p*0.6,1-p*0.98);ctx.translate(-W/2,-hy);blit(lo2);ctx.restore();scan(0.3*(1-p))}else{blit(lo2);scan(0.3)}}
- else if(e===2){E3.draw(lo3.x,t);if(tr){E4.draw(ctx,t);ctx.globalAlpha=Math.pow(1-tr.p,1.5);blit(lo3);ctx.globalAlpha=1;scan(0.07*(1-tr.p))}else{blit(lo3);scan(0.07)}}
+ else if(e===1){E2.draw(lo2.x,t);if(tr){drawE3(t);const p=smooth(tr.p);ctx.save();ctx.globalAlpha=1-p;const hy=H*0.5;ctx.translate(W/2,hy);ctx.scale(1+p*0.6,1-p*0.98);ctx.translate(-W/2,-hy);blit(lo2);ctx.restore();scan(0.3*(1-p))}else{blit(lo2);scan(0.3)}}
+ else if(e===2){if(tr){E4.draw(ctx,t);ctx.globalAlpha=Math.pow(1-tr.p,1.5);drawE3(t);ctx.globalAlpha=1;scan(0.07*(1-tr.p))}else{drawE3(t);scan(0.07)}}
  else if(e===3){E4.draw(ctx,t);if(tr){const p=smooth(tr.p);ctx.save();ctx.translate(W*(1-p),0);ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();drawE5(t);ctx.restore();edge(W*(1-p))}}
  else{drawE5(t);const q=clamp((t-ERAS[4].start)/(BAR*8),0,1);scan(0.1*q);glitch(t)}}
+function drawE3(t){if(E3GL.ok){E3GL.render(t);ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(E3GL.canvas(),0,0,W,H);ctx.restore();E3.overlay(ctx,t)}else{ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font="10px 'Press Start 2P',monospace";ctx.fillText('WEBGL REQUIRED FOR THE RACER',W/2-150,H/2)}}
 function drawE5(t){if(E5GL.ok){E5GL.render(t);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(E5GL.canvas(),0,0,W,H);ctx.restore();E5.overlay(ctx,t)}else E5.draw(ctx,t)}
 
 let lyricShown='',lineIdx=-1,captions=true;
@@ -53,6 +55,6 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-las
   if(songT>=TOTAL){playing=false;ended=true;$('#play').textContent='REPLAY'}
   E1.update(dt,songT,inp,auto);E2.update(dt,songT,inp,auto);E3.update(dt,songT,inp,auto);E4.update(dt,songT,inp,auto);E5.update(dt,songT,inp,auto)}
  render(songT,auto);hud(songT,auto);clearEdges()}
-Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek,nudge,tap,clearTaps,saveTiming});loadSong();E5GL.init();
+Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek,nudge,tap,clearTaps,saveTiming});loadSong();E5GL.init();E3GL.init();
 (window as any).ETM={seek,step(secs){const inp={left:false,right:false,up:false,down:false,fire:false,jump:false,upEdge:false,mv:{x:0,y:0}};for(let i=0;i<secs*60;i++){const prev=songT;songT=Math.min(TOTAL,songT+1/60);const pb=Math.floor(prev/BEAT),cb=Math.floor(songT/BEAT);if(cb!==pb){beatIdx=cb;lastBeatT=songT;onBeat(cb,songT,true)}const p8=Math.floor(prev/(BEAT/2)),c8=Math.floor(songT/(BEAT/2));if(c8!==p8)on8th(c8,songT,true);hud(songT,true);E1.update(1/60,songT,inp,true);E2.update(1/60,songT,inp,true);E3.update(1/60,songT,inp,true);E4.update(1/60,songT,inp,true);E5.update(1/60,songT,inp,true)}render(songT,true);hud(songT,true)}};
 seek(0);requestAnimationFrame(frame);
