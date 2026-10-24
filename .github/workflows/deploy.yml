@@ -25,9 +25,7 @@ jobs:
     defaults:
       run:
         shell: bash
-    environment:
-      name: production
-      url: https://${{ secrets.DEPLOY_HOST }}/
+    environment: production
     steps:
       - uses: actions/checkout@v4
         with:
