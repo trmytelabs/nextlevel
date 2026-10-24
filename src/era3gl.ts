@@ -11,22 +11,50 @@ function textSprite(text,color,bg='rgba(8,8,16,.75)'){const key=text+'|'+color+'
 const flat=(color,extra={})=>new THREE.MeshLambertMaterial({color,flatShading:true,...extra} as any);
 const hex=(n:number)=>'#'+n.toString(16).padStart(6,'0');
 const LIVERY=[{b:0xf4f4f4,s:0xd82a3a,s2:0x2a4ad8,n:'41'},{b:0xf2c230,s:0x111111,s2:0x111111,n:'7'},{b:0x2fb85a,s:0xffffff,s2:0xffffff,n:'12'},{b:0x2f6fe8,s:0xffffff,s2:0xffe066,n:'3'},{b:0xff7a1a,s:0x111111,s2:0xffffff,n:'22'},{b:0x8a3ad8,s:0xffe066,s2:0xffe066,n:'9'},{b:0x1a1a22,s:0xd82a3a,s2:0xd82a3a,n:'14'},{b:0x20c8c0,s:0xffffff,s2:0x111111,n:'28'},{b:0xd82a3a,s:0xffffff,s2:0xffffff,n:'5'},{b:0xffffff,s:0x2fb85a,s2:0x2fb85a,n:'17'},{b:0xe83a7a,s:0xffffff,s2:0xffffff,n:'33'},{b:0x9a9aa8,s:0xff7a1a,s2:0x111111,n:'8'},{b:0x1a2a7a,s:0xffe066,s2:0xffe066,n:'44'}];
-function numberTex(n:string,fg:string,bg:string){return canvasTex(128,128,x=>{x.fillStyle=bg;x.fillRect(0,0,128,128);x.fillStyle='#fff';x.beginPath();x.ellipse(64,64,52,44,0,0,7);x.fill();x.fillStyle=fg;x.font="bold 64px Arial Black, Arial, sans-serif";x.textAlign='center';x.textBaseline='middle';x.fillText(n,64,68)})}
-function makeCar(liv){const g=new THREE.Group();const bodyMat=flat(liv.b);
- const shape=new THREE.Shape();const pts=[[-2.35,0.32],[-2.35,0.82],[-1.7,0.9],[-1.0,1.3],[0.3,1.34],[1.05,1.02],[1.95,0.84],[2.35,0.74],[2.35,0.32]];shape.moveTo(pts[0][0],pts[0][1]);for(const p of pts.slice(1))shape.lineTo(p[0],p[1]);shape.closePath();
- const bg=new THREE.ExtrudeGeometry(shape,{depth:2.0,bevelEnabled:true,bevelThickness:0.05,bevelSize:0.05,bevelSegments:1});bg.translate(0,0,-1);const body=new THREE.Mesh(bg,bodyMat);body.rotation.y=-Math.PI/2;g.add(body);
- // glass band
- const glass=flat(0x182030);for(const[z,w,h,yy,tilt]of[[0.95,1.7,0.42,1.12,-0.5],[-1.15,1.7,0.36,1.1,0.55]]){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,0.08),glass);m.position.set(0,yy,z);m.rotation.x=tilt;g.add(m)}for(const k of[-1,1]){const m=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.34,1.6),glass);m.position.set(k*1.0,1.1,-0.1);g.add(m)}
- // hood and roof stripes, door numbers
- const stripe=flat(liv.s),stripe2=flat(liv.s2);for(const k of[-0.3,0.3]){const m=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.02,2.0),k<0?stripe:stripe2);m.position.set(k,1.0+0.02,1.6);m.rotation.x=-0.12;g.add(m)}
- const roofN=new THREE.Mesh(new THREE.PlaneGeometry(1.2,1.2),new THREE.MeshLambertMaterial({map:numberTex(liv.n,'#111',hex(liv.b)),transparent:true}));roofN.rotation.x=-Math.PI/2;roofN.position.set(0,1.36,-0.35);g.add(roofN);
- for(const k of[-1,1]){const d=new THREE.Mesh(new THREE.PlaneGeometry(1.0,0.8),new THREE.MeshLambertMaterial({map:numberTex(liv.n,'#111',hex(liv.b)),transparent:true}));d.position.set(k*1.04,0.68,-0.1);d.rotation.y=k*Math.PI/2;g.add(d);const sideS=new THREE.Mesh(new THREE.BoxGeometry(0.02,0.14,4.6),stripe);sideS.position.set(k*1.03,0.45,0);g.add(sideS)}
- // spoiler, bumpers, lights
- const sp=new THREE.Mesh(new THREE.BoxGeometry(2.1,0.08,0.45),flat(0x111111));sp.position.set(0,1.05,-2.25);sp.rotation.x=-0.25;g.add(sp);for(const k of[-1,1]){const st=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.3,0.25),flat(0x111111));st.position.set(k*0.85,0.9,-2.25);g.add(st)}
- const hl=new THREE.MeshBasicMaterial({color:0xfff6d0});for(const k of[-1,1]){const h=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.22),hl);h.position.set(k*0.6,0.62,2.37);g.add(h)}const tl=new THREE.Mesh(new THREE.PlaneGeometry(1.8,0.16),new THREE.MeshBasicMaterial({color:0xff2a2a}));tl.position.set(0,0.66,-2.37);tl.rotation.y=Math.PI;g.add(tl);
- // fenders and wheels
- const wheels:THREE.Mesh[]=[];const tyre=flat(0x16161c),rim=flat(0xd0d0d8);for(const[x,z]of[[-1,1.45],[1,1.45],[-1,-1.45],[1,-1.45]]){const f=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.5,1.1),bodyMat);f.position.set(x*1.03,0.62,z);g.add(f);const w=new THREE.Mesh(new THREE.CylinderGeometry(0.44,0.44,0.36,12),tyre);w.rotation.z=Math.PI/2;w.position.set(x*1.05,0.44,z);g.add(w);wheels.push(w);const hb=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.26,0.38,8),rim);hb.rotation.z=Math.PI/2;hb.position.copy(w.position);g.add(hb)}
- const shadow=new THREE.Mesh(new THREE.PlaneGeometry(2.8,5.2),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.35}));shadow.rotation.x=-Math.PI/2;shadow.position.y=0.03;g.add(shadow);
+const SPONSORS=[['MAXIMAL','GoA'],['TURN IT UP','ONE DESK'],['SPEED OF LIGHT','PIPELINE'],['EVERYTHING','THEN SOME'],['BOX TALKS','BACK'],['NO BACKLOG','RACING'],['HUNDRED','HANDS'],['DESK CO','TOOLS'],['ASK ONCE','ANSWERS'],['SECTOR 07','BUILDS'],['LEVEL UP','GARAGE'],['THREAD','THE GAP'],['WIRE','LIGHTS']];
+// body cross-sections along the length: [z, half width, shoulder height, roof height, greenhouse width fraction]
+const STATIONS=[[-2.4,0.92,0.84,0.90,0.86],[-2.0,1.02,0.94,0.98,0.86],[-1.5,1.06,0.98,1.06,0.84],[-1.1,1.07,0.99,1.22,0.74],[-0.7,1.07,1.0,1.38,0.66],[-0.1,1.07,1.0,1.41,0.64],[0.35,1.07,1.0,1.40,0.65],[0.8,1.06,1.0,1.24,0.74],[1.2,1.04,0.98,1.03,0.86],[1.7,1.0,0.92,0.94,0.9],[2.15,0.96,0.82,0.84,0.92],[2.4,0.9,0.7,0.74,0.95]];
+const Y0=0.34;
+function sideTex(liv,idx,frontLeft){return canvasTex(512,128,x=>{const b=hex(liv.b),s1=hex(liv.s),s2=hex(liv.s2);x.fillStyle=b;x.fillRect(0,0,512,128);
+ x.fillStyle=s1;x.fillRect(0,78,512,14);x.fillStyle=s2;x.fillRect(0,92,512,6);x.fillStyle='rgba(0,0,0,.18)';x.fillRect(0,116,512,12);
+ const F=frontLeft?1:-1,fx=frontLeft?0:512;const at=(u)=>fx+F*u;
+ // door number
+ x.fillStyle='#fff';x.beginPath();x.ellipse(256,50,70,40,0,0,7);x.fill();x.fillStyle=s1==='#ffffff'?'#111':s1;x.font="bold 58px Arial Black, Arial, sans-serif";x.textAlign='center';x.textBaseline='middle';x.fillText(liv.n,256,54);
+ // sponsor blocks: quarter panel and front fender
+ const sp=SPONSORS[idx%SPONSORS.length];x.font="bold 22px Arial Black, Arial, sans-serif";x.fillStyle=s2;x.fillRect(frontLeft?350:40,22,122,30);x.fillStyle=s2==='#ffffff'||s2==='#ffe066'?'#111':'#fff';x.fillText(sp[0],frontLeft?411:101,38);
+ x.fillStyle='#fff';x.fillRect(frontLeft?36:356,24,120,26);x.fillStyle='#111';x.font="bold 18px Arial Black, Arial, sans-serif";x.fillText(sp[1],frontLeft?96:416,38);
+ // contingency stickers behind the front wheel
+ const cx0=frontLeft?30:430;['#e8402c','#2a4ad8','#ffe066','#2fb85a','#fff','#111'].forEach((c,k)=>{x.fillStyle=c;x.fillRect(cx0+(k%3)*18,60+Math.floor(k/3)*14,14,10)});
+ // headlight and taillight decals at the ends
+ x.fillStyle='#111';x.fillRect(frontLeft?2:496,70,14,22);x.fillStyle='#ff2a2a';x.fillRect(frontLeft?496:2,74,14,14)})}
+function topTex(liv){return canvasTex(512,256,x=>{const b=hex(liv.b),s1=hex(liv.s),s2=hex(liv.s2);x.fillStyle=b;x.fillRect(0,0,512,256);x.fillStyle=s1;x.fillRect(0,96,512,26);x.fillRect(0,134,512,26);x.fillStyle=s2;x.fillRect(0,122,512,12);
+ x.fillStyle='#fff';x.beginPath();x.ellipse(256,128,70,78,0,0,7);x.fill();x.fillStyle=s1==='#ffffff'?'#111':s1;x.font="bold 96px Arial Black, Arial, sans-serif";x.textAlign='center';x.textBaseline='middle';x.fillText(liv.n,256,136);
+ x.fillStyle='rgba(0,0,0,.35)';x.fillRect(430,110,40,36);x.fillRect(42,110,40,36)})}
+function loft(liv,idx){const pos:number[]=[],uv:number[]=[],idxs:number[][]=[[],[],[],[],[]];const rings:number[][]=[];
+ const pts=(st)=>{const[z,w,ys,yt,gf]=st,wg=w*gf;return[[-w*0.94,Y0,z],[-w,Y0+0.22,z],[-w,ys,z],[-wg,yt,z],[wg,yt,z],[w,ys,z],[w,Y0+0.22,z],[w*0.94,Y0,z]]};
+ const uvFor=(k,p)=>{const u=(p[2]+2.4)/4.8,v=(p[1]-Y0)/1.1;if(k<=2)return[u,v];if(k>=4&&k<=6)return[1-u,v];if(k===3)return[u,(p[0]+1.1)/2.2];return[0,0]};
+ // each strip gets its own vertices so uvs and flat normals stay clean
+ for(let i=0;i<STATIONS.length-1;i++){const A=pts(STATIONS[i]),B=pts(STATIONS[i+1]);const zm=(STATIONS[i][0]+STATIONS[i+1][0])/2;
+  for(let k=0;k<8;k++){const k2=(k+1)%8;let m=k<=2?0:(k>=4&&k<=6?1:(k===3?2:4));
+   const cabin=zm>-1.45&&zm<1.15;if((k===2||k===4)&&cabin)m=3;if(k===3&&((zm>-1.45&&zm<-0.75)||(zm>0.3&&zm<1.2)))m=3;
+   const q=[A[k],A[k2],B[k2],B[k]];const base=pos.length/3;for(const p of q){pos.push(p[0],p[1],p[2]);const t=uvFor(k,p);uv.push(t[0],t[1])}idxs[m].push(base,base+1,base+2,base,base+2,base+3)}}
+ // end caps
+ for(const[st,flip]of[[STATIONS[0],false],[STATIONS[STATIONS.length-1],true]]){const P=pts(st);const base=pos.length/3;for(const p of P){pos.push(p[0],p[1],p[2]);uv.push(0.5,0.5)}for(let k=1;k<7;k++){if(flip)idxs[4].push(base,base+k,base+k+1);else idxs[4].push(base,base+k+1,base+k)}}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));const all=[];let start=0;idxs.forEach((arr,m)=>{all.push(...arr);g.addGroup(start,arr.length,m);start+=arr.length});g.setIndex(all);g.computeVertexNormals();
+ const mats=[new THREE.MeshLambertMaterial({map:sideTex(liv,idx,false),flatShading:true}),new THREE.MeshLambertMaterial({map:sideTex(liv,idx,true),flatShading:true}),new THREE.MeshLambertMaterial({map:topTex(liv),flatShading:true}),flat(0x14202e),flat(liv.b)];
+ return new THREE.Mesh(g,mats)}
+function makeCar(liv,idx=0){const g=new THREE.Group();const body=loft(liv,idx);g.add(body);const dark=flat(0x111115),chrome=flat(0xd0d0d8);
+ // bumpers, splitter, spoiler and struts, roof flaps, mirror, exhaust
+ const fb=new THREE.Mesh(new THREE.BoxGeometry(1.86,0.16,0.14),flat(liv.b));fb.position.set(0,0.48,2.42);g.add(fb);const spl=new THREE.Mesh(new THREE.BoxGeometry(1.9,0.05,0.3),dark);spl.position.set(0,0.36,2.42);g.add(spl);
+ const rb=new THREE.Mesh(new THREE.BoxGeometry(1.86,0.16,0.14),flat(liv.b));rb.position.set(0,0.52,-2.42);g.add(rb);
+ const sp=new THREE.Mesh(new THREE.BoxGeometry(2.0,0.05,0.42),dark);sp.position.set(0,1.1,-2.3);sp.rotation.x=-0.3;g.add(sp);for(const k of[-1,1]){const st=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.24,0.26),dark);st.position.set(k*0.8,0.98,-2.3);g.add(st);const flap=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.02,0.16),dark);flap.position.set(k*0.3,1.42,-0.5);g.add(flap)}
+ const mir=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.08,0.12),flat(liv.b));mir.position.set(1.12,1.02,0.75);g.add(mir);const ex=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.5,8),chrome);ex.rotation.z=Math.PI/2;ex.position.set(0.98,0.42,-1.0);g.add(ex);
+ // window net on the driver's side
+ const net=new THREE.Mesh(new THREE.PlaneGeometry(0.78,0.34),new THREE.MeshLambertMaterial({map:canvasTex(64,32,x=>{x.fillStyle='rgba(0,0,0,0)';x.clearRect(0,0,64,32);x.strokeStyle='#e8e8e8';x.lineWidth=2;for(let i=0;i<=64;i+=8){x.beginPath();x.moveTo(i,0);x.lineTo(i,32);x.stroke()}for(let j=0;j<=32;j+=8){x.beginPath();x.moveTo(0,j);x.lineTo(64,j);x.stroke()}}),transparent:true,side:THREE.DoubleSide}));net.position.set(-0.99,1.18,0.25);net.rotation.y=-Math.PI/2;net.rotation.z=0.0;g.add(net);
+ // wheel wells and wheels
+ const wheels:THREE.Mesh[]=[];for(const[xs,z]of[[-1,1.5],[1,1.5],[-1,-1.45],[1,-1.45]]){const well=new THREE.Mesh(new THREE.CylinderGeometry(0.56,0.56,0.14,14),dark);well.rotation.z=Math.PI/2;well.position.set(xs*1.0,0.5,z);g.add(well);
+  const w=new THREE.Mesh(new THREE.CylinderGeometry(0.44,0.44,0.34,14),flat(0x16161c));w.rotation.z=Math.PI/2;w.position.set(xs*1.08,0.44,z);g.add(w);wheels.push(w);const rim=new THREE.Mesh(new THREE.CylinderGeometry(0.27,0.27,0.36,10),chrome);rim.rotation.z=Math.PI/2;rim.position.copy(w.position);g.add(rim);const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,0.4,8),flat(0x3a3a44));hub.rotation.z=Math.PI/2;hub.position.copy(w.position);g.add(hub)}
+ const shadow=new THREE.Mesh(new THREE.PlaneGeometry(2.9,5.3),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.38}));shadow.rotation.x=-Math.PI/2;shadow.position.y=0.03;g.add(shadow);
  const label=textSprite(' ','#ffe066');label.position.y=3.3;label.visible=false;g.add(label);return{g,wheels,label,lastWord:null,body:g.children.slice(0,-2)}}
 function init(){try{renderer=new THREE.WebGLRenderer({antialias:false,alpha:false});renderer.setPixelRatio(0.5*Math.max(1,dpr));renderer.setSize(W,H,false);renderer.outputColorSpace=THREE.SRGBColorSpace;
  scene=new THREE.Scene();scene.fog=new THREE.Fog(0xb8dcff,140,560);camera=new THREE.PerspectiveCamera(60,W/H,0.3,900);
@@ -72,7 +100,7 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:false,alpha:fals
  // palms in the infield
  for(let i=0;i<30;i++){const u=hash(i*1.7);const f=E3.frame(u*L);const p=f.p.clone().add(f.right.clone().multiplyScalar(-(ROADW+16+hash(i*3)*40)));const tr=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.4,7+hash(i)*3,5),flat(0x9a6a3a));tr.position.copy(p).add(new THREE.Vector3(0,4,0));scene.add(tr);for(let l=0;l<6;l++){const leaf=new THREE.Mesh(new THREE.PlaneGeometry(4.5,1.3),flat(0x2f9a3a,{side:THREE.DoubleSide}));leaf.position.copy(p).add(new THREE.Vector3(0,tr.position.y*2-0.6,0));leaf.rotation.y=l*Math.PI/3;leaf.rotation.z=-0.5;leaf.translateX(2);scene.add(leaf)}}
  // cars
- playerCar=makeCar(LIVERY[0]);scene.add(playerCar.g);for(let i=0;i<12;i++){const c=makeCar(LIVERY[1+i%12]);scene.add(c.g);cars.push(c)}
+ playerCar=makeCar(LIVERY[0],0);scene.add(playerCar.g);for(let i=0;i<12;i++){const c=makeCar(LIVERY[1+i%12],1+i);scene.add(c.g);cars.push(c)}
  // optional real model: public/models/car.glb replaces the procedural bodies
  fetch(import.meta.env.BASE_URL+'models/car.glb',{method:'HEAD'}).then(r=>{if(!r.ok||/text\/html/.test(r.headers.get('content-type')||''))return;new GLTFLoader().load(import.meta.env.BASE_URL+'models/car.glb',gl=>{const box=new THREE.Box3().setFromObject(gl.scene);const size=box.getSize(new THREE.Vector3());const sc=4.7/Math.max(size.x,size.z);for(const c of[playerCar,...cars]){for(const m of c.body)m.visible=false;const inst=gl.scene.clone(true);inst.scale.setScalar(sc);inst.position.y=-box.min.y*sc;if(size.x>size.z)inst.rotation.y=Math.PI/2;c.g.add(inst)}})}).catch(()=>{});
  ok=true}catch(e){console.warn('WebGL era 3 unavailable',e);ok=false}}
