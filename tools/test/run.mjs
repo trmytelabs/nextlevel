@@ -110,7 +110,8 @@ const to=opt('to',null)!=null?+opt('to'):ERA!=null?ERA_BARS[ERA]:96;
 console.log(`simulate bars ${from} -> ${to} in ${CHUNK}s steps, ${CASES.length} cases loaded`);
 await page.evaluate(t=>ETM.seek(t),bar(from));
 const history=[];const perf={};let t=bar(from);const tEnd=Math.min(TOTAL,bar(to));
-const isolated=c=>/ETM\.seek\(/.test(String(c.fn));
+// C-5: a case can declare isolated:true/false explicitly (a seek hidden in a helper is invisible to the regex); the regex stays as the default
+const isolated=c=>typeof c.isolated==='boolean'?c.isolated:/ETM\.seek\(/.test(String(c.fn));
 const pending=CASES.filter(c=>c.era==null||(ERA_BARS[c.era-1]>=from-1e-6&&ERA_BARS[c.era-1]<to+1e-6)||(c.bar!=='end'&&c.bar>=from&&c.bar<=to)).map(c=>({...c,done:false}));
 const runCases=async(p,endOfRange)=>{for(const c of pending){if(c.done||isolated(c))continue;const due=c.bar==='end'?(c.era!=null?p.bar>=ERA_BARS[c.era]-1e-6:(endOfRange&&p.t>=tEnd-1e-6)):p.bar>=c.bar;if(!due)continue;c.done=true;let r;try{r=await c.fn(p,history,page)}catch(e){if(/dynamically imported module|Failed to fetch/.test(String(e.message))){console.log('  skip ',c.name,'(needs the dev server)');continue}r='threw '+e.message}if(r===true||r===undefined)pass(c.name,p.t);else fail(c.name,String(r),p.t)}};
 const shotBars=new Set();for(let e=0;e<5;e++){shotBars.add(ERA_BARS[e]+0.6);shotBars.add((ERA_BARS[e]+ERA_BARS[e+1])/2);shotBars.add(ERA_BARS[e+1]-0.4)}

@@ -25,4 +25,5 @@ for(let i=0;i<total;i++){
 }
 await browser.close();
 const r=spawnSync(FF,['-y','-framerate',String(FPS),'-i',path.join(frames,'%05d.jpg'),'-c:v','libx264','-pix_fmt','yuv420p','-crf','18','-movflags','+faststart',path.resolve(OUT)],{stdio:'inherit'});
-console.log(r.status===0?`wrote ${OUT}`:'ffmpeg failed with status '+r.status);process.exit(r.status||0);
+// r.status is null when ffmpeg could not be spawned at all (not on PATH): that is a failure, not exit 0
+console.log(r.status===0?`wrote ${OUT}`:'ffmpeg failed: '+(r.error?r.error.message:'status '+r.status));process.exit(r.status===0?0:1);

@@ -25,12 +25,15 @@ mkdir -p "$APP/data/html" "$APP/data/db" "$APP/backups"
 cp "$HERE/docker-compose.yml" "$APP/docker-compose.yml"
 printf 'upload_max_filesize=64M\npost_max_size=64M\nmemory_limit=256M\nmax_execution_time=120\n' > "$APP/uploads.ini"
 ROOTPW=$(openssl rand -hex 24)
+# docker compose interpolates ${...}/$x and strips " #comments" in unquoted .env values, which mangles real-world DB
+# passwords; single-quoted values are literal (a value containing ' cannot be single-quoted: warn and write it raw)
+envq(){ case "$1" in *\'*) echo "warning: $2 contains a single quote; check $APP/.env by hand" >&2; printf '%s' "$1";; *) printf "'%s'" "$1";; esac; }
 cat > "$APP/.env" <<EOF
-DB_NAME=$DB_NAME
-DB_USER=$DB_USER
-DB_PASSWORD=$DB_PASSWORD
+DB_NAME=$(envq "$DB_NAME" DB_NAME)
+DB_USER=$(envq "$DB_USER" DB_USER)
+DB_PASSWORD=$(envq "$DB_PASSWORD" DB_PASSWORD)
 DB_ROOT_PASSWORD=$ROOTPW
-TABLE_PREFIX=$TABLE_PREFIX
+TABLE_PREFIX=$(envq "$TABLE_PREFIX" TABLE_PREFIX)
 EOF
 chmod 600 "$APP/.env"
 
@@ -48,22 +51,20 @@ zcat "$SRC/db.sql.gz" | docker compose exec -T db sh -c "MYSQL_PWD=\$MARIADB_ROO
 docker compose up -d
 echo "waiting for WordPress"; for i in $(seq 1 60); do curl -sf -o /dev/null -H "Host: $WP_DOMAIN" http://127.0.0.1:8080/ && break; sleep 2; done
 
-# ---- carry over the old salts so existing sessions/cookies keep working (optional, safe to skip) ----
-if [ -f "$APP/wp-config.old.php" ]; then
-  SALTS=$(grep -E "define\(\s*'(AUTH|SECURE_AUTH|LOGGED_IN|NONCE)_(KEY|SALT)'" "$APP/wp-config.old.php" || true)
-  if [ -n "$SALTS" ]; then docker compose exec -T wordpress sh -c "cat >> /var/www/html/wp-config.php" <<EOF
-
-/* salts carried over from the previous server */
-$SALTS
-EOF
-  fi
-fi
+# ---- salts: NOT carried over ----
+# The old script appended the old define('AUTH_KEY',...) lines to the END of the image's wp-config.php, i.e. after it
+# had already defined them from WORDPRESS_AUTH_KEY... and after require wp-settings.php: the salts never applied and
+# every request raised "Constant AUTH_KEY already defined" warnings (which can break redirects/headers). Fresh salts
+# only mean everyone logs in once more. The old values stay in $APP/wp-config.old.php if they are ever needed.
 
 # ---- wp-cli for the domain move and a health check ----
-docker run --rm --network "$(basename "$APP")_default" -v "$APP/data/html:/var/www/html" --user 33:33 --env-file "$APP/.env" wordpress:cli-php8.3 wp --path=/var/www/html core version || true
+# the image's wp-config.php reads WORDPRESS_DB_* from the environment; .env only has DB_*, so pass them explicitly
+# (without them wp-cli connected to host "mysql" and search-replace failed, aborting the restore under set -e)
+CLI_ENV=(-e WORDPRESS_DB_HOST=db -e "WORDPRESS_DB_NAME=$DB_NAME" -e "WORDPRESS_DB_USER=$DB_USER" -e "WORDPRESS_DB_PASSWORD=$DB_PASSWORD" -e "WORDPRESS_TABLE_PREFIX=$TABLE_PREFIX")
+docker run --rm --network "$(basename "$APP")_default" -v "$APP/data/html:/var/www/html" --user 33:33 "${CLI_ENV[@]}" wordpress:cli-php8.3 wp --path=/var/www/html core version || true
 if [ -n "${NEW_DOMAIN:-}" ]; then
   echo "moving site URL to $NEW_DOMAIN"
-  docker run --rm --network "$(basename "$APP")_default" -v "$APP/data/html:/var/www/html" --user 33:33 wordpress:cli-php8.3 \
+  docker run --rm --network "$(basename "$APP")_default" -v "$APP/data/html:/var/www/html" --user 33:33 "${CLI_ENV[@]}" wordpress:cli-php8.3 \
     wp --path=/var/www/html search-replace "://$WP_DOMAIN" "://$NEW_DOMAIN" --all-tables --precise --skip-columns=guid
   WP_DOMAIN="$NEW_DOMAIN"
 fi

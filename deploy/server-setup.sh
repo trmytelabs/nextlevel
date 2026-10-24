@@ -11,7 +11,8 @@ SITE_DIR=/var/www/nextlevel
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
-apt-get install -y curl rsync ufw fail2ban unattended-upgrades apt-listchanges debian-keyring debian-archive-keyring apt-transport-https gnupg
+# python3: rrsync in rsync >= 3.2.4 is a Python script (minimal Debian 12 images do not have python3)
+apt-get install -y curl rsync python3 ufw fail2ban unattended-upgrades apt-listchanges debian-keyring debian-archive-keyring apt-transport-https gnupg
 
 # ---- deploy user: key only, no shell beyond rsync into the site dir ----
 id -u deploy >/dev/null 2>&1 || useradd -m -s /bin/bash deploy
@@ -51,14 +52,21 @@ dpkg-reconfigure -f noninteractive unattended-upgrades
 # ---- SSH hardening (keys only). Opt in with HARDEN_SSH=1 once your own key works for root/your user, or you lock yourself out. ----
 if [ "${HARDEN_SSH:-0}" = "1" ]; then
 install -d /etc/ssh/sshd_config.d
-cat > /etc/ssh/sshd_config.d/90-hardening.conf <<'EOF'
+# sshd keeps the FIRST value it reads and includes sshd_config.d/*.conf in lexical order, so this must sort before
+# Ubuntu cloud images' 50-cloud-init.conf ("PasswordAuthentication yes"), or the hardening silently does nothing.
+rm -f /etc/ssh/sshd_config.d/90-hardening.conf
+HCONF=/etc/ssh/sshd_config.d/01-hardening.conf
+cat > "$HCONF" <<'EOF'
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 PermitRootLogin prohibit-password
 X11Forwarding no
 MaxAuthTries 4
 EOF
-sshd -t && (systemctl reload ssh || systemctl reload sshd)
+# `sshd -t && reload` does not stop set -e when the test fails, and a bad file left in place breaks sshd on the next
+# restart/reboot (lockout). Remove it and stop instead.
+if ! sshd -t; then rm -f "$HCONF"; echo "sshd -t rejected the hardening config; removed it, SSH unchanged" >&2; exit 1; fi
+systemctl reload ssh || systemctl reload sshd
 else
   echo "SSH password login left enabled. Re-run with HARDEN_SSH=1 after your key works."
 fi

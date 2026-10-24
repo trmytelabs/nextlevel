@@ -24,8 +24,12 @@ __DOMAIN__ {
 		-Server
 	}
 
-	@static path *.js *.css *.png *.glb *.mp3 *.woff2
+	# only Vite's content-hashed output is immutable; song.mp3, models/*.glb, textures, icons and og.png keep their
+	# names when replaced, so a year-long immutable cache would pin returning visitors to the old file
+	@static path /assets/*
 	header @static Cache-Control "public, max-age=31536000, immutable"
+	@media path *.mp3 *.glb *.jpg *.png *.json
+	header @media Cache-Control "public, max-age=3600"
 	@html path / /index.html /manifest.webmanifest
 	header @html Cache-Control "no-cache"
 

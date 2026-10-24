@@ -21,6 +21,11 @@ if os.path.isdir(mdir):
         if f.endswith('.glb'):
             b=open(os.path.join(mdir,f),'rb').read();open(os.path.join(mdir,f+'.txt'),'w').write(base64.b64encode(b).decode())
             files['models/'+f+'.txt']={'from':'models/'+f+'.txt','contentType':'text/plain'}
+# era3gl.ts loads textures/*.jpg via BASE_URL; without them the racer silently falls back to procedural textures
+tdir=os.path.join(DIST,'textures')
+if os.path.isdir(tdir):
+    for f in sorted(os.listdir(tdir)):
+        if f.lower().endswith(('.jpg','.jpeg','.png','.webp')):files['textures/'+f]='textures/'+f
 for f in ['manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','og.png','favicon-32.png']:
     if os.path.exists(os.path.join(DIST,f)):files[f]=f
 print('artifact.html written;',len(files),'files. Publish with root=dist, file_path=dist/artifact.html and files=')

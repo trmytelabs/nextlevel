@@ -33,7 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          # deploy exactly the commit that passed verification, not whatever main points at by now
+          ref: ${{ github.event.workflow_run.head_sha || 'main' }}
       - name: Put Git bash on the PATH (self-hosted Windows runner)
         shell: cmd
         run: echo C:\Program Files\Git\bin>>%GITHUB_PATH%
@@ -58,6 +59,8 @@ jobs:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
         run: |
+          # Git for Windows ships ssh but not rsync; fail with a clear message instead of "command not found"
+          command -v rsync >/dev/null || { echo "::error::rsync is not on PATH on this runner (install it, e.g. from MSYS2 or cwRsync, into Git's usr/bin)"; exit 1; }
           rsync -az --delete --no-perms --no-owner --no-group \
             -e "ssh -i $HOME/.ssh/nextlevel_deploy -o UserKnownHostsFile=$HOME/.ssh/known_hosts_nextlevel -o StrictHostKeyChecking=yes" \
             dist/ "$USER@$HOST:/"
