@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # One-time provisioning for the Next Level VPS (Ubuntu 22.04/24.04 or Debian 12). Run as root:
-#   DOMAIN=nextlevel.example.com DEPLOY_PUBKEY="ssh-ed25519 AAAA... nextlevel-deploy@belt-pc" bash server-setup.sh
+#   DOMAIN=nextlevel.example.com DEPLOY_PUBKEY="ssh-ed25519 AAAA... nextlevel-deploy@belt-pc" [HARDEN_SSH=1] bash server-setup.sh
 # What it does: creates an unprivileged `deploy` user that can only receive files, installs Caddy (automatic HTTPS via
 # Let's Encrypt, HTTP->HTTPS redirect, security headers), locks the firewall to 22/80/443, enables fail2ban and
 # unattended security upgrades, and disables password SSH logins once the key works.
 set -euo pipefail
 : "${DOMAIN:?set DOMAIN, e.g. DOMAIN=nextlevel.example.com}"
-: "${DEPLOY_PUBKEY:?set DEPLOY_PUBKEY to the deploy key's public line}"
+: "${DEPLOY_PUBKEY:?set DEPLOY_PUBKEY to the public line of the deploy key}"
 SITE_DIR=/var/www/nextlevel
 
 export DEBIAN_FRONTEND=noninteractive
@@ -48,7 +48,8 @@ ufw --force enable
 systemctl enable --now fail2ban
 dpkg-reconfigure -f noninteractive unattended-upgrades
 
-# ---- SSH hardening (keys only). Keep your own key installed for root/your user BEFORE this runs. ----
+# ---- SSH hardening (keys only). Opt in with HARDEN_SSH=1 once your own key works for root/your user, or you lock yourself out. ----
+if [ "${HARDEN_SSH:-0}" = "1" ]; then
 install -d /etc/ssh/sshd_config.d
 cat > /etc/ssh/sshd_config.d/90-hardening.conf <<'EOF'
 PasswordAuthentication no
@@ -57,7 +58,10 @@ PermitRootLogin prohibit-password
 X11Forwarding no
 MaxAuthTries 4
 EOF
-sshd -t && systemctl reload ssh || systemctl reload sshd
+sshd -t && (systemctl reload ssh || systemctl reload sshd)
+else
+  echo "SSH password login left enabled. Re-run with HARDEN_SSH=1 after your key works."
+fi
 
 echo "Done. Point DNS A/AAAA for $DOMAIN at this server, then the first HTTPS request obtains the certificate."
 echo "Deploy with: rsync -az --delete -e 'ssh -i <deploy key>' dist/ deploy@$DOMAIN:/"
