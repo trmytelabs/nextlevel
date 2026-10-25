@@ -1,4 +1,4 @@
-import {$,clamp,lerp,smooth,rngf,hash,BPM,BEAT,BAR,TOTAL,bar,W,H,ERAS,eraAt,transAt,LYRICS,cv,dpr,ctx,lo1,lo2,lo3,scan,blit,readInput,clickOn,setClickOn,ensureAC,hat,drums,lastInputReal,clearEdges,HK,MOBILE,QUALITY,setQuality,lastTouch,ptr} from './core';
+import {$,clamp,lerp,smooth,rngf,hash,BPM,BEAT,BAR,TOTAL,bar,W,H,ERAS,eraAt,transAt,LYRICS,cv,dpr,ctx,lo1,lo2,lo3,scan,blit,readInput,clickOn,setClickOn,ensureAC,hat,drums,lastInputReal,clearEdges,HK,MOBILE,QUALITY,setQuality,lastTouch,ptr,padsShown} from './core';
 import {E1} from './era1';
 import {E2} from './era2';
 import {E3} from './era3';
@@ -20,7 +20,8 @@ function seek(t){hideStart();seeks++;lineIdx=-1;songT=clamp(t,0,TOTAL);lastBeatT
 function setPlaying(v){playing=v;$('#play').textContent=playing?'PAUSE':'PLAY';if(playing)songPlay().then(ok=>{if(!ok)setPlaying(false)});else songPause()}
 function togglePlay(){if(startUp){startGame();return}if(ended){seek(0);setPlaying(true)}else setPlaying(!playing)}
 function toggleClick(){soundChosen=true;ensureAC();setClickOn(!clickOn);$('#click').textContent='SOUND: '+(clickOn?'ON':'OFF');$('#click').classList.toggle('on',clickOn)}
-const AUTO_MODES=['idle','on','off'],AUTO_LABEL:any={idle:'AUTOPILOT: WHEN IDLE',on:'AUTOPILOT: ON',off:'AUTOPILOT: OFF'};let autoMode='idle';
+// phones get short labels: the side pads leave the control bar about 500 px wide
+const AUTO_MODES=['idle','on','off'],AUTO_LABEL:any=MOBILE?{idle:'AUTO: IDLE',on:'AUTO: ON',off:'AUTO: OFF'}:{idle:'AUTOPILOT: WHEN IDLE',on:'AUTOPILOT: ON',off:'AUTOPILOT: OFF'};let autoMode='idle';if(MOBILE)$('#autoBtn').textContent=AUTO_LABEL.idle;if(MOBILE)$('#auto').textContent='AUTOPILOT · touch a pad to play';
 function cycleAuto(){autoMode=AUTO_MODES[(AUTO_MODES.indexOf(autoMode)+1)%3];$('#autoBtn').textContent=AUTO_LABEL[autoMode];$('#autoBtn').classList.toggle('on',autoMode==='on')}
 function isAuto(now){const last=eraAt(songT)===4?Math.max(lastInputReal,ptr.t):lastInputReal;return autoMode==='on'?true:autoMode==='off'?false:now-last>2000}
 $('#qBtn').textContent='FX: '+QUALITY.toUpperCase();$('#qBtn').onclick=()=>setQuality(QUALITY==='low'?'high':'low');$('#rotate').onclick=()=>document.body.classList.add('pok');
@@ -80,7 +81,7 @@ function cards(t){ctx.setTransform(dpr,0,0,dpr,0,0);
  if(t>=bar(94.9)&&!E5GL.ok){const a=Math.min(1,(t-bar(94.9))/0.8);ctx.save();ctx.globalAlpha=a;ctx.textAlign='center';ctx.fillStyle='#ffe81f';ctx.font="12px 'Press Start 2P',monospace";ctx.fillText(CARD.title,W/2,H*0.30);ctx.fillStyle='#fff';ctx.font="9px 'Press Start 2P',monospace";ctx.fillText(CARD.credit,W/2,H*0.40);ctx.fillStyle='#cfd3dc';ctx.fillText(CARD.name+"  ·  "+CARD.program,W/2,H*0.47);ctx.fillStyle='#fff';ctx.font="9px 'Press Start 2P',monospace";ctx.fillText(CARD.invite,W/2,H*0.60);ctx.textAlign='left';ctx.restore()}}
 const CHAPTERS=['1 · FIRST PROMPTS','2 · LEARNING TO ASK','3 · DIRECTING AGENTS','4 · WORKING FROM ANYWHERE','5 · FULL DEVELOPMENT'];
 function chapters(t){if(MOBILE&&innerWidth<700)return;for(let i=0;i<ERAS.length;i++){const s=i===0?bar(2):ERAS[i].start;const q=(t-s)/2.6;if(q<0||q>1)continue;const a=q<0.15?q/0.15:q>0.8?(1-q)/0.2:1;ctx.save();ctx.globalAlpha=a;ctx.textAlign='center';ctx.font="8px 'Press Start 2P',monospace";const txt=CHAPTERS[i];const tw=ctx.measureText(txt).width+22;ctx.fillStyle='rgba(6,8,20,.72)';ctx.fillRect(W/2-tw/2,8,tw,18);ctx.fillStyle='#5bff5b';ctx.fillRect(W/2-tw/2,8,tw,1);ctx.fillStyle='#e8e8f0';ctx.fillText(txt,W/2,21);ctx.restore()}}
-function touchHints(t){if(!MOBILE||startUp)return;const fresh=performance.now()-lastTouch<1500;if(!(t<bar(2)||fresh))return;const a=t<bar(2)?0.55:0.35*Math.max(0,1-(performance.now()-lastTouch)/1500);ctx.save();ctx.globalAlpha=a;ctx.strokeStyle='#5bff5b';ctx.setLineDash([6,6]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*0.28,0);ctx.lineTo(W*0.28,H);ctx.moveTo(W*0.72,0);ctx.lineTo(W*0.72,H);ctx.moveTo(W*0.28,H*0.5);ctx.lineTo(W*0.72,H*0.5);ctx.stroke();ctx.setLineDash([]);
+function touchHints(t){if(!MOBILE||startUp||padsShown())return;const fresh=performance.now()-lastTouch<1500;if(!(t<bar(2)||fresh))return;const a=t<bar(2)?0.55:0.35*Math.max(0,1-(performance.now()-lastTouch)/1500);ctx.save();ctx.globalAlpha=a;ctx.strokeStyle='#5bff5b';ctx.setLineDash([6,6]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*0.28,0);ctx.lineTo(W*0.28,H);ctx.moveTo(W*0.72,0);ctx.lineTo(W*0.72,H);ctx.moveTo(W*0.28,H*0.5);ctx.lineTo(W*0.72,H*0.5);ctx.stroke();ctx.setLineDash([]);
  ctx.fillStyle='#5bff5b';ctx.textAlign='center';ctx.font="9px 'Press Start 2P',monospace";ctx.fillText('< HOLD',W*0.14,H*0.5);ctx.fillText('LEFT',W*0.14,H*0.5+16);ctx.fillText('HOLD >',W*0.86,H*0.5);ctx.fillText('RIGHT',W*0.86,H*0.5+16);ctx.font="8px 'Press Start 2P',monospace";ctx.fillText('TAP · JUMP',W*0.5,H*0.12);ctx.fillText('TAP · FIRE',W*0.5,H*0.94);ctx.textAlign='left';ctx.restore()}
 let lyricShown='',lineIdx=-1,captions=true,stepping=false;
 function toggleCaptions(){captions=!captions;lyricShown=''}
@@ -88,7 +89,10 @@ function dispatchLine(i,t){const words=LYRICS[i][1].split(' ');E1.onLine(words,t
 // HUD text is rewritten only when it changes: assigning textContent every frame replaces the text node and costs a
 // style/layout pass per element per frame on phones.
 const HEL:any={},HTX:any={};function setTxt(id:string,s:string){if(HTX[id]===s)return;HTX[id]=s;(HEL[id]||(HEL[id]=$('#'+id))).textContent=s}
-function hud(t,auto){const e=eraAt(t),tr=transAt(t);document.body.classList.toggle('e1',e===0);document.body.classList.toggle('e4',e===3);document.body.classList.toggle('endcard',t>=bar(94.9));setTxt('era',tr?ERAS[tr.from].name+'  >  '+ERAS[tr.to].name:ERAS[e].name);
+// side-pad labels follow the stage (see #pads in index.html and the pad code in core.ts)
+const PADL=['< MOVE >','< MOVE >\nPUSH UP · JUMP','< STEER >','TAP · FLAP','DRAG HERE\nTO AIM\nTHE SABER'],PADA=['FIRE','JUMP','','FLAP',''],PADR=['HOLD · RAPID FIRE','HOLD · JUMP HIGHER','','TAP · FLAP','DRAG HERE\nTO AIM\nTHE SABER'];let padE=-1;
+function padLabels(e){if(e===padE||!MOBILE)return;padE=e;$('#padLl').textContent=PADL[e];$('#padA').textContent=PADA[e];$('#padRl').textContent=PADR[e];document.body.classList.toggle('noA',e===2);document.body.classList.toggle('aim',e===4)}
+function hud(t,auto){const e=eraAt(t),tr=transAt(t);padLabels(e);document.body.classList.toggle('e1',e===0);document.body.classList.toggle('e4',e===3);document.body.classList.toggle('endcard',t>=bar(94.9));setTxt('era',tr?ERAS[tr.from].name+'  >  '+ERAS[tr.to].name:ERAS[e].name);
  setTxt('clock','BAR '+(Math.floor(t/BAR)+1)+' · '+(Math.floor((t%BAR)/BEAT)+1)+'  ·  '+BPM+' BPM'+(SONG.has?'  ·  SONG '+(SONG.offset>=0?'+':'')+SONG.offset.toFixed(2)+'s'+(SONG.taps.length?'  ·  TAP '+SONG.taps.length+'/'+LYRICS.length:''):''));
  let line='',idx=-1;for(let i=0;i<LYRICS.length;i++){const s=bar(LYRICS[i][0]);if(t<s)break;idx=i;const nx=LYRICS[i+1]?bar(LYRICS[i+1][0]):1e9;if(t-s<Math.min(nx-s,bar(1.9)))line=LYRICS[i][1];else line=''}
  // only consume the line index when the line is actually dispatched: a seek/scrub while paused used to mark the line as
@@ -97,7 +101,7 @@ function hud(t,auto){const e=eraAt(t),tr=transAt(t);document.body.classList.togg
  // the 3D finale card ends on its own READY WHEN YOU ARE prompt: the sung caption hands over to it (never both on screen)
  if(E5GL.ok&&t>=bar(E5.K.CARD.capOff))line='';
  if(line!==lyricShown){lyricShown=line;const el=$('#lyric');el.style.opacity=line&&captions?1:0;if(line)el.textContent=line}
- setTxt('auto',SONG.has&&!playing&&!ended&&t<1?'PRESS PLAY TO START THE SONG':autoMode==='on'?'AUTOPILOT · watching':autoMode==='off'?'MANUAL · you are playing':auto?'AUTOPILOT · press any key to play':'MANUAL · autopilot resumes after 2s idle');
+ setTxt('auto',SONG.has&&!playing&&!ended&&t<1?'PRESS PLAY TO START THE SONG':autoMode==='on'?'AUTOPILOT · watching':autoMode==='off'?'MANUAL · you are playing':auto?(MOBILE?'AUTOPILOT · touch a pad to play':'AUTOPILOT · press any key to play'):'MANUAL · autopilot resumes after 2s idle');
  setTxt('time',Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')+' / 3:00');const pw=(t/TOTAL*100).toFixed(2)+'%';if(HTX.prog!==pw){HTX.prog=pw;(HEL.prog||(HEL.prog=$('#prog'))).style.width=pw}}
 
 function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-lastNow)/1000);lastNow=now;const inp=readInput();const auto=isAuto(now);

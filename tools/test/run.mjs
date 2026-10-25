@@ -68,17 +68,24 @@ if(flag('controls')){
   const inp=()=>page.evaluate(()=>{const i=ETM.input();return i});
   const keyCases=[['a','left'],['ArrowLeft','left'],['d','right'],['ArrowRight','right'],['w','up'],['ArrowUp','up'],['s','down'],['ArrowDown','down']];
   for(const [k,f] of keyCases){await page.keyboard.down(k);const i=await inp();if(i[f])pass('key '+k+' -> '+f);else fail('key '+k,'expected '+f+' got '+JSON.stringify(i));await page.keyboard.up(k)}
-  await page.keyboard.down(' ');{const i=await inp();if(i.fire&&i.jump)pass('space -> fire+jump');else fail('space','got '+JSON.stringify(i))}await page.keyboard.up(' ');
+  await page.keyboard.down(' ');{const i=await inp();if((i.fire&&i.jump)||i.fireHeld)pass('space -> fire+jump (or held, if a frame already consumed the edge; G5b checks the edge synchronously)');else fail('space','got '+JSON.stringify(i))}await page.keyboard.up(' ');
   await page.evaluate(()=>{window.__clear=()=>{}});
   // settings keys must not move the player
   for(const k of ['q','m','l']){await page.keyboard.press(k);const i=await inp();if(i.left||i.right||i.up||i.down)fail('settings key '+k,'moved player '+JSON.stringify(i));else pass('settings key '+k+' does not move')}
-  const autoLabel=await page.$eval('#autoBtn',e=>e.textContent);if(/AUTOPILOT: (ON|OFF|WHEN IDLE)/.test(autoLabel))pass('Q cycles autopilot label: '+autoLabel);else fail('Q autopilot','label '+autoLabel);
+  const autoLabel=await page.$eval('#autoBtn',e=>e.textContent);if(/AUTO(PILOT)?: (ON|OFF|WHEN IDLE|IDLE)/.test(autoLabel))pass('Q cycles autopilot label: '+autoLabel);else fail('Q autopilot','label '+autoLabel);
   await page.keyboard.press('l'); // the settings-key check above toggled captions off; turn them back on for later cases
   const sound=await page.$eval('#click',e=>e.textContent);if(/SOUND: (ON|OFF)/.test(sound))pass('M toggles sound label: '+sound);else fail('M sound','label '+sound);
   for(let e=1;e<=5;e++){await page.keyboard.press(String(e));const p=await probe();if(p.era===e-1)pass('key '+e+' -> era '+e);else fail('key '+e,'era '+p.era+' bar '+p.bar.toFixed(2))}
   await page.keyboard.press('1');
   // touch zones (pointer events with pointerType touch)
   const zones=[['left edge',box.x+box.width*0.10,box.y+box.height*0.5,'left'],['right edge',box.x+box.width*0.90,box.y+box.height*0.5,'right'],['upper middle',box.x+box.width*0.5,box.y+box.height*0.25,'jump'],['lower middle',box.x+box.width*0.5,box.y+box.height*0.75,'fire']];
+  // phones show the side pads instead: drive them with real touches (stick left/right/up, then the action button)
+  const P=await page.evaluate(()=>{const c=s=>{const r=document.querySelector(s).getBoundingClientRect();return r.width>0?{x:r.x+r.width/2,y:r.y+r.height/2}:null};return{l:c('#padL'),r:c('#padR')}});
+  if(P.l&&P.r){zones.length=0;
+   for(const [name,pt,d,f] of [['pad stick left',P.l,[-30,0],'left'],['pad stick right',P.l,[30,0],'right'],['pad stick up',P.l,[0,-30],'up'],['pad action button',P.r,null,'fire']]){
+    await page.touchscreen.touchStart(pt.x,pt.y);if(d)await page.touchscreen.touchMove(pt.x+d[0],pt.y+d[1]);const i=await inp();
+    if(i[f])pass('touch '+name+' -> '+f);else fail('touch '+name,'expected '+f+' got '+JSON.stringify(i));
+    await page.touchscreen.touchEnd();const j=await inp();if((f==='left'||f==='right')&&j[f])fail('touch '+name+' release','still '+f+' after touchEnd')}}
   for(const [name,x,y,f] of zones){await page.touchscreen.touchStart(x,y);const i=await inp();if(i[f])pass('touch '+name+' -> '+f);else fail('touch '+name,'expected '+f+' got '+JSON.stringify(i));await page.touchscreen.touchEnd();const j=await page.evaluate(()=>{const i=ETM.input();return i});if((f==='left'||f==='right')&&j[f])fail('touch '+name+' release','still '+f+' after touchEnd')}
   await page.evaluate(()=>{ETM.seek(0)});
 }
@@ -91,7 +98,9 @@ if(MOBILE){
   if(m.canvas.w>0&&m.canvas.x>=-1&&m.canvas.x+m.canvas.w<=m.vw+1&&m.canvas.y+m.canvas.h<=m.vh+1)pass('canvas fits landscape viewport');else fail('mobile canvas','canvas '+JSON.stringify(m.canvas)+' vp '+m.vw+'x'+m.vh);
   if(m.barOverflow<=1&&m.btnRight<=m.barRight+1)pass('control bar does not overflow');else fail('mobile bar','overflow '+m.barOverflow+' btnRight '+m.btnRight+' barRight '+m.barRight);
   if(m.rotate==='none')pass('rotate card hidden in landscape');else fail('rotate card','visible in landscape');
-  if(/HOLD LEFT/.test(m.help))pass('touch help text shown');else fail('touch help','help='+m.help);
+  // side pads: both shown, at least a thumb wide, beside the game and not over it
+  const pd=await page.evaluate(()=>{const R=s=>document.querySelector(s).getBoundingClientRect(),c=R('#c'),l=R('#padL'),r=R('#padR');return{l:{x:l.x,w:l.width,h:l.height},r:{x:r.x,w:r.width,h:r.height},c:{x:c.x,w:c.width},a:document.querySelector('#padA').textContent}});
+  if(pd.l.w>=100&&pd.r.w>=100&&pd.l.h>200&&pd.l.x+pd.l.w<=pd.c.x+1&&pd.r.x>=pd.c.x+pd.c.w-1)pass('side pads beside the game: left '+Math.round(pd.l.w)+' px, right '+Math.round(pd.r.w)+' px');else fail('side pads',JSON.stringify(pd));
   if(m.bodyScrollW<=m.vw+1)pass('no horizontal page scroll');else fail('page scroll','scrollWidth '+m.bodyScrollW);
   const p=await probe();if(p.quality==='low'||Q==='high')pass('quality tier on phone: '+p.quality);else fail('quality','phone got '+p.quality);
   await page.setViewport({width:390,height:844,deviceScaleFactor:3,isMobile:true,hasTouch:true,isLandscape:false});
@@ -102,6 +111,9 @@ if(MOBILE){
   await page.tap('#rotate');await new Promise(r=>setTimeout(r,200));
   const rot2=await page.evaluate(()=>getComputedStyle(document.querySelector('#rotate')).display);
   if(rot2==='none')pass('tap dismisses rotate card');else fail('rotate card','not dismissed');
+  await new Promise(r=>setTimeout(r,600));
+  const pp=await page.evaluate(()=>{const R=s=>document.querySelector(s).getBoundingClientRect(),c=R('#c'),l=R('#padL'),b=R('#bar');return{cb:c.bottom,lt:l.top,lb:l.bottom,lh:l.height,lw:l.width,bt:b.top}});
+  if(pp.lt>=pp.cb-1&&pp.lb<=pp.bt+1&&pp.lh>=150&&pp.lw>=150)pass('portrait: pads sit between the game and the control bar ('+Math.round(pp.lh)+' px tall)');else fail('portrait pads',JSON.stringify(pp));
   await page.setViewport({width:844,height:390,deviceScaleFactor:3,isMobile:true,hasTouch:true,isLandscape:true});await new Promise(r=>setTimeout(r,300));
 }
 

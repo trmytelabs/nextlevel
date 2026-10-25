@@ -88,17 +88,50 @@ addEventListener('keydown',e=>{const k=normKey(e.key);if(k==='p'||k==='P'||k==='
 addEventListener('keyup',e=>{keys[normKey(e.key)]=false});
 // touch: hold the left or right edge to move, tap the upper middle to jump, tap the lower middle to fire
 const tz=new Map<number,string>();let tzFire=0;cv.style.touchAction='none';
-cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;const r=cv.getBoundingClientRect();const fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;lastInputReal=performance.now();lastTouch=lastInputReal;if(clickOn)ensureAC();let z='';if(fx<0.28){z='L';keys.ArrowLeft=true;mv.x-=1}else if(fx>0.72){z='R';keys.ArrowRight=true;mv.x+=1}else if(fy<0.5){jumpEdge=true;mv.y-=1}else{fireEdge=true;z='F';tzFire++}tz.set(e.pointerId,z);e.preventDefault()},{passive:false});
+export const padsShown=()=>{const L=$('#padL');return !!L&&L.getBoundingClientRect().width>0};
+cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'||padsShown())return;const r=cv.getBoundingClientRect();const fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;lastInputReal=performance.now();lastTouch=lastInputReal;if(clickOn)ensureAC();let z='';if(fx<0.28){z='L';keys.ArrowLeft=true;mv.x-=1}else if(fx>0.72){z='R';keys.ArrowRight=true;mv.x+=1}else if(fy<0.5){jumpEdge=true;mv.y-=1}else{fireEdge=true;z='F';tzFire++}tz.set(e.pointerId,z);e.preventDefault()},{passive:false});
 // iOS only unlocks/resumes audio from touchend-class gestures, so retry ensureAC on release as well as on press
 const tup=e=>{if(e.type==='pointerup'&&clickOn)ensureAC();if(!tz.has(e.pointerId))return;const z=tz.get(e.pointerId);if(z==='L')keys.ArrowLeft=false;if(z==='R')keys.ArrowRight=false;if(z==='F')tzFire=Math.max(0,tzFire-1);tz.delete(e.pointerId)};cv.addEventListener('pointerup',tup);cv.addEventListener('pointercancel',tup);cv.addEventListener('pointerleave',tup);
 // a key or finger held while the tab/app loses focus never gets its keyup/pointerup: release everything
-const releaseAll=()=>{for(const k in keys)keys[k]=false;tz.clear();tzFire=0};addEventListener('blur',releaseAll);document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseAll()});
-if(matchMedia('(pointer: coarse)').matches){const h=$('#help');if(h)h.textContent='HOLD LEFT / RIGHT EDGE TO MOVE · TAP TOP TO JUMP · TAP BOTTOM TO FIRE'}
+const releaseAll=()=>{for(const k in keys)keys[k]=false;tz.clear();tzFire=0;pad.left=pad.right=pad.up=pad.down=false};addEventListener('blur',releaseAll);document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseAll()});
+if(matchMedia('(pointer: coarse)').matches){const h=$('#help');if(h)h.textContent='LEFT PAD MOVES · RIGHT BUTTON FIRES / JUMPS · FINALE: DRAG A PAD TO AIM'}
 // pointer (mouse or finger) position over the canvas, 0..1, for the finale's hands
 export const ptr={x:0.5,y:0.55,t:-1e9};
 const ptrSet=(e:PointerEvent)=>{const r=cv.getBoundingClientRect();if(!r.width)return;ptr.x=clamp((e.clientX-r.left)/r.width,0,1);ptr.y=clamp((e.clientY-r.top)/r.height,0,1);ptr.t=performance.now()};
 cv.addEventListener('pointermove',ptrSet);cv.addEventListener('pointerdown',ptrSet);
-export function readInput(){return{left:!!(keys.ArrowLeft||keys.a||keys.A),right:!!(keys.ArrowRight||keys.d||keys.D),up:!!(keys.ArrowUp||keys.w||keys.W),down:!!(keys.ArrowDown||keys.s||keys.S),fire:fireEdge,fireHeld:!!keys[' ']||tzFire>0,jump:jumpEdge||fireEdge,upEdge:jumpEdge,mv:{x:mv.x,y:mv.y}}}
+// side pads (touch screens, see #pads in index.html). Left: a floating thumb stick (move/steer, push up to jump). Right: the
+// action button (fire, jump, flap). In the finale (era 5) both pads are trackpads that move the saber. In the flyer (era 4)
+// a touch on either pad flaps. While the pads are shown the game screen itself only takes the finale's direct finger aim.
+export const pad={left:false,right:false,up:false,down:false};
+const padEra=()=>eraAt(HK.now?HK.now():0);
+const padTouch=()=>{lastInputReal=performance.now();lastTouch=lastInputReal;if(clickOn)ensureAC()};
+const AIMX=1/130,AIMY=1/95;
+{const L=$('#padL'),R=$('#padR'),ring=$('#padRing'),knob=$('#padKnob'),A=$('#padA');
+ if(L&&R){
+  let lp:any=null,rp:any=null;
+  const aim=(p,e)=>{ptr.x=clamp(ptr.x+(e.clientX-p.px)*AIMX,0,1);ptr.y=clamp(ptr.y+(e.clientY-p.py)*AIMY,0,1);ptr.t=performance.now();p.px=e.clientX;p.py=e.clientY};
+  const knobAt=(dx,dy)=>{knob.style.transform=`translate(${dx}px,${dy}px)`};
+  const ringHome=()=>{ring.style.left='50%';ring.style.top='50%';knobAt(0,0);L.classList.remove('on')};
+  L.addEventListener('pointerdown',e=>{e.preventDefault();try{L.setPointerCapture(e.pointerId)}catch{}padTouch();const r=L.getBoundingClientRect(),era=padEra();
+   lp={id:e.pointerId,ox:e.clientX,oy:e.clientY,px:e.clientX,py:e.clientY};L.classList.add('on');
+   if(era===3){fireEdge=true;return}if(era===4){ptr.t=performance.now();return}
+   ring.style.left=(e.clientX-r.left)+'px';ring.style.top=(e.clientY-r.top)+'px';knobAt(0,0)},{passive:false});
+  L.addEventListener('pointermove',e=>{if(!lp||e.pointerId!==lp.id)return;e.preventDefault();const era=padEra();if(era===3)return;padTouch();if(era===4){aim(lp,e);return}
+   let dx=e.clientX-lp.ox,dy=e.clientY-lp.oy;const RAD=34,d=Math.hypot(dx,dy);
+   if(d>RAD){lp.ox+=dx*(1-RAD/d);lp.oy+=dy*(1-RAD/d);dx=e.clientX-lp.ox;dy=e.clientY-lp.oy;const r=L.getBoundingClientRect();ring.style.left=(lp.ox-r.left)+'px';ring.style.top=(lp.oy-r.top)+'px'}
+   pad.left=dx<-10;pad.right=dx>10;const up=dy<-18;if(up&&!pad.up){jumpEdge=true;mv.y-=1}pad.up=up;pad.down=dy>18;knobAt(dx,dy)},{passive:false});
+  const lup=e=>{if(!lp||e.pointerId!==lp.id)return;lp=null;pad.left=pad.right=pad.up=pad.down=false;ringHome()};
+  L.addEventListener('pointerup',lup);L.addEventListener('pointercancel',lup);
+  R.addEventListener('pointerdown',e=>{e.preventDefault();try{R.setPointerCapture(e.pointerId)}catch{}padTouch();rp={id:e.pointerId,px:e.clientX,py:e.clientY,fire:false};
+   if(padEra()===4){ptr.t=performance.now();return}fireEdge=true;tzFire++;rp.fire=true;A.classList.add('on')},{passive:false});
+  R.addEventListener('pointermove',e=>{if(!rp||e.pointerId!==rp.id)return;e.preventDefault();if(padEra()===4){padTouch();aim(rp,e)}},{passive:false});
+  const rup=e=>{if(!rp||e.pointerId!==rp.id)return;if(rp.fire)tzFire=Math.max(0,tzFire-1);rp=null;A.classList.remove('on')};
+  R.addEventListener('pointerup',rup);R.addEventListener('pointercancel',rup);
+  // the portrait layout puts the pads between the game and the control bar, whose height depends on how its buttons wrap
+  const barH=()=>{const b=$('#bar');if(b)document.documentElement.style.setProperty('--barH',Math.ceil(b.getBoundingClientRect().height)+'px')};
+  addEventListener('resize',barH);setTimeout(barH,0);setTimeout(barH,500);
+ }}
+export function readInput(){return{left:!!(keys.ArrowLeft||keys.a||keys.A||pad.left),right:!!(keys.ArrowRight||keys.d||keys.D||pad.right),up:!!(keys.ArrowUp||keys.w||keys.W||pad.up),down:!!(keys.ArrowDown||keys.s||keys.S||pad.down),fire:fireEdge,fireHeld:!!keys[' ']||tzFire>0,jump:jumpEdge||fireEdge,upEdge:jumpEdge,mv:{x:mv.x,y:mv.y}}}
 
 // ---------- audio (optional click track) ----------
 let AC:any=null,master:any=null,noiseBuf:any=null;export let clickOn=false;

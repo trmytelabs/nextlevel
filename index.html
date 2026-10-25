@@ -60,6 +60,37 @@ body.start #endbtns{display:flex;left:2%;top:3.5%;bottom:auto;transform:none}
 #notesBody ul{margin:0;padding-left:1.5em}
 #notesBody li::marker{color:#ff3fb4}
 @media (pointer:coarse){.eb{font-size:clamp(8px,1.4vw,12px)}#notesBody{font-size:clamp(7px,1.25vw,11px)}}
+/* side pads (touch screens): a thumb stick in the left gutter, the action button in the right. Landscape: beside the game. Portrait ("play small"): under it. */
+#pads{display:none}
+@media (pointer:coarse){
+ #pads{display:block;position:fixed;inset:0;pointer-events:none;z-index:2}
+ .pad{position:absolute;top:0;bottom:0;width:var(--pad);pointer-events:auto;touch-action:none;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(91,255,91,.035),rgba(255,63,180,.035))}
+ #padL{left:env(safe-area-inset-left,0px);border-right:1px solid rgba(91,255,91,.12)}
+ #padR{right:env(safe-area-inset-right,0px);border-left:1px solid rgba(255,63,180,.14)}
+ #padRing{position:absolute;width:92px;height:92px;margin:-46px 0 0 -46px;left:50%;top:50%;border-radius:50%;border:2px solid rgba(91,255,91,.45);box-shadow:0 0 14px rgba(91,255,91,.18) inset}
+ #padKnob{position:absolute;left:50%;top:50%;width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;background:rgba(91,255,91,.32);border:2px solid rgba(91,255,91,.8)}
+ #padA{width:86px;height:86px;border-radius:50%;border:3px solid #ff3fb4;background:rgba(255,63,180,.16);color:#ffd9f0;display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:1px;box-shadow:0 0 18px rgba(255,63,180,.35)}
+ #padA.on{background:rgba(255,63,180,.5);transform:scale(.94)}
+ #padL.on #padRing{border-color:#5bff5b}
+ .pl{position:absolute;bottom:12%;left:4px;right:4px;text-align:center;font-size:7px;line-height:1.8;color:var(--dim);letter-spacing:.5px;white-space:pre-line}
+ body.noA #padA{opacity:.25}
+ body.aim #padA,body.aim #padRing{display:none}
+ body.aim .pad{background:linear-gradient(180deg,rgba(63,240,255,.07),rgba(255,63,180,.06))}
+ body.aim .pl{bottom:auto;color:#9ff6ff}
+ body.start #pads{display:none}
+ #help{display:none}
+}
+@media (pointer:coarse) and (orientation:landscape){#bar{gap:1%;padding:0 1.2%}#bar button{font-size:clamp(5px,1.05vw,8px);padding:.8em .5em}}
+@media (pointer:coarse) and (orientation:landscape){
+ :root{--pad:clamp(112px,15.5vw,172px)}
+ #stage{padding-left:calc(var(--pad) + env(safe-area-inset-left,0px));padding-right:calc(var(--pad) + env(safe-area-inset-right,0px))}
+}
+@media (pointer:coarse) and (orientation:portrait){
+ :root{--pad:50%}
+ body.pok #stage{align-items:flex-start}
+ .pad{top:calc(env(safe-area-inset-top,0px) + 100vw*9/16);bottom:var(--barH,110px)}
+ #padL{left:0}#padR{right:0}
+}
 body.start #hud .tag{display:none}
 body.start canvas#c{cursor:pointer}
 body.e1 #lyric{bottom:26%}
@@ -78,6 +109,7 @@ body.e4 #lyric{left:3%;right:64%;bottom:30%;text-align:left}
 </head>
 <body>
 <div id="rotate"><div class="ph"></div><div>TURN YOUR PHONE SIDEWAYS<br><small>it is a widescreen game</small></div><small>or tap here to play small</small></div>
+<div id="pads"><div class="pad" id="padL"><div id="padRing"><div id="padKnob"></div></div><div class="pl" id="padLl">&lt; MOVE &gt;</div></div><div class="pad" id="padR"><div id="padA">FIRE</div><div class="pl" id="padRl">HOLD · RAPID FIRE</div></div></div>
 <div id="stage"><div id="wrap">
 <canvas id="c"></canvas>
 <div id="endbtns"><a id="src" class="eb" href="https://github.com/trmytelabs/maximalist" target="_blank" rel="noopener">SOURCE CODE</a><button id="notesBtn" class="eb" type="button">PATCH NOTES</button></div>

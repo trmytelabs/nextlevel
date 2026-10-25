@@ -62,6 +62,18 @@ export default [
   await page.evaluate(t=>{ETM.seek(t);ETM.step(0)},p.t);const bad=r.filter(x=>!x[1]).map(x=>x[0]);return bad.length===0||'failed: '+bad.join(', ')}},
  {name:'G5b space / tap edges reach readInput (synchronous, no rAF race)',era:null,bar:3,fn:async(p,h,page)=>{const r=await page.evaluate(async()=>{const out=[];const tick=()=>new Promise(r=>requestAnimationFrame(()=>setTimeout(r,0)));const kd=k=>dispatchEvent(new KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true})),ku=k=>dispatchEvent(new KeyboardEvent('keyup',{key:k,bubbles:true}));
   const c=document.querySelector('#c'),b=c.getBoundingClientRect();const pd=(fx,fy,id)=>c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:id,pointerType:'touch',clientX:b.left+b.width*fx,clientY:b.top+b.height*fy,bubbles:true,cancelable:true})),pu=id=>c.dispatchEvent(new PointerEvent('pointerup',{pointerId:id,pointerType:'touch',bubbles:true}));
+  // phones: the side pads replace the screen zones (core.ts); same checks through the stick and the action button
+  const PL=document.querySelector('#padL'),PR=document.querySelector('#padR');
+  if(PL&&PL.getBoundingClientRect().width>0){const l=PL.getBoundingClientRect(),r=PR.getBoundingClientRect(),lx=l.left+l.width/2,ly=l.top+l.height/2,rx=r.left+r.width/2,ry=r.top+r.height/2;
+   const ev=(el,type,x,y,id)=>el.dispatchEvent(new PointerEvent(type,{pointerId:id,pointerType:'touch',clientX:x,clientY:y,bubbles:true,cancelable:true}));
+   await tick();ev(PL,'pointerdown',lx,ly,8);ev(PL,'pointermove',lx,ly-30,8);const j=ETM.input();ev(PL,'pointerup',lx,ly-30,8);out.push(['stick up -> jump (not fire)',j.jump&&j.upEdge&&!j.fire]);
+   await tick();kd(' ');const i=ETM.input();ku(' ');out.push(['space -> fire+jump',i.fire&&i.jump]);
+   await tick();ev(PR,'pointerdown',rx,ry,7);const f=ETM.input();ev(PR,'pointerup',rx,ry,7);out.push(['action button -> fire (no upEdge)',f.fire&&!f.upEdge&&!f.left&&!f.right]);
+   await tick();ev(PL,'pointerdown',lx,ly,9);ev(PL,'pointermove',lx-30,ly,9);const L1=ETM.input();ev(PL,'pointerup',lx-30,ly,9);const L2=ETM.input();out.push(['stick left then release',L1.left&&!L1.right&&!L2.left]);
+   await tick();ev(PL,'pointerdown',lx,ly,10);ev(PL,'pointermove',lx+30,ly,10);const R1=ETM.input();ev(PL,'pointerup',lx+30,ly,10);const R2=ETM.input();out.push(['stick right then release',R1.right&&!R1.left&&!R2.right]);
+   await tick();ev(PL,'pointerdown',lx,ly,11);ev(PL,'pointermove',lx-30,ly,11);ev(PR,'pointerdown',rx,ry,12);const two=ETM.input();ev(PR,'pointerup',rx,ry,12);const still=ETM.input();ev(PL,'pointerup',lx-30,ly,11);out.push(['two thumbs: stick left + action, left survives the button release',two.left&&two.fire&&still.left]);
+   await tick();const clean=ETM.input();out.push(['edges cleared by the next frame',!clean.fire&&!clean.jump&&!clean.left&&!clean.right]);
+   return out}
   await tick();pd(0.5,0.25,8);const j=ETM.input();pu(8);out.push(['tap upper middle -> jump (not fire)',j.jump&&j.upEdge&&!j.fire]);
   await tick();kd(' ');const i=ETM.input();ku(' ');out.push(['space -> fire+jump',i.fire&&i.jump]);
   await tick();pd(0.5,0.75,7);const f=ETM.input();pu(7);out.push(['tap lower middle -> fire (no upEdge)',f.fire&&!f.upEdge&&!f.left&&!f.right]);
