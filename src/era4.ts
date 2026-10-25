@@ -137,8 +137,6 @@ function drawGame(ctx,t,pulse){const b=S.bird,run=Math.max(0,t-s4);ctx.save();ct
  for(const g of S.ghosts){const x=BX+g.x;ctx.fillStyle=hexa(GREEN,0.22);ctx.beginPath();ctx.arc(x,g.y,17,0,7);ctx.fill();drawBird(ctx,x,g.y,-0.2,t,GREEN,0.8,g.i)}
  // bird
  if(b.alive||t-b.deadT<BAR){const rot=b.hover?0:clamp(b.vy/600,-0.5,1.2);const blink=b.inv>0&&Math.floor(t*20)%2;if(!blink)drawBird(ctx,BX,b.y,rot,t,null,1,0)}
- // collected words pop up off the bird
- for(const p of S.parts){const q=(t-p.t)/0.7;ctx.save();ctx.globalAlpha=1-q*q;ctx.font=F(10);ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#2f6a1c';ctx.fillStyle='#fff';const y=p.y-20-q*36;ctx.strokeText(p.w,BX+40,y);ctx.fillText(p.w,BX+40,y);ctx.restore()}
  // score and prompts
  ctx.font=F(18);ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#2f3a44';ctx.strokeText(String(S.score),GW/2,52);ctx.fillStyle='#fff';ctx.fillText(String(S.score),GW/2,52);
  if((!S.started||(b.alive&&b.hover))&&Math.floor(t*3)%2===0){ctx.font=F(10);ctx.lineWidth=4;ctx.strokeText(S.started?'TAP!':'TAP TO FLY',GW/2,GAH*0.62);ctx.fillStyle='#f7d33c';ctx.fillText(S.started?'TAP!':'TAP TO FLY',GW/2,GAH*0.62)}

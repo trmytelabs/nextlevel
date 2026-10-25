@@ -15,7 +15,7 @@ open(os.path.join(DIST,'artifact.html'),'w',encoding='utf-8').write(body.strip()
 files={}
 assets=os.path.join(DIST,'assets')
 for f in sorted(os.listdir(assets)):files['assets/'+f]='assets/'+f
-for sub in ['models','models/finale']:
+for sub in ['models','models/finale','models/racer']:
     mdir=os.path.join(DIST,sub)
     if not os.path.isdir(mdir):continue
     for f in sorted(os.listdir(mdir)):

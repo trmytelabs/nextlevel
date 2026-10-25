@@ -285,7 +285,7 @@ function draw(x,t){const sp=sprites();const cam=Math.round(S.camX),ft=S.ft;x.sav
  for(const q of S.pops){x.globalAlpha=Math.min(1,q.l*3);x.fillStyle=q.c||'#e0b0ff';const z=q.sz||2;x.fillRect(Math.round(q.x-cam),Math.round(q.y),z,z)}x.globalAlpha=1;
  x.restore();
  x.font="6px 'Press Start 2P',monospace";x.fillStyle='#fff';x.strokeStyle='#1c3a6a';x.lineWidth=2;x.strokeText('SCORE '+S.score,6,26);x.fillText('SCORE '+S.score,6,26);x.fillStyle='#ffd23f';x.strokeText('WORDS '+S.coinsGot,LW-76,26);x.fillText('WORDS '+S.coinsGot,LW-76,26);x.fillStyle='#e0b0ff';x.strokeText('STOMPS '+S.stomps,6,36);x.fillText('STOMPS '+S.stomps,6,36);
- if(S.line.length){const txt=S.line.join(' ');if(txt.length*6>LW-8)x.font="5px 'Press Start 2P',monospace";x.textAlign='center';x.fillStyle='#fff2a0';x.strokeText(txt,LW/2,46);x.fillText(txt,LW/2,46);x.textAlign='left'}}
+ }
 // debug: every sprite frame on one sheet (tools / screenshots)
 function sheet(x){const sp=sprites();let i=0;const put=(c)=>{x.drawImage(c,4+(i%12)*24,4+Math.floor(i/12)*30);i++};
  for(const k of ['idle','blink','land','jump','fall','skid','bump'])put(sp[k][0]);for(const f of sp.walk)put(f[0]);for(const f of sp.run)put(f[0]);put(sp.death);put(sp.run[0][1]);
