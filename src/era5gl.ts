@@ -103,7 +103,7 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:!LOW,alpha:false
   const ground:any=LOW?new THREE.Mesh(new THREE.PlaneGeometry(1400,420),new THREE.MeshStandardMaterial({color:0x0b0816,metalness:0.9,roughness:0.35})):new Reflector(new THREE.PlaneGeometry(1400,420),{clipBias:0.003,textureWidth:Math.floor(W*dpr*0.5),textureHeight:Math.floor(H*dpr*0.5),color:0x0b0816});ground.rotation.x=-Math.PI/2;ground.position.set(0,-0.01,-20);floorG.add(ground);
   if(!LOW){const ob=ground.onBeforeRender;ground.onBeforeRender=function(r:any,sc:any,c:any,g:any,m:any,gr:any){const sun=(skyM as any).userData.sun;const v=sun.visible;sun.visible=false;starsM.visible=false;
    // keep the saber and anything at arm's length out of the mirror: their reflections read as extra sabers and blobs
-   hidden.length=0;const near=camera.position.x+6;const hide=(o:THREE.Object3D)=>{if(o.visible){o.visible=false;hidden.push(o)}};hide(saber.g);hide(saber.trail.mesh);for(const h of halves)hide(h.m);for(const b of blocks)if(b.g.position.x<near)hide(b.g);
+   hidden.length=0;const near=camera.position.x+6;const hide=(o:THREE.Object3D)=>{if(o.visible){o.visible=false;hidden.push(o)}};hide(saber.g);hide(saber.trail.mesh);for(const h of halves)hide(h.m);for(const b of blocks)if(b.g.position.x<near)hide(b.g);if(glowSp)hide(glowSp);if(shock)hide(shock);
    ob.call(this,r,sc,c,g,m,gr);sun.visible=v;starsM.visible=true;for(const o of hidden)o.visible=true}}
   const gridP=new THREE.Mesh(new THREE.PlaneGeometry(1400,420),new THREE.MeshBasicMaterial({map:gridTex,transparent:true,opacity:0.5,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false}));gridP.rotation.x=-Math.PI/2;gridP.position.set(0,0.005,-20);floorG.add(gridP);
   for(const z of[-1.5,1.5]){const rail=new THREE.Mesh(geo.box,new THREE.MeshBasicMaterial({color:z<0?MAG:CYAN,toneMapped:false}));rail.scale.set(1400,0.04,0.06);rail.position.set(0,0.03,z*LANEZ/1.5);floorG.add(rail)}
@@ -116,16 +116,96 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:!LOW,alpha:false
   saber=makeSaber();copilot=makeCopilot();sparks=makeSparks();
   for(let i=0;i<14;i++){const m=new THREE.Mesh(geo.sph,new THREE.MeshBasicMaterial({color:i%3?GRN:0xffffff,toneMapped:false}));m.scale.setScalar(0.07);m.visible=false;scene.add(m);arrivals.push(m)}
   for(let i=0;i<8;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:wordTex('·'),transparent:true,depthTest:false,toneMapped:false}));sp.visible=false;scene.add(sp);flights.push({sp,piece:null,t0:-9,from:new THREE.Vector3(),to:new THREE.Vector3(),done:true})}
-  loadKit();ok=true}catch(e){console.warn('WebGL era 5 unavailable, using 2D renderer',e);ok=false}}
+  initCard();loadKit();ok=true}catch(e){console.warn('WebGL era 5 unavailable, using 2D renderer',e);ok=false}}
+// ---- finale card: the words you cut stream out of the arena and assemble, voxel by voxel, into NEXT LEVEL ----
+// Pure function of t (seeded hash only): every voxel has a launch time, a source piece in the arena, an arc and an
+// arrival slot; arrivals sweep left to right and the last ones slam in on the bar-95 downbeat, where the whole title
+// locks (white-hot flash, bloom spike, shock ring, camera push) and recolours into one gradient. LOW: one voxel per
+// font pixel; HIGH: a second layer behind it (deeper extrusion, twice the voxels in the stream).
+const CARD=E5.K.CARD,XE=(OUT+1.2-s5)*SPD; // XE: where the run stops (era5.ts xAt)
+const GLYPH:Record<string,string[]>={N:['X...X','XX..X','XX..X','X.X.X','X..XX','X..XX','X...X'],E:['XXXXX','X....','X....','XXXX.','X....','X....','XXXXX'],X:['X...X','X...X','.X.X.','..X..','.X.X.','X...X','X...X'],
+ T:['XXXXX','..X..','..X..','..X..','..X..','..X..','..X..'],L:['X....','X....','X....','X....','X....','X....','XXXXX'],V:['X...X','X...X','X...X','X...X','.X.X.','.X.X.','..X..']};
+const camF=new THREE.PerspectiveCamera(50,W/H,0.05,600),CPOS=new THREE.Vector3(XE-3,6.2,0),cF=new THREE.Vector3(),cU=new THREE.Vector3(),cR=new THREE.Vector3(),cBk=new THREE.Vector3(),titleC=new THREE.Vector3();
+let vox:THREE.InstancedMesh|null=null,vt:any[]=[],VS=0.25,TP=0.5,shock:THREE.Mesh,glowSp:THREE.Sprite,elig:any[]=[],eligKey='';
+const voxU={uFlash:{value:0},uBase:{value:0.3},uEdge:{value:2.6}};
+const TD=22,THALF=Math.tan(25*Math.PI/180);
+function initCard(){camF.position.copy(CPOS);camF.lookAt(CPOS.x+100,CPOS.y-100*0.1*THALF,0);camF.updateMatrixWorld(true);camF.matrixWorld.extractBasis(cR,cU,cBk);cF.copy(cBk).negate();
+ titleC.copy(CPOS).addScaledVector(cF,TD).addScaledVector(cU,0.44*THALF*TD);
+ const txt='NEXT LEVEL',layers=LOW?1:2,px:number[][]=[];let cx=0;for(const ch of txt){if(ch===' '){cx+=3;continue}const g=GLYPH[ch];for(let r=0;r<7;r++)for(let c=0;c<5;c++)if(g[r][c]==='X')px.push([cx+c,r]);cx+=6}const TW=cx-1;
+ TP=0.66*2*THALF*(W/H)*TD/TW;VS=TP; // world size of one font pixel = one voxel
+ vt=[];for(let d=0;d<layers;d++)for(const [x,y] of px){const lx=(x+0.5-TW/2)*TP,ly=(3-y)*TP,lz=-d*TP*1.62,ux=(x+0.5)/TW,uy=(y+0.5)/7,k=vt.length;
+  const h1=hash(k*1.37+0.5),h2=hash(k*2.71+1.1),h3=hash(k*3.97+2.3),h4=hash(k*5.33+3.7);const key=h2>0.92; // keystones: the last voxels, slammed in on the downbeat
+  let tA=key?bar(CARD.lock):bar(94.42)+ux*bar(0.5)+(h1-0.5)*0.12;tA=Math.min(tA,bar(CARD.lock)-0.03);if(key)tA=bar(CARD.lock);
+  const dur=key?0.5+h3*0.12:0.8+h3*0.35,tL=Math.max(bar(CARD.fly)+0.03+h4*0.1,tA-dur);vt.push({lx,ly,lz,ux,uy,h1,h2,h3,h4,key,tA,tL})}
+ const g=new RoundedBoxGeometry(1,1,1,LOW?1:2,0.12);const m=new THREE.MeshStandardMaterial({color:0x161a3a,metalness:0.55,roughness:0.32,emissive:0xffffff});
+ // block language: dark body, glowing hue edges (an edge factor from the local position, since instanced meshes cannot share the LineSegments edges)
+ m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,voxU);sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vLoc;').replace('#include <begin_vertex>','#include <begin_vertex>\nvLoc=position;');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vLoc;uniform float uFlash,uBase,uEdge;').replace('vec3 totalEmissiveRadiance = emissive;','vec3 aL=abs(vLoc)*2.0;float mxL=max(aL.x,max(aL.y,aL.z)),mnL=min(aL.x,min(aL.y,aL.z)),mdL=aL.x+aL.y+aL.z-mxL-mnL;float edL=smoothstep(0.72,0.92,mdL);\nvec3 totalEmissiveRadiance = vColor*(uBase+edL*uEdge)+vec3(uFlash);')};
+ vox=new THREE.InstancedMesh(g,m,vt.length);vox.frustumCulled=false;vox.visible=false;const c0=new THREE.Color(1,1,1);for(let i=0;i<vt.length;i++)vox.setColorAt(i,c0);scene.add(vox);
+ shock=new THREE.Mesh(new THREE.RingGeometry(0.92,1,72),new THREE.MeshBasicMaterial({color:0xbff8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false,side:THREE.DoubleSide}));shock.visible=false;scene.add(shock);
+ glowSp=new THREE.Sprite(new THREE.SpriteMaterial({map:canvasTex(256,128,x=>{const g=x.createRadialGradient(128,128,4,128,128,128);g.addColorStop(0,'rgba(255,200,140,1)');g.addColorStop(0.25,'rgba(255,90,170,.75)');g.addColorStop(0.6,'rgba(120,40,200,.3)');g.addColorStop(1,'rgba(40,10,80,0)');x.fillStyle=g;x.fillRect(0,0,256,128)}),transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,toneMapped:false}));glowSp.visible=false;scene.add(glowSp)}
+// card camera: crane from the rider's eye up to the hero pose by the lock, then a push on the downbeat and a slow drift
+const cardPos=(t:number,o:THREE.Vector3)=>{const d=t>=bar(CARD.lock)?1.1*(1-Math.exp(-(t-bar(CARD.lock))*5))+0.15*(t-bar(CARD.lock)):0;return o.copy(CPOS).addScaledVector(cF,d)};
+const vP=new THREE.Vector3(),vA=new THREE.Vector3(),vB=new THREE.Vector3(),vC=new THREE.Vector3(),vQ=new THREE.Quaternion(),vQ2=new THREE.Quaternion(),vE=new THREE.Euler(),vS=new THREE.Vector3(),vM=new THREE.Matrix4(),vCol=new THREE.Color(),vCol2=new THREE.Color();
+const GRAD=[new THREE.Color(0x9ff8ff),new THREE.Color(CYAN),new THREE.Color(MAG),new THREE.Color(VIO)];
+function gradAt(u:number,o:THREE.Color){const f=clamp(u,0,1)*(GRAD.length-1),i=Math.min(GRAD.length-2,Math.floor(f));return o.copy(GRAD[i]).lerp(GRAD[i+1],f-i)}
+const titleW=(lx:number,ly:number,lz:number,o:THREE.Vector3)=>o.copy(titleC).addScaledVector(cR,lx).addScaledVector(cU,ly).addScaledVector(cBk,lz);
+let cardLast=-1;
+function updateCard(S:any,t:number,cam:number,dt:number){if(!vox)return;const b=t/BAR,on=b>=CARD.fly;vox.visible=on;shock.visible=false;glowSp.visible=on;const sun=(skyM as any).userData.sun;
+ if(!on){voxU.uFlash.value=0;cardLast=t;cardStat.inFlight=cardStat.placed=0;cardStat.n=vt.length;cardStat.locked=false;return}
+ const lock=bar(CARD.lock),sl=t-lock;
+ // sources: the arena pieces around where the run stopped (cached per simulation state)
+ const key=S.built.length+'|'+(S===lastS);if(key!==eligKey){eligKey=key;elig=S.built.filter((p:any)=>p.x>CPOS.x+3&&p.x<XE+80)}
+ const n=vt.length,np=elig.length;let latest=-1,latestT=-1,inFlight=0,placed=0;
+ for(let i=0;i<n;i++){const v=vt[i];let s=0;const p=np?elig[Math.floor(v.h1*np*0.999)]:null;
+  if(t<v.tL){s=0;vP.copy(titleC)}
+  else{const q=clamp((t-v.tL)/(v.tA-v.tL),0,1);
+   if(p)vA.set(p.x+(v.h3-0.5)*3,pieceTop(p)*(0.3+0.7*v.h4),pieceZ(p)+(v.h2-0.5)*3);else vA.set(XE+8+v.h1*40,0.3,(v.h2<0.5?-1:1)*(3+v.h3*6));
+   titleW(v.lx,v.ly,v.lz,vB);
+   if(q<1){inFlight++;const e=v.key?q*q:q*q*(3-2*q);vC.copy(vA).add(vB).multiplyScalar(0.5);vC.y+=v.key?9+v.h4*4:3+v.h4*6;vC.addScaledVector(cR,(v.h1-0.5)*12);vC.addScaledVector(cBk,v.key?0:1+v.h3*2.5); // arcs swing up and out towards the lens before settling
+    const a=1-e;vP.copy(vA).multiplyScalar(a*a).addScaledVector(vC,2*a*e).addScaledVector(vB,e*e);s=lerp(v.key?0.42:0.5,VS*0.88,e)*Math.min(1,(t-v.tL)/0.08);
+    vE.set((v.h1-0.5)*12*a,(v.h2-0.5)*12*a,(v.h3-0.5)*12*a);vQ2.setFromEuler(vE);vQ.copy(camF.quaternion).multiply(vQ2)}
+   else{placed++;if(v.tA>latestT){latestT=v.tA;latest=i}const since=t-v.tA;
+    // landed: a little bounce towards the camera, then the lock ripple and a beat shimmer
+    let lz=since<0.35?Math.sin(since/0.35*Math.PI)*Math.exp(-since*6)*TP*0.9:0;if(sl>=0){const w=sl-v.ux*0.32;lz+=Math.exp(-w*w/0.003)*TP*0.7}
+    vP.copy(vB).addScaledVector(cBk,lz);if(sl<0)vP.addScaledVector(cU,Math.sin(t*9+v.h1*20)*0.015);s=VS*0.88;vQ.copy(camF.quaternion)}}
+  vS.set(s,s,s*(sl>=0?1.9:1.3)).multiplyScalar(v.lz<0&&t>=v.tA?1.04:1).multiplyScalar(s>0?1:0);if(s<=0)vS.setScalar(1e-4);vM.compose(vP,vQ,vS);vox.setMatrixAt(i,vM);
+  // colour: the hue of the word it came from, then one gradient after the lock
+  vCol.setHex(HUEX[((p?p.hue:0)+Math.floor(v.h2*2.4))%3]);
+  let k=1;if(t>=v.tA)k+=2.5*Math.exp(-(t-v.tA)*9);
+  if(sl>=0){gradAt(v.uy,vCol2);vCol.lerp(vCol2,clamp(sl/0.12,0,1));const ph=((t-lock)/(BEAT*2))%1,w=ph*1.6-0.3-v.ux;k+=0.9*Math.exp(-w*w/0.004)}
+  if(v.lz<0&&t>=v.tA)k*=lerp(1,0.22,clamp((t-v.tA)/0.3,0,1)); // the back layer settles into shadow: depth, not a second grid
+  vCol.multiplyScalar(k);vox.setColorAt(i,vCol)}
+ vox.instanceMatrix.needsUpdate=true;if(vox.instanceColor)vox.instanceColor.needsUpdate=true;
+ voxU.uFlash.value=sl>=0?0.8*Math.exp(-sl*9):0;voxU.uEdge.value=2.6;
+ // shock ring + sparks on the lock
+ if(sl>=0&&sl<0.7){const q=sl/0.7;shock.visible=true;shock.position.copy(titleC).addScaledVector(cBk,0.3);shock.quaternion.copy(camF.quaternion);shock.scale.setScalar(1+34*(1-Math.pow(1-q,3)));(shock.material as any).opacity=0.9*(1-q)*(1-q)}
+ if(cardLast<lock&&t>=lock&&t-cardLast<0.25){for(let j=0;j<(LOW?24:60);j++){const v=vt[Math.floor(hash(j*7.7)*n)];titleW(v.lx,v.ly,0.2,vA);spark(vA.x,vA.y,vA.z,j%3?0xffffff:CYAN,LOW?3:5,6)}}
+ cardLast=t;
+ // the synthwave sun moves to the vanishing point and rises behind the title; a glow swells with it and kicks on the lock
+ if(sun){const q=clamp((b-CARD.fly)/0.3,0,1),sm=sun.material as any;if(q<1){sm.opacity=1-q}else{sm.opacity=1;const r=smooth(clamp((b-94.35)/1.55,0,1));sun.position.set(camera.position.x+300,lerp(-60,16,r),0);sun.scale.setScalar(150)}}
+ {const r=smooth(clamp((b-94.3)/0.7,0,1)),kick=sl>=0?0.5*Math.exp(-sl*3):0,breathe=0.06*Math.cos(t/BEAT*Math.PI*2);glowSp.position.set(camera.position.x+280,4,0);glowSp.scale.set(520*(1+kick*0.3),170*(1+kick*0.2),1);(glowSp.material as any).opacity=clamp(0.5*r+kick+breathe*r,0,1)}
+ // co-pilot: under the title while it assembles, beaming each voxel in; beside the name once the card is up (see updateCopilot)
+ const c=copilot;if(b>=94.35&&sl<0&&latest>=0){const v=vt[latest];titleW(v.lx,v.ly,0,vB);const a=c.g.position;c.beam.visible=true;c.beam.position.copy(vA.copy(a).add(vB).multiplyScalar(0.5));c.beam.scale.set(0.03,a.distanceTo(vB),0.03);c.beam.lookAt(vB);c.beam.rotateX(Math.PI/2);(c.beam.material as any).opacity=0.35+0.4*rnd(5)}
+ cardStat.inFlight=inFlight;cardStat.placed=placed;cardStat.n=n;cardStat.locked=sl>=0}
+const cardStat={n:0,inFlight:0,placed:0,locked:false};
+// where the co-pilot hovers at time t during the card (world point), or null outside the card
+function copilotCard(t:number,o:THREE.Vector3){const b=t/BAR;if(b<CARD.fly)return null;
+ if(b<CARD.lock-0.06)return titleW(0,-TP*6.2,5,o);
+ // beside the name: a point at a fixed depth in front of the camera, under the name's right end
+ const d=7,ndx=CARD.copilotX*2-1,ndy=1-CARD.nameY*2,th=Math.tan(camera.fov*Math.PI/360);camera.updateMatrixWorld();camera.matrixWorld.extractBasis(kR,kU,kB);return o.copy(camera.position).addScaledVector(kB,-d).addScaledVector(kR,ndx*th*camera.aspect*d).addScaledVector(kU,ndy*th*d)}
+const kR=new THREE.Vector3(),kU=new THREE.Vector3(),kB=new THREE.Vector3(),kO=new THREE.Vector3();
 // ---- camera + mood ----
 const V=()=>new THREE.Vector3();const cinP=V(),cinL=V(),altP=V(),altL=V();
 function cinema(t:number,S:any){const b=t/BAR,cam=S.dist;const bob=Math.sin(t*2.1)*0.02;cinP.set(cam-BACK,EYE+bob,Math.sin(t*0.7)*0.03);cinL.set(cam+9,EYE-0.3,0);let f=fovAt(t),q=0;
  if(b<76.3){q=1-smooth(clamp((b-75)/1.3,0,1));altP.set(cam-BACK,EYE,0);altL.set(cam+9,2.4,0)}
- else if(t>=OUT){q=smooth(clamp((t-OUT)/1.8,0,1));altP.set(cam-7,7.5,5);altL.set(cam+12,1,0);f=lerp(f,52,q)}
+ else if(t>=OUT){const u=clamp((t-OUT)/(bar(CARD.lock)-0.05-OUT),0,1);q=smooth(u);cardPos(t,altP);altL.copy(altP).addScaledVector(cF,60);f=lerp(f,50,q);if(t>=bar(CARD.lock)){const sl=t-bar(CARD.lock);f-=2.2*(1-Math.exp(-sl*6))}
+  // crane: rise first, travel second
+  const qy=1-Math.pow(1-u,2.4);cinP.set(lerp(cinP.x,altP.x,q),lerp(cinP.y,altP.y,qy),lerp(cinP.z,altP.z,q));cinL.lerp(altL,q);q=0}
  if(q>0){cinP.lerp(altP,q);cinL.lerp(altL,q)}if(S.shake>0){cinP.x+=(rnd(1)-0.5)*S.shake*0.08;cinP.y+=(rnd(2)-0.5)*S.shake*0.08}return{p:cinP,l:cinL,f}}
-const MOOD:number[][]=[[75,0x1a0b36,0xffb090,0x5a3aa0],[88.3,0x1a0b36,0xffb090,0x5a3aa0],[89.3,0x2a0a12,0xff7040,0x8a3a30],[93.8,0x2a0a12,0xff7040,0x8a3a30],[95.2,0x000000,0x302020,0x100810]];
+const MOOD:number[][]=[[75,0x1a0b36,0xffb090,0x5a3aa0],[88.3,0x1a0b36,0xffb090,0x5a3aa0],[89.3,0x2a0a12,0xff7040,0x8a3a30],[93.8,0x2a0a12,0xff7040,0x8a3a30],[94.7,0x2a0b3c,0xffa080,0x6a3aa0],[96,0x320c40,0xffb090,0x7a44b0]];
 const cA=new THREE.Color(),cB=new THREE.Color();
-function mood(t:number){const b=t/BAR;let i=0;while(i<MOOD.length-2&&b>=MOOD[i+1][0])i++;const a=MOOD[i],z=MOOD[i+1],u=clamp((b-a[0])/(z[0]-a[0]),0,1);(scene.fog as THREE.FogExp2).color.copy(cA.setHex(a[1]).lerp(cB.setHex(z[1]),u));sunL.color.copy(cA.setHex(a[2]).lerp(cB.setHex(z[2]),u));hemiL.color.copy(cA.setHex(a[3]).lerp(cB.setHex(z[3]),u));(scene.fog as THREE.FogExp2).density=t>=TUNNEL?0.02:0.013}
+function mood(t:number){const b=t/BAR;let i=0;while(i<MOOD.length-2&&b>=MOOD[i+1][0])i++;const a=MOOD[i],z=MOOD[i+1],u=clamp((b-a[0])/(z[0]-a[0]),0,1);(scene.fog as THREE.FogExp2).color.copy(cA.setHex(a[1]).lerp(cB.setHex(z[1]),u));sunL.color.copy(cA.setHex(a[2]).lerp(cB.setHex(z[2]),u));hemiL.color.copy(cA.setHex(a[3]).lerp(cB.setHex(z[3]),u));(scene.fog as THREE.FogExp2).density=t>=OUT?lerp(0.02,0.008,clamp((t-OUT)/1,0,1)):t>=TUNNEL?0.02:0.013}
 // ---- per-frame updates ----
 let lastT=0,lastS:any=null;const hidden:THREE.Object3D[]=[];
 function updateBlocks(S:any,t:number,cam:number,dt:number){let bi=0;for(const b of S.blocks){if(!b.active)continue;const x=cam+HIT+(b.hitT-t)*SPD;if(x<cam-2||x>cam+60)continue;
@@ -155,10 +235,10 @@ function updateSaber(S:any,t:number,cam:number,dt:number){const fwd=sFwd;camera.
 function updatePieces(S:any,t:number,cam:number){for(const o of pieces)o.g.visible=false;const from=Math.max(0,S.built.length-pieces.length);
  for(let i=from;i<S.built.length;i++){const p=S.built[i],o=pieces[i%pieces.length];if(p.x<cam-(t>=OUT?70:12)||p.x>cam+90)continue;o.g.visible=true;o.g.position.set(p.x,0,0);const sideZ=p.side==='L'?-1:1;
   if(o.kind!==p.kind||o.word!==p.word||o.side!==p.side||o.hue!==p.hue){o.kind=p.kind;o.word=p.word;o.side=p.side;o.hue=p.hue;o.arch.visible=p.kind==='arch';o.pillar.visible=p.kind==='pillar';o.panel.visible=p.kind==='panel';o.beam.visible=p.kind==='beam';o.ring.visible=p.kind==='ring';o.em.emissive.setHex(HUEX[p.hue]);o.pillar.position.z=PIECEZ*sideZ;o.panel.position.z=(PIECEZ+0.3)*sideZ;o.panel.rotation.y=-Math.PI/2-sideZ*0.45;(o.pp.material as any).map=wordTex(p.word)} // panels face the player, angled in towards the lane
-  const q=clamp((t-p.t)/0.35,0,1),s=q<1?lerp(0,1.15,q)-(q>0.6?(q-0.6)/0.4*0.15:0):1;o.g.scale.setScalar(Math.max(0.001,s));const nearF=clamp((p.x-cam)/7,0.12,1);const fa=flashAt.get(p);const fl=fa!==undefined?clamp(1-(t-fa)/0.5,0,1):0;o.em.emissiveIntensity=(1.0+0.4*(1-((t/BEAT)%1))+(q<1?1.5*(1-q):0)+fl*3)*nearF*o.kitK;if(p.kind==='ring')o.ring.rotation.x=t*0.6+p.i}}
+  const q=clamp((t-p.t)/0.35,0,1),s=q<1?lerp(0,1.15,q)-(q>0.6?(q-0.6)/0.4*0.15:0):1;const gone=t>=OUT&&p.x>CPOS.x+3?smooth(clamp((t-bar(CARD.fly+0.08)-hash(p.i*3.3)*0.35)/0.45,0,1)):0;o.g.scale.setScalar(Math.max(0.001,s*(1-gone)));const nearF=clamp((p.x-cam)/7,0.12,1);const fa=flashAt.get(p);const fl=fa!==undefined?clamp(1-(t-fa)/0.5,0,1):0;o.em.emissiveIntensity=(1.0+0.4*(1-((t/BEAT)%1))+(q<1?1.5*(1-q):0)+fl*3)*nearF*o.kitK*(t>=OUT?lerp(1,0.4,smooth(clamp((t-OUT)/bar(0.8),0,1))):1);if(p.kind==='ring')o.ring.rotation.x=t*0.6+p.i}}
 function updateCopilot(S:any,t:number,cam:number,dt:number){const c=copilot;let tx=cam+9,ty=2.8,tz=0;const p=S.built[S.copilot.pi];const busy=p&&S.copilot.status!=='STANDING BY'&&S.copilot.status!=='ARENA COMPLETE';if(busy){tx=p.x;ty=p.kind==='pillar'?4.6:p.kind==='panel'?3.4:p.kind==='beam'?4.9:3.2;tz=(p.kind==='pillar'||p.kind==='panel')?(p.side==='L'?-3:3):0}
- if(t>=OUT){tx=cam+16;ty=6+(t-OUT)*1.5;tz=0}
- const k=1-Math.pow(0.02,dt);c.x+=(tx-c.x)*k;c.y+=(ty-c.y)*k;c.z+=(tz-c.z)*k;if(Math.abs(tx-c.x)>30){c.x=tx;c.y=ty;c.z=tz}
+ const cc=copilotCard(t,kO);if(cc){tx=cc.x;ty=cc.y;tz=cc.z}else if(t>=OUT){tx=cam+16;ty=6+(t-OUT)*1.5;tz=0}
+ const k=1-Math.pow(cc?0.004:0.02,dt);c.x+=(tx-c.x)*k;c.y+=(ty-c.y)*k;c.z+=(tz-c.z)*k;if(Math.abs(tx-c.x)>30||c.snap){c.x=tx;c.y=ty;c.z=tz;c.snap=false}
  c.g.position.set(c.x,c.y+Math.sin(t*3)*0.06,c.z);c.g.visible=t>=bar(75.4);if(c.kit){c.kit.ra.rotation.set(0.35,t*1.7,0);c.kit.rb.rotation.set(0.3+Math.sin(t*0.5)*0.2,t*1.3,0);c.kit.shell.rotation.y=t*0.8;c.kit.core.rotation.set(t*0.7,-t*1.2,0)}c.ring.rotation.z=t*1.7;c.ring2.rotation.x=t*1.3;c.shell.rotation.y=t*0.8;c.orbit.forEach((s,i)=>{const a=t*2.2+i*Math.PI/3;s.position.set(Math.cos(a)*0.62,Math.sin(a*1.3)*0.25,Math.sin(a)*0.62)});
  const working=busy&&t-S.copilot.since<BEAT*1.5&&t<OUT;c.beam.visible=!!working;if(working){const by=p.kind==='pillar'?2:p.kind==='panel'?2.4:p.kind==='beam'?4.3:1.5,bz=pieceZ(p);const a=c.g.position,b=bB.set(p.x,by,bz);c.beam.position.copy(bA.copy(a).add(b).multiplyScalar(0.5));c.beam.scale.set(0.03,a.distanceTo(b),0.03);c.beam.lookAt(b);c.beam.rotateX(Math.PI/2);(c.beam.material as any).opacity=0.25+0.35*rnd(3);if(rnd(4)<0.5)spark(b.x,b.y,b.z,GRN,2,2.5)}
  trailPush(c.trail,c.g.position.x-0.1,c.g.position.y,c.g.position.z,c.g.visible)}
@@ -166,14 +246,15 @@ const pieceTop=(p:any)=>p.kind==='pillar'?4.3:p.kind==='panel'?2.6:p.kind==='bea
 function updateFlights(S:any,t:number){for(const f of flights){if(f.done)continue;const q=clamp((t-f.t0)/0.7,0,1);const e=q*q*(3-2*q);f.sp.position.lerpVectors(f.from,f.to,e);f.sp.position.y+=Math.sin(q*Math.PI)*1.2;const sc=1-q*0.3;f.sp.scale.set(1.1*sc,0.55*sc,1);(f.sp.material as any).opacity=q<0.85?1:(1-q)/0.15;if(q>=1){f.done=true;f.sp.visible=false;const p=f.piece;if(p&&S.built[p.i]===p){flashAt.set(p,t);spark(f.to.x,f.to.y,f.to.z,HUEX[p.hue],30,5)}}}}
 function updateArrivals(S:any,t:number,cam:number){const on=t>=s5&&t<bar(76.4);arrivals.forEach((m,i)=>{m.visible=on;if(!on)return;const q=clamp((t-s5-i*0.05)/(bar(76.3)-s5),0,1),e=q*q*(3-2*q);const sx=cam-2+i*0.3,sy=1.2+(i%4)*0.6,sz=6+(i%5)*0.8;m.position.set(lerp(sx,copilot.g.position.x,e)+Math.sin(t*5+i)*(1-e)*0.3,lerp(sy,copilot.g.position.y,e)+Math.cos(t*4+i)*(1-e)*0.3,lerp(sz,copilot.g.position.z,e));m.scale.setScalar(0.07*(1-e*0.6))})}
 function updatePillars(t:number,cam:number){const n0=Math.floor(cam/5);pillars.forEach((p,i)=>{const k=n0+Math.floor(i/2),side=i%2?1:-1;p.position.set(k*5+1.5,1.3,side*(LANEZ+0.65));const d=p.position.x-cam;p.visible=d>-2&&d<70;(p.material as any).opacity=0.25+0.35*clamp(1-d/60,0,1)})}
-function updateRings(S:any,t:number,cam:number){const on=t>=TUNNEL&&t<OUT+1;const n0=Math.floor(cam/4)+1;rings.forEach((r,i)=>{const x=(n0+i)*4;r.visible=on&&x>cam-2;if(!r.visible)return;r.position.set(x,1.9,0);r.rotation.x=t*0.9+i*0.4;const q=clamp((t-TUNNEL)/BAR-(x-cam)/120,0,1);r.scale.setScalar(Math.max(0.01,q));(r.material as any).emissiveIntensity=(0.8+0.9*(1-((t/BEAT)%1)))*clamp((x-cam)/8,0.1,1)})}
+function updateRings(S:any,t:number,cam:number){const on=t>=TUNNEL&&t<OUT+1;const n0=Math.floor(cam/4)+1;rings.forEach((r,i)=>{const x=(n0+i)*4;r.visible=on&&x>cam-2;if(!r.visible)return;r.position.set(x,1.9,0);r.rotation.x=t*0.9+i*0.4;const q=clamp((t-TUNNEL)/BAR-(x-cam)/120,0,1);r.scale.setScalar(Math.max(0.01,q*(t>=OUT?1-smooth(clamp((t-OUT)/0.5,0,1)):1)));(r.material as any).emissiveIntensity=(0.8+0.9*(1-((t/BEAT)%1)))*clamp((x-cam)/8,0.1,1)})}
 export const E5GL={init,get ok(){return ok},canvas:()=>renderer.domElement,
- render(t:number){if(!ok)return;const S=E5.S;if(!S)return;if(t<lastT-0.5||S!==lastS){split=new WeakSet();flashAt=new WeakMap();for(const f of flights){f.done=true;f.sp.visible=false}for(const h of halves)h.life=0;lastS=S}const dt=clamp(t-lastT,0,0.05);lastT=t;const cam=S.dist,pulse=1-((t/BEAT)%1);
-  const cin=cinema(t,S);camera.position.copy(cin.p);camera.lookAt(cin.l);camera.fov=lerp(camera.fov,cin.f,1-Math.pow(0.002,dt));camera.updateProjectionMatrix();
+ render(t:number){if(!ok)return;const S=E5.S;if(!S)return;if(t<lastT-0.5||S!==lastS){split=new WeakSet();flashAt=new WeakMap();for(const f of flights){f.done=true;f.sp.visible=false}for(const h of halves)h.life=0;copilot.snap=true;lastS=S}const dt=clamp(t-lastT,0,0.05);lastT=t;const cam=S.dist,pulse=1-((t/BEAT)%1);
+  const cin=cinema(t,S);camera.position.copy(cin.p);camera.lookAt(cin.l);camera.fov=t>=OUT?cin.f:lerp(camera.fov,cin.f,1-Math.pow(0.002,dt)); // the card's lens is a pure function of t (already smooth), so a seek lands on the same frame
+  camera.updateProjectionMatrix();
   const cell=1400/220;floorG.position.x=Math.floor(cam/cell)*cell;const k=Math.floor((cam-60)/SKYW);skyA.position.set(k*SKYW-60,0,0);skyB.position.set((k+1)*SKYW-60,0,0);
   cutLine.position.set(cam+HIT,0.03,0);cutLine.visible=t<OUT;(cutLine.material as any).opacity=0.35+0.4*pulse;
   skyM.position.copy(camera.position);starsM.position.copy(camera.position);const sun=(skyM as any).userData.sun;sun.position.set(camera.position.x+330,camera.position.y+30,-120);sunL.position.set(cam+16,42,24);sunL.target.position.set(cam+8,0,0);
-  updateBlocks(S,t,cam,dt);updateSaber(S,t,cam,dt);updatePieces(S,t,cam);updatePillars(t,cam);updateCopilot(S,t,cam,dt);updateArrivals(S,t,cam);updateFlights(S,t);updateRings(S,t,cam);
-  bloom.strength=0.4+0.15*pulse+(S.flash>0?0.15:0);mood(t);composer.render()}};
+  updateBlocks(S,t,cam,dt);updateSaber(S,t,cam,dt);updatePieces(S,t,cam);updatePillars(t,cam);updateCopilot(S,t,cam,dt);updateArrivals(S,t,cam);updateFlights(S,t);updateRings(S,t,cam);updateCard(S,t,cam,dt);
+  const sl=t-bar(CARD.lock);bloom.strength=0.4+0.15*pulse+(S.flash>0?0.15:0)+(sl>=0?0.5*Math.exp(-sl*5):0);mood(t);composer.render()}};
 
-if(import.meta.env.DEV)(window as any).__E5GL={pieces:()=>pieces,camera:()=>camera,S:()=>E5.S,kit:()=>Object.keys(kit)};
+if(import.meta.env.DEV)(window as any).__E5GL={pieces:()=>pieces,camera:()=>camera,S:()=>E5.S,kit:()=>Object.keys(kit),card:()=>({...cardStat})};

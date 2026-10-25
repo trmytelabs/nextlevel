@@ -29,5 +29,17 @@ export default [
  {name:'E5.8 a seek into the outro settles the co-pilot on ARENA COMPLETE (no STANDING BY lock)',era:5,bar:84,fn:async(p,h,page)=>{const r=await page.evaluate(()=>{const t=ETM.now();ETM.seek(94.5*1.875);ETM.step(0.1);const st=ETM.probe().e5.copilot.status;ETM.seek(t);ETM.step(0.02);return st});return r==='ARENA COMPLETE'||'status '+r}},
  {name:'E5.9 manual: one mouse swiping through the next block cuts >=90%, on both halves of the lane; a parked pointer cuts little',era:5,bar:85,fn:async(p,h,page)=>{const sw=await manualRun(page,81,113,'swipe'),idle=await manualRun(page,83,113,'idle');
   return (sw.hit>=sw.due*0.9&&sw.due>=8&&sw.both&&idle.hit<=idle.due*0.3)||`swipe ${sw.hit}/${sw.due} in ${sw.cols} cols (both halves ${sw.both}), idle ${idle.hit}/${idle.due}`}},
+ {name:'E5.11 finale card: voxels stream out from bar 94, all land and lock on the bar-95 downbeat, deterministic after a seek; caption hands over to the card prompt',era:5,bar:86,fn:async(p,h,page)=>{
+  const r=await page.evaluate(()=>{if(!window.__E5GL||!window.__E5GL.card)return null;const t0=ETM.now();const at=b=>{ETM.seek(b*1.875-0.3);ETM.step(0.3);ETM.render();return {...window.__E5GL.card(),cap:document.querySelector('#lyric').style.opacity,txt:document.querySelector('#lyric').textContent}};
+   const pre=at(93.9),fly=at(94.5),fly2=at(94.5),lock=at(95.02),sung=at(95.1),end=at(95.9);ETM.seek(t0);ETM.step(0.02);return {pre,fly,fly2,lock,sung,end}});
+  if(!r)return true; // dev hook only (production build)
+  const bad=[];const {pre,fly,fly2,lock,sung,end}=r;
+  if(!(pre.n>=100))bad.push('only '+pre.n+' voxels');if(pre.inFlight+pre.placed!==0)bad.push('voxels out before bar 94');
+  if(!(fly.inFlight>0&&fly.placed>0&&fly.placed<fly.n))bad.push(`bar 94.5 in flight ${fly.inFlight} placed ${fly.placed}/${fly.n}`);
+  if(fly.inFlight!==fly2.inFlight||fly.placed!==fly2.placed)bad.push('seek not deterministic');
+  if(!(lock.placed===lock.n&&lock.locked&&lock.inFlight===0))bad.push(`bar 95.02 placed ${lock.placed}/${lock.n} locked ${lock.locked}`);
+  if(!(sung.cap==='1'&&/^Ready when you are/.test(sung.txt)))bad.push(`sung line not captioned at 95.1 (${sung.cap} "${sung.txt}")`);
+  if(end.cap!=='0')bad.push('caption still up at 95.9 under the card prompt');
+  return bad.length===0||bad.join('; ')}},
  {name:'E5.10 Blender finale kit loaded (dev hook): block, saber, copilot, arch, pillar, panel, ring',era:5,bar:86,fn:async(p,h,page)=>{const k=await page.evaluate(()=>window.__E5GL&&window.__E5GL.kit?window.__E5GL.kit():null);if(!k)return true;const want=['block','saber','copilot','arch','pillar','panel','ring'];const miss=want.filter(n=>!k.includes(n));return miss.length===0||'missing '+miss.join(',')}},
 ];

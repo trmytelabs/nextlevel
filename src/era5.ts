@@ -1,4 +1,4 @@
-import {ERAS,TRANS,BAR,BEAT,bar,W,H,LYRICS,hash,clamp,lerp,smooth,blip,noise,ptr,MOBILE} from './core';
+import {ERAS,TRANS,BAR,BEAT,bar,W,H,LYRICS,hash,clamp,lerp,smooth,blip,noise,ptr,MOBILE,TOTAL} from './core';
 
 // ---------- ERA 5: NOW. A VR rhythm game (saber lane) with an AI co-pilot that builds the arena out of every word you cut ----------
 // The whole lyric table is known, so blocks are planned up front: each word of each line is a block that reaches the
@@ -64,6 +64,54 @@ function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;S.dist=xAt(t);S.tunnel
  for(const b of S.blocks){if(b.active&&!b.hit&&!b.missed&&t>b.hitT+HITWIN){b.missed=t;S.misses++;S.combo=0;S.mult=1;S.shake=0.25;noise(0.1,0.25,900);blip(110,0.18,0.1)}}
  if(t>=OUT){if(S.copilot.status!=='ARENA COMPLETE'){S.copilot.status='ARENA COMPLETE';S.copilot.since=t}}
  else if(t-S.copilot.since>BEAT*3&&S.copilot.status!=='STANDING BY'){S.copilot.status='STANDING BY';S.copilot.since=t}}
+// ---- finale card (bars 94-96), shared with the renderer. The cut words stream out of the arena and assemble into a
+// voxel NEXT LEVEL (era5gl.ts) that locks on the bar-95 downbeat; then this 2D type layer drops the name in with a light
+// sweep, types the invite word by word on 16ths and pulses the prompt. The caption hides at capOff (main.ts) so the sung
+// "Ready when you are. Press start." and the card's prompt are never on screen together. Times in bars.
+const CARD={fly:94.0,lock:95.0,name:95.0,nameIn:0.125,invite:95.25,credit:95.42,capOff:95.5,prompt:95.625,
+ nameY:0.535,inviteY:0.625,creditY:0.685,promptY:0.80,nameFont:13,copilotX:0.875}; // layout: canvas fractions / px
+const CT={name:'IAN GINN',sep:'  ·  ',prog:"FOR THE DEPUTY'S MAXIMALISTS",invite:'Imagine what we could build together.',credit:'Built with AI agents, asking to build with people.',prompt:'READY WHEN YOU ARE  ·  PRESS START'};
+let nameCv:HTMLCanvasElement|null=null,nameDpr=0;
+const ease3=(x:number)=>1-Math.pow(1-clamp(x,0,1),3);
+function card(ctx:CanvasRenderingContext2D,t:number){const b=t/BAR;if(b<CARD.fly)return;const dpr=ctx.getTransform().a||1;
+ // the hold after the song ends keeps the prompt alive on the wall clock (t stops at TOTAL)
+ const tp=t>=TOTAL-1e-3?performance.now()/1000:t;
+ // white-hot frame on the lock downbeat
+ const sinceLock=t-bar(CARD.lock);if(sinceLock>=0&&sinceLock<0.5){ctx.fillStyle=`rgba(255,240,255,${0.32*Math.exp(-sinceLock*14)})`;ctx.fillRect(0,0,W,H)}
+ if(b<CARD.name)return;
+ // a soft dark bed under the type block (the floor reflects the title right where the lines sit)
+ const bed=smooth(clamp((b-CARD.name)/0.25,0,1));if(bed>0){const y0=H*0.47,y1=H*0.86;const g=ctx.createLinearGradient(0,y0,0,y1);g.addColorStop(0,'rgba(4,2,12,0)');g.addColorStop(0.18,`rgba(4,2,12,${0.62*bed})`);g.addColorStop(0.8,`rgba(4,2,12,${0.62*bed})`);g.addColorStop(1,'rgba(4,2,12,0)');ctx.fillStyle=g;ctx.fillRect(0,y0,W,y1-y0)}
+ ctx.save();ctx.textBaseline='middle';
+ // 1) name: pre-rendered crisp at device resolution, drops in from above with weight, lands on the 8th after the lock, then a light sweep runs across it
+ const fs=CARD.nameFont,f1=`${fs}px 'Press Start 2P',monospace`;
+ if(!nameCv||nameDpr!==dpr){nameDpr=dpr;nameCv=document.createElement('canvas');const x=nameCv.getContext('2d')!;x.font=f1;const w1=x.measureText(CT.name).width,w2=x.measureText(CT.sep).width,w3=x.measureText(CT.prog).width;const tw=Math.ceil(w1+w2+w3)+8,th=fs+10;
+  nameCv.width=Math.ceil(tw*dpr);nameCv.height=Math.ceil(th*dpr);(nameCv as any).tw=tw;(nameCv as any).th=th}
+ const nc=nameCv!,ncx=nc.getContext('2d')!,tw=(nc as any).tw,th=(nc as any).th;
+ // redraw the strip each frame (cheap): base type + the sweep band clipped to the glyphs
+ ncx.setTransform(dpr,0,0,dpr,0,0);ncx.clearRect(0,0,tw,th);ncx.globalCompositeOperation='source-over';ncx.font=f1;ncx.textBaseline='middle';ncx.textAlign='left';
+ {const w1=ncx.measureText(CT.name).width,w2=ncx.measureText(CT.sep).width;ncx.fillStyle='#000';ncx.fillText(CT.name+CT.sep+CT.prog,5,th/2+2);ncx.fillStyle='#ffffff';ncx.fillText(CT.name,4,th/2);ncx.fillStyle='#8a8aa0';ncx.fillText(CT.sep,4+w1,th/2);ncx.fillStyle='#5bff5b';ncx.fillText(CT.prog,4+w1+w2,th/2)}
+ const sw=(b-(CARD.name+CARD.nameIn))/0.3;if(sw>0&&sw<1.2){const sx=lerp(-60,tw+60,sw);ncx.globalCompositeOperation='source-atop';const g=ncx.createLinearGradient(sx-46,0,sx+46,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(0.5,'rgba(255,255,255,.95)');g.addColorStop(1,'rgba(255,255,255,0)');ncx.fillStyle=g;ncx.fillRect(0,0,tw,th);ncx.globalCompositeOperation='source-over'}
+ {const q=clamp((b-CARD.name)/CARD.nameIn,0,1),e=q*q,land=b-(CARD.name+CARD.nameIn);const cy=H*CARD.nameY,dy=-46*(1-e);
+  const squash=land>=0&&land<0.12?Math.sin(land/0.12*Math.PI)*0.28*(1-land/0.12):0;const sy=1-squash,sxs=1+squash*0.6;
+  const dw=tw*sxs,dh=th*sy,x0=W/2-dw/2,y0=cy-dh/2+dy+(th-dh)/2;
+  if(q<1){ctx.globalAlpha=0.25*q;ctx.drawImage(nc,x0,y0-18*(1-q),dw,dh*1.6);ctx.globalAlpha=0.45*q;ctx.drawImage(nc,x0,y0-8*(1-q),dw,dh*1.25)} // speed smear on the way down
+  ctx.globalAlpha=Math.min(1,q*1.6);ctx.drawImage(nc,x0,y0,dw,dh);ctx.globalAlpha=1;
+  // a thin underline that draws out from the centre as it lands
+  if(land>0){const u=ease3(land/0.2);ctx.fillStyle='rgba(91,255,91,.7)';ctx.fillRect(W/2-u*tw*0.5,cy+th*0.5+4,u*tw,1)}}
+ // 2) invite: types on word by word on 16ths, with a block cursor
+ if(b>=CARD.invite){ctx.font="11px 'Press Start 2P',monospace";ctx.textAlign='left';const words=CT.invite.split(' ');const full=ctx.measureText(CT.invite).width,x0=W/2-full/2,cy=H*CARD.inviteY;let x=x0,last=-1;
+  for(let k=0;k<words.length;k++){const tk=bar(CARD.invite+k*0.0625),pre=words.slice(0,k).join(' ')+(k?' ':'');const wx=x0+ctx.measureText(pre).width;if(t<tk)break;last=k;const a=clamp((t-tk)/0.07,0,1);ctx.globalAlpha=a;ctx.fillStyle='#000';ctx.fillText(words[k],wx+1,cy+1+(1-a)*5);ctx.fillStyle=k===words.length-1?'#ffe14d':'#ffffff';ctx.fillText(words[k],wx,cy+(1-a)*5);x=wx+ctx.measureText(words[k]).width}
+  ctx.globalAlpha=1;const done=last===words.length-1&&t-bar(CARD.invite+last*0.0625)>0.15;if(!done||Math.floor(tp*2.4)%2===0){ctx.fillStyle=done?'rgba(255,225,77,.8)':'#ffffff';ctx.fillRect(x+5,cy-6,8,12)}}
+ // 3) the credit, small, as a quiet footnote under the invite
+ if(b>=CARD.credit){const a=smooth(clamp((b-CARD.credit)/0.12,0,1));ctx.globalAlpha=a;ctx.textAlign='center';ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='#000';ctx.fillText(CT.credit,W/2+1,H*CARD.creditY+1);ctx.fillStyle='#a9aec4';ctx.fillText(CT.credit,W/2,H*CARD.creditY);ctx.globalAlpha=1}
+ // 4) the prompt: pops in on the off-beat after the caption has gone, then pulses on the beat
+ if(b>=CARD.prompt){const q=clamp((b-CARD.prompt)/0.08,0,1),pop=1+0.35*(1-ease3(q));const ph=(tp/BEAT)%1,pulse=0.5+0.5*Math.cos(ph*Math.PI*2);
+  ctx.font="11px 'Press Start 2P',monospace";ctx.textAlign='center';const pw=ctx.measureText(CT.prompt).width,cy=H*CARD.promptY;
+  ctx.save();ctx.translate(W/2,cy);ctx.scale(pop,pop);ctx.globalAlpha=q;
+  const bw=pw+64,bh=26;ctx.fillStyle='rgba(6,4,16,.78)';ctx.fillRect(-bw/2,-bh/2,bw,bh);ctx.fillStyle=`rgba(255,225,77,${0.35+0.65*pulse})`;ctx.fillRect(-bw/2,-bh/2,bw,2);ctx.fillRect(-bw/2,bh/2-2,bw,2);
+  ctx.shadowColor='#ffe14d';ctx.shadowBlur=6+10*pulse;ctx.fillStyle=`rgba(255,232,120,${0.72+0.28*pulse})`;ctx.fillText(CT.prompt,0,1);ctx.shadowBlur=0;
+  const ax=bw/2-16,s=5+pulse*1.5;ctx.beginPath();ctx.moveTo(-ax-s,-s);ctx.lineTo(-ax+s*0.6,0);ctx.lineTo(-ax-s,s);ctx.closePath();ctx.moveTo(ax+s,-s);ctx.lineTo(ax-s*0.6,0);ctx.lineTo(ax+s,s);ctx.closePath();ctx.fill();ctx.restore()}
+ ctx.restore()}
 const onBeat=(b,t,auto)=>{},on8th=onBeat,onLine=(words,t)=>{}; // no-ops: everything is planned from the lyric table
 // ---- 2D fallback (no WebGL): lane, blocks, saber ----
 function draw(ctx,t){ctx.fillStyle='#07040f';ctx.fillRect(0,0,W,H);const cx=W/2,hy=H*0.42;ctx.strokeStyle='rgba(255,91,224,.5)';ctx.lineWidth=1;for(let i=-3;i<=3;i++){ctx.beginPath();ctx.moveTo(cx+i*40,hy);ctx.lineTo(cx+i*260,H);ctx.stroke()}
@@ -75,10 +123,10 @@ function overlay(ctx,t){if(t<s5-TRANS*0.3)return;ctx.save();
  // headset on: two lenses open and merge into one view
  if(t<bar(76.3)){const q=clamp((t-s5)/(bar(76.3)-s5),0,1);const e=q*q*(3-2*q);const r=lerp(H*0.22,H*1.4,e),dx=lerp(W*0.23,0,e);ctx.fillStyle='#000';ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(W/2-dx,H/2,r,0,Math.PI*2,true);ctx.fill();ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(W/2+dx,H/2,r,0,Math.PI*2,true);ctx.fill('evenodd')}
  // score, small
- ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='rgba(6,8,20,.55)';ctx.fillRect(16,64,196,46);ctx.fillStyle='#fff';ctx.fillText('SCORE '+String(S.score).padStart(6,'0'),26,84);ctx.fillStyle=YEL;ctx.fillText('COMBO x'+S.combo+'  '+S.mult+'x',26,102);
- // end card: dim the arena so the card over it is the most legible frame of the piece
- if(t>=bar(94.9)){ctx.fillStyle=`rgba(0,0,0,${0.62*clamp((t-bar(94.9))/0.8,0,1)})`;ctx.fillRect(0,0,W,H)}
+ ctx.globalAlpha=1-clamp((t-OUT)/0.6,0,1);if(ctx.globalAlpha>0){ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='rgba(6,8,20,.55)';ctx.fillRect(16,64,196,46);ctx.fillStyle='#fff';ctx.fillText('SCORE '+String(S.score).padStart(6,'0'),26,84);ctx.fillStyle=YEL;ctx.fillText('COMBO x'+S.combo+'  '+S.mult+'x',26,102)}ctx.globalAlpha=1;
+ // the finale card's type layer (the voxel title itself is 3D, in era5gl.ts)
+ card(ctx,t);
  // one hint line while the saber first appears, above the lane (not over the hit line or the captions)
  if(t>=bar(76.3)&&t<bar(78.3)){ctx.globalAlpha=Math.min(1,(bar(78.3)-t)/0.6,(t-bar(76.3))/0.3);ctx.textAlign='center';ctx.font="9px 'Press Start 2P',monospace";const l1=MOBILE?'DRAG THE SABER THROUGH THE WORDS':'MOVE THE SABER THROUGH THE WORDS',y=H*0.13;const tw=ctx.measureText(l1).width+28;ctx.fillStyle='rgba(6,8,20,.6)';ctx.fillRect(W/2-tw/2,y,tw,26);ctx.fillStyle='#fff';ctx.fillText(l1,W/2,y+17);ctx.textAlign='left';ctx.globalAlpha=1}
  ctx.restore()}
-return{init,update,draw,overlay,onBeat,on8th,onLine,get S(){return S},K:{SPD,LEAD,COLS,ROWS,TUNNEL,OUT,s5,WIN,HITWIN,RZ,RY,HIT,BACK,EYE,COLW,ROW0,ROWH,PITCH,HUES,fovAt,screenOf}}})();
+return{init,update,draw,overlay,onBeat,on8th,onLine,get S(){return S},K:{SPD,LEAD,COLS,ROWS,TUNNEL,OUT,s5,WIN,HITWIN,RZ,RY,HIT,BACK,EYE,COLW,ROW0,ROWH,PITCH,HUES,fovAt,screenOf,CARD}}})();
