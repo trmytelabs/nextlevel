@@ -8,18 +8,20 @@ import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass.js';
 import {Reflector} from 'three/examples/jsm/objects/Reflector.js';
 import {RoomEnvironment} from 'three/examples/jsm/environments/RoomEnvironment.js';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {W,H,dpr,BEAT,BAR,bar,hash,clamp,lerp,smooth,QUALITY} from './core';
 import {E5} from './era5';
 const LOW=QUALITY==='low';
 
 // ---------- ERA 5 in WebGL: a VR saber lane. Word blocks fly at you on the beat, you cut them, and an AI co-pilot builds the arena out of them ----------
 const {SPD,LEAD,COLS,ROWS,TUNNEL,OUT,s5,HIT,BACK,EYE,COLW,ROW0,ROWH,fovAt}=E5.K;
-const CYAN=0x4df0ff,MAG=0xff5be0,YEL=0xffe14d,ORG=0xff9a3c,GRN=0x5bff5b;
+const CYAN=0x4df0ff,MAG=0xff5be0,YEL=0xffe14d,ORG=0xff9a3c,GRN=0x5bff5b,VIO=0xb07cff;
+const HUEX=[MAG,CYAN,VIO]; // matches E5.K.HUES: block / piece colour per lyric line
 const COLZ=(c:number)=>(c-1.5)*COLW,ROWY=(r:number)=>ROW0+r*ROWH; // hit plane is HIT units ahead of the player (HIT+BACK from the camera)
 const LANEZ=COLS/2*COLW+0.15,PIECEZ=3.6; // rails, and where side pieces stand
 let ok=false,renderer:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.PerspectiveCamera,composer:EffectComposer,bloom:UnrealBloomPass;
 let skyM:THREE.Mesh,starsM:THREE.Points,sunL:THREE.DirectionalLight,hemiL:THREE.HemisphereLight,skyA:THREE.Group,skyB:THREE.Group,floorG:THREE.Group,cutLine:THREE.Mesh;
-let blocks:any[]=[],halves:any[]=[],pieces:any[]=[],rings:THREE.Mesh[]=[],sabers:any,copilot:any,sparks:any,texCache=new Map<string,THREE.Texture>(),arrivals:THREE.Mesh[]=[],flights:any[]=[],flightN=0,pillars:THREE.Mesh[]=[],halfMat:any;
+let blocks:any[]=[],halves:any[]=[],pieces:any[]=[],rings:THREE.Mesh[]=[],saber:any,copilot:any,sparks:any,texCache=new Map<string,THREE.Texture>(),arrivals:THREE.Mesh[]=[],flights:any[]=[],flightN=0,pillars:THREE.Mesh[]=[],halfMat:any;
 // renderer-side flags, kept out of the simulation's objects (a fresh plan() on seek drops them with the blocks)
 let split=new WeakSet<object>(),flashAt=new WeakMap<object,number>();
 const rnd=(k:number)=>hash(k*12.9898+lastT*78.233); // deterministic per-frame jitter (camera shake, beam flicker, cut halves)
@@ -42,21 +44,47 @@ function makeTrail(col:number,width:number,n=22){const pos=new Float32Array(n*6)
 function trailPush(tr:any,x:number,y:number,z:number,vis:boolean,vertical=false,ox=0){tr.mesh.visible=vis;tr.mesh.position.x=ox;x-=ox;if(!vis){tr.init=false;return}const {hx,hy,hz,n,pos}=tr;if(!tr.init||Math.hypot(hx[0]-x,hy[0]-y,hz[0]-z)>6){hx.fill(x);hy.fill(y);hz.fill(z);tr.init=true}else{for(let i=n-1;i>0;i--){hx[i]=hx[i-1];hy[i]=hy[i-1];hz[i]=hz[i-1]}hx[0]=x;hy[0]=y;hz[0]=z}
  for(let i=0;i<n;i++){const w=tr.width*(1-i/n);if(vertical){pos[i*6]=hx[i];pos[i*6+1]=hy[i]+w;pos[i*6+2]=hz[i];pos[i*6+3]=hx[i];pos[i*6+4]=hy[i]-w;pos[i*6+5]=hz[i]}else{pos[i*6]=hx[i];pos[i*6+1]=hy[i];pos[i*6+2]=hz[i]+w;pos[i*6+3]=hx[i];pos[i*6+4]=hy[i];pos[i*6+5]=hz[i]-w}}(tr.mesh.geometry.attributes.position as THREE.BufferAttribute).needsUpdate=true}
 // ---- pools ----
-function makeBlock(){const g=new THREE.Group();const cube=new THREE.Mesh(geo.cube,emissive(MAG,0.6));const ed=new THREE.LineSegments(edgesCube,mat.lineW);const face=new THREE.Mesh(geo.plane,new THREE.MeshBasicMaterial({map:wordTex('·'),transparent:true,toneMapped:false,depthWrite:false}));face.scale.set(0.84,0.54,1);face.rotation.y=-Math.PI/2;face.position.x=-0.316;g.add(cube,ed,face);g.visible=false;scene.add(g);const shadow=new THREE.Mesh(geo.disc,new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.45,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.visible=false;scene.add(shadow);return{g,cube,face,shadow,word:'',side:''}}
-function makeHalf(){const m=new THREE.Mesh(geo.half,halfMat.L);m.visible=false;scene.add(m);return{m,vx:0,vy:0,vz:0,rx:0,rz:0,life:0}}
+function makeBlock(){const g=new THREE.Group();const cube=new THREE.Mesh(geo.cube,emissive(MAG,0.6));const ed=new THREE.LineSegments(edgesCube,mat.lineW);const face=new THREE.Mesh(geo.plane,new THREE.MeshBasicMaterial({map:wordTex('·'),transparent:true,toneMapped:false,depthWrite:false}));face.scale.set(0.84,0.54,1);face.rotation.y=-Math.PI/2;face.position.x=-0.316;g.add(cube,ed,face);g.visible=false;scene.add(g);const shadow=new THREE.Mesh(geo.disc,new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.45,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.visible=false;scene.add(shadow);return{g,cube,ed,face,shadow,word:'',hue:-1,edgeMat:null as any}}
+function makeHalf(){const m=new THREE.Mesh(geo.half,halfMat[0]);m.visible=false;scene.add(m);return{m,vx:0,vy:0,vz:0,rx:0,rz:0,life:0}}
 function makePiece(){const g=new THREE.Group();const em=emissive(CYAN,1.4);
  const arch=new THREE.Mesh(geo.arch,em);arch.rotation.y=Math.PI/2;arch.position.y=0.35;
  const pillar=new THREE.Group();const pb=new THREE.Mesh(geo.box,mat.shell);pb.scale.set(0.5,4,0.5);pb.position.y=2;const pc=new THREE.Mesh(geo.box,em);pc.scale.set(0.56,0.12,0.56);pc.position.y=4.05;pillar.add(pb,pc);pillar.position.z=PIECEZ;
  const panel=new THREE.Group();const pp=new THREE.Mesh(geo.plane,new THREE.MeshBasicMaterial({map:wordTex('·'),transparent:true,toneMapped:false}));pp.scale.set(2.7,1.35,1);pp.position.z=0.02;const pf=new THREE.Mesh(geo.plane,new THREE.MeshStandardMaterial({color:0x0a0c20,metalness:0.6,roughness:0.4,side:THREE.DoubleSide}));pf.scale.set(2.8,1.5,1);pf.position.z=-0.01;const pe=new THREE.LineSegments(planeEdges,mat.lineW);pe.scale.set(2.8,1.5,1);pe.position.z=0.03;panel.add(pf,pp,pe);panel.position.set(0,2.4,PIECEZ+0.3);panel.rotation.y=-Math.PI/2;
  const beam=new THREE.Mesh(geo.box,em);beam.scale.set(0.14,0.14,7.2);beam.position.y=4.3;
  const ring=new THREE.Mesh(geo.ring,em);ring.rotation.y=Math.PI/2;ring.position.y=1.9;
- g.add(arch,pillar,panel,beam,ring);g.visible=false;scene.add(g);return{g,em,arch,pillar,panel,pp,beam,ring,word:'',kind:'',i:-1,side:''}}
-function makeSaber(col:number){const g=new THREE.Group();const handle=new THREE.Mesh(geo.cyl,mat.dark);handle.scale.set(0.03,0.22,0.03);handle.position.y=0.11;const guard=new THREE.Mesh(geo.cyl,mat.shell);guard.scale.set(0.05,0.02,0.05);guard.position.y=0.22;const blade=new THREE.Mesh(geo.cyl,emissive(col,3.2));blade.scale.set(0.022,1,0.022);const core=new THREE.Mesh(geo.cyl,mat.white);core.scale.set(0.008,1,0.008);const tipG=new THREE.Mesh(geo.sph,new THREE.MeshBasicMaterial({color:0xffffff,toneMapped:false}));tipG.scale.setScalar(0.05);const light=new THREE.PointLight(col,1.4,4,2);g.add(handle,guard,blade,core,tipG,light);scene.add(g);return{g,blade,core,tipG,light,trail:makeTrail(col,0.07,16),col}}
+ g.add(arch,pillar,panel,beam,ring);g.visible=false;scene.add(g);return{g,em,arch,pillar,panel,pp,beam,ring,word:'',kind:'',i:-1,side:'',hue:-1,kitK:1}}
+// the one saber: hilt + blade from the hilt to the tip at the hit plane; its colour follows the line being cut
+function makeSaber(){const g=new THREE.Group();const handle=new THREE.Mesh(geo.cyl,mat.dark);handle.scale.set(0.03,0.22,0.03);handle.position.y=0.11;const guard=new THREE.Mesh(geo.cyl,mat.shell);guard.scale.set(0.05,0.02,0.05);guard.position.y=0.22;const blade=new THREE.Mesh(geo.cyl,emissive(MAG,3.2));blade.scale.set(0.022,1,0.022);const core=new THREE.Mesh(geo.cyl,mat.white);core.scale.set(0.008,1,0.008);const tipG=new THREE.Mesh(geo.sph,new THREE.MeshBasicMaterial({color:0xffffff,toneMapped:false}));tipG.scale.setScalar(0.05);const light=new THREE.PointLight(MAG,1.4,4,2);g.add(handle,guard,blade,core,tipG,light);scene.add(g);const trail=makeTrail(0xffffff,0.07,16);(trail.mesh.material as any).color.setHex(MAG);return{g,handle,guard,blade,core,tipG,light,trail,col:new THREE.Color(MAG),emit:null as any}}
+// ---- Blender finale kit (public/models/finale/<name>.glb, built by tools/blender/finale.py). Each GLB is flattened once
+// into named parts (geometry baked to model space + its material); pool objects get meshes that share that geometry,
+// with the trim / edge / core / face meshes on the pool's own recolourable materials. Until (or unless) a file loads,
+// the primitives above stay as the fallback.
+type KitPart={geo:THREE.BufferGeometry,mat:THREE.Material};
+const KIT=['block','saber','copilot','arch','pillar','panel','ring'],kit:Record<string,Record<string,KitPart>>={};
+function loadKit(){const loader=new GLTFLoader(),base=import.meta.env.BASE_URL+'models/finale/';const good=(r:Response)=>r.ok&&!/text\/html/.test(r.headers.get('content-type')||'');
+ const take=(name:string,root:THREE.Object3D)=>{root.updateMatrixWorld(true);const parts:Record<string,KitPart>={};root.traverse((o:any)=>{if(!o.isMesh)return;const nm=String(o.userData.name||o.name).replace(/[._]\d+$/,'');const g=(o.geometry as THREE.BufferGeometry).clone();g.applyMatrix4(o.matrixWorld);
+   // glTF stores v top-down; the word textures are canvas textures with flipY, so flip the face UVs once here
+   if(nm==='face'&&g.attributes.uv){const uv=g.attributes.uv as THREE.BufferAttribute;for(let i=0;i<uv.count;i++)uv.setY(i,1-uv.getY(i))}
+   parts[nm]={geo:g,mat:o.material}});kit[name]=parts;try{applyKit(name)}catch(e){console.warn('finale kit',name,e)}};
+ // hosts that cannot serve .glb get the same model as base64 text in <name>.glb.txt
+ for(const name of KIT)fetch(base+name+'.glb').then(r=>good(r)?r.arrayBuffer():fetch(base+name+'.glb.txt').then(r2=>good(r2)?r2.text().then(b64=>Uint8Array.from(atob(b64.trim()),c=>c.charCodeAt(0)).buffer as ArrayBuffer):null)).then(buf=>{if(buf)loader.parse(buf,'',gl=>take(name,gl.scene),()=>{})}).catch(()=>{})}
+function kitMesh(k:Record<string,KitPart>,part:string,m?:THREE.Material){const p=k[part];if(!p)return null;const o=new THREE.Mesh(p.geo,m||p.mat);return o}
+function kitGroup(k:Record<string,KitPart>,mats:Record<string,THREE.Material>){const g=new THREE.Group();for(const nm in k){const o=kitMesh(k,nm,mats[nm]);if(o)g.add(o)}return g}
+function swapPart(o:any,key:string,g:THREE.Object3D){const old=o[key] as THREE.Object3D;g.position.copy(old.position);g.rotation.copy(old.rotation);g.visible=old.visible;old.parent!.add(g);old.parent!.remove(old);o[key]=g}
+function applyKit(name:string){const k=kit[name];
+ if(name==='block'){for(const o of blocks){if(!o.edgeMat)o.edgeMat=emissive(HUEX[0],2);const kg=kitGroup(k,{edge:o.edgeMat,face:o.face.material});kg.rotation.y=-Math.PI/2;o.g.add(kg);o.cube.visible=false;o.ed.visible=false;o.face.visible=false;o.hue=-1}}
+ else if(name==='saber'){const sb=saber;sb.emit=emissive(MAG,3);const h=kitGroup(k,{emitter:sb.emit});h.position.y=0.2;h.scale.setScalar(1.25);sb.g.add(h);sb.handle.visible=false;sb.guard.visible=false}
+ else if(name==='copilot'){const c=copilot;const shell=new THREE.Group();const sm=kitMesh(k,'shell');if(sm){const m=(sm.material as THREE.Material).clone() as any;m.transparent=true;m.depthWrite=false;m.opacity=Math.min(m.opacity??1,0.45);sm.material=m;shell.add(sm)}const fins=kitMesh(k,'fins');if(fins)shell.add(fins);
+  const core=kitMesh(k,'core',c.core.material),ra=kitMesh(k,'ring_a',c.ring.material),rb=kitMesh(k,'ring_b',c.ring.material);if(!core||!ra||!rb)return;c.g.add(core,shell,ra,rb);c.core.visible=c.shell.visible=c.ring.visible=c.ring2.visible=false;c.kit={core,shell,ra,rb}}
+ else{const key=name as 'arch'|'pillar'|'panel'|'ring';for(const o of pieces){const g=kitGroup(k,{trim:o.em,face:o.pp.material});o.kitK=1.7; // thin strips need more glow than the solid primitives did
+  if(key==='arch'){g.position.y=0;g.rotation.y=Math.PI/2;const v=o.arch.visible;o.g.add(g);o.g.remove(o.arch);g.visible=v;o.arch=g}
+  else if(key==='ring'){g.position.y=1.9;g.rotation.y=Math.PI/2;const v=o.ring.visible;o.g.add(g);o.g.remove(o.ring);g.visible=v;o.ring=g}
+  else swapPart(o,key,g)}}}
 function makeCopilot(){const g=new THREE.Group();const core=new THREE.Mesh(geo.sph,emissive(GRN,2.6));core.scale.setScalar(0.22);const shell=new THREE.Mesh(new THREE.IcosahedronGeometry(0.34,1),new THREE.MeshStandardMaterial({color:0x102018,metalness:0.9,roughness:0.2,transparent:true,opacity:0.5}));const ring=new THREE.Mesh(new THREE.TorusGeometry(0.5,0.015,8,40),new THREE.MeshBasicMaterial({color:GRN,toneMapped:false}));ring.rotation.x=Math.PI/2;const ring2=ring.clone();ring2.rotation.x=0;ring2.rotation.y=Math.PI/2;const light=new THREE.PointLight(GRN,1.6,6,1.8);
  const orbit:THREE.Mesh[]=[];for(let i=0;i<6;i++){const s=new THREE.Mesh(geo.sph,new THREE.MeshBasicMaterial({color:i%2?GRN:0xffffff,toneMapped:false}));s.scale.setScalar(0.035);g.add(s);orbit.push(s)}
  
  g.add(core,shell,ring,ring2,light);scene.add(g);const beam=new THREE.Mesh(geo.box,new THREE.MeshBasicMaterial({color:GRN,transparent:true,opacity:0.5,toneMapped:false,blending:THREE.AdditiveBlending,depthWrite:false}));beam.visible=false;scene.add(beam);
- return{g,core,shell,ring,ring2,orbit,trail:makeTrail(GRN,0.05,24),beam,x:0,y:2.6,z:0}}
+ return{g,core,shell,ring,ring2,orbit,trail:makeTrail(GRN,0.05,24),beam,x:0,y:2.6,z:0,kit:null as any}}
 function makeSparks(n=400){const pos=new Float32Array(n*3),col=new Float32Array(n*3),vel=new Float32Array(n*3),life=new Float32Array(n);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));const pts=new THREE.Points(g,new THREE.PointsMaterial({size:0.07,vertexColors:true,transparent:true,opacity:0.95,toneMapped:false,blending:THREE.AdditiveBlending,depthWrite:false}));pts.frustumCulled=false;scene.add(pts);return{pts,pos,col,vel,life,n,next:0}}
 const sparkC=new THREE.Color();
 function spark(x:number,y:number,z:number,hex:number,n:number,sp:number){const c=sparkC.setHex(hex);for(let k=0;k<n;k++){const i=sparks.next;sparks.next=(i+1)%sparks.n;sparks.pos[i*3]=x;sparks.pos[i*3+1]=y;sparks.pos[i*3+2]=z;sparks.vel[i*3]=(Math.random()-0.5)*sp;sparks.vel[i*3+1]=(Math.random()-0.2)*sp;sparks.vel[i*3+2]=(Math.random()-0.5)*sp;sparks.col[i*3]=c.r;sparks.col[i*3+1]=c.g;sparks.col[i*3+2]=c.b;sparks.life[i]=0.5+Math.random()*0.4}}
@@ -74,21 +102,21 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:!LOW,alpha:false
   const gridTex=canvasTex(128,128,x=>{x.clearRect(0,0,128,128);x.strokeStyle='rgba(255,91,224,.9)';x.lineWidth=3;x.strokeRect(0,0,128,128)});gridTex.wrapS=gridTex.wrapT=THREE.RepeatWrapping;gridTex.repeat.set(220,80);
   const ground:any=LOW?new THREE.Mesh(new THREE.PlaneGeometry(1400,420),new THREE.MeshStandardMaterial({color:0x0b0816,metalness:0.9,roughness:0.35})):new Reflector(new THREE.PlaneGeometry(1400,420),{clipBias:0.003,textureWidth:Math.floor(W*dpr*0.5),textureHeight:Math.floor(H*dpr*0.5),color:0x0b0816});ground.rotation.x=-Math.PI/2;ground.position.set(0,-0.01,-20);floorG.add(ground);
   if(!LOW){const ob=ground.onBeforeRender;ground.onBeforeRender=function(r:any,sc:any,c:any,g:any,m:any,gr:any){const sun=(skyM as any).userData.sun;const v=sun.visible;sun.visible=false;starsM.visible=false;
-   // keep the hands and anything at arm's length out of the mirror: their reflections read as extra sabers and blobs
-   hidden.length=0;const near=camera.position.x+6;const hide=(o:THREE.Object3D)=>{if(o.visible){o.visible=false;hidden.push(o)}};hide(sabers.L.g);hide(sabers.R.g);hide(sabers.L.trail.mesh);hide(sabers.R.trail.mesh);for(const h of halves)hide(h.m);for(const b of blocks)if(b.g.position.x<near)hide(b.g);
+   // keep the saber and anything at arm's length out of the mirror: their reflections read as extra sabers and blobs
+   hidden.length=0;const near=camera.position.x+6;const hide=(o:THREE.Object3D)=>{if(o.visible){o.visible=false;hidden.push(o)}};hide(saber.g);hide(saber.trail.mesh);for(const h of halves)hide(h.m);for(const b of blocks)if(b.g.position.x<near)hide(b.g);
    ob.call(this,r,sc,c,g,m,gr);sun.visible=v;starsM.visible=true;for(const o of hidden)o.visible=true}}
   const gridP=new THREE.Mesh(new THREE.PlaneGeometry(1400,420),new THREE.MeshBasicMaterial({map:gridTex,transparent:true,opacity:0.5,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false}));gridP.rotation.x=-Math.PI/2;gridP.position.set(0,0.005,-20);floorG.add(gridP);
   for(const z of[-1.5,1.5]){const rail=new THREE.Mesh(geo.box,new THREE.MeshBasicMaterial({color:z<0?MAG:CYAN,toneMapped:false}));rail.scale.set(1400,0.04,0.06);rail.position.set(0,0.03,z*LANEZ/1.5);floorG.add(rail)}
   for(let c=1;c<COLS;c++){const ln=new THREE.Mesh(geo.box,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:c===COLS/2?0.22:0.1,toneMapped:false,depthWrite:false}));ln.scale.set(1400,0.01,0.02);ln.position.set(0,0.02,COLZ(c-0.5));floorG.add(ln)}
   cutLine=new THREE.Mesh(geo.box,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.55,toneMapped:false}));cutLine.scale.set(0.05,0.02,LANEZ*2);scene.add(cutLine);
   skyA=makeSky();skyB=makeSky();scene.add(skyA,skyB);
-  halfMat={L:emissive(MAG,0.8),R:emissive(CYAN,0.8)};for(let i=0;i<56;i++)blocks.push(makeBlock());for(let i=0;i<24;i++)halves.push(makeHalf());for(let i=0;i<100;i++)pieces.push(makePiece());
+  halfMat=HUEX.map(h=>emissive(h,0.8));for(let i=0;i<56;i++)blocks.push(makeBlock());for(let i=0;i<24;i++)halves.push(makeHalf());for(let i=0;i<100;i++)pieces.push(makePiece());
   for(let i=0;i<26;i++){const r=new THREE.Mesh(geo.tunnel,emissive(ORG,1.6));r.rotation.y=Math.PI/2;r.visible=false;scene.add(r);rings.push(r)}
   for(let i=0;i<28;i++){const p=new THREE.Mesh(geo.box,new THREE.MeshBasicMaterial({color:i%2?MAG:CYAN,toneMapped:false,transparent:true,opacity:0.55}));p.scale.set(0.06,2.6,0.06);scene.add(p);pillars.push(p)}
-  sabers={L:makeSaber(MAG),R:makeSaber(CYAN)};copilot=makeCopilot();sparks=makeSparks();
+  saber=makeSaber();copilot=makeCopilot();sparks=makeSparks();
   for(let i=0;i<14;i++){const m=new THREE.Mesh(geo.sph,new THREE.MeshBasicMaterial({color:i%3?GRN:0xffffff,toneMapped:false}));m.scale.setScalar(0.07);m.visible=false;scene.add(m);arrivals.push(m)}
   for(let i=0;i<8;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:wordTex('·'),transparent:true,depthTest:false,toneMapped:false}));sp.visible=false;scene.add(sp);flights.push({sp,piece:null,t0:-9,from:new THREE.Vector3(),to:new THREE.Vector3(),done:true})}
-  ok=true}catch(e){console.warn('WebGL era 5 unavailable, using 2D renderer',e);ok=false}}
+  loadKit();ok=true}catch(e){console.warn('WebGL era 5 unavailable, using 2D renderer',e);ok=false}}
 // ---- camera + mood ----
 const V=()=>new THREE.Vector3();const cinP=V(),cinL=V(),altP=V(),altL=V();
 function cinema(t:number,S:any){const b=t/BAR,cam=S.dist;const bob=Math.sin(t*2.1)*0.02;cinP.set(cam-BACK,EYE+bob,Math.sin(t*0.7)*0.03);cinL.set(cam+9,EYE-0.3,0);let f=fovAt(t),q=0;
@@ -101,36 +129,41 @@ function mood(t:number){const b=t/BAR;let i=0;while(i<MOOD.length-2&&b>=MOOD[i+1
 // ---- per-frame updates ----
 let lastT=0,lastS:any=null;const hidden:THREE.Object3D[]=[];
 function updateBlocks(S:any,t:number,cam:number,dt:number){let bi=0;for(const b of S.blocks){if(!b.active)continue;const x=cam+HIT+(b.hitT-t)*SPD;if(x<cam-2||x>cam+60)continue;
-  if(b.hit){if(!split.has(b)){split.add(b);if(t-b.hit<0.3){const col=b.side==='L'?MAG:CYAN;for(const sgn of[-1,1]){let h=halves[0];for(const c of halves)if(c.life<=0){h=c;break}const r0=b.k*7+sgn;h.m.visible=true;h.m.material=halfMat[b.side];h.m.position.set(cam+HIT,ROWY(b.row),COLZ(b.col)+sgn*0.23);h.m.rotation.set(0,0,0);h.vx=SPD*0.8+hash(r0)*2;h.vy=1.5+hash(r0+1)*2;h.vz=sgn*(2.5+hash(r0+2)*2);h.rx=(hash(r0+3)-0.5)*14;h.rz=(hash(r0+4)-0.5)*14;h.life=0.55;h.m.scale.setScalar(1)}spark(cam+HIT,ROWY(b.row),COLZ(b.col),col,26,7);spark(cam+HIT,ROWY(b.row),COLZ(b.col),0xffffff,10,4);
+  if(b.hit){if(!split.has(b)){split.add(b);if(t-b.hit<0.3){const col=HUEX[b.hue];for(const sgn of[-1,1]){let h=halves[0];for(const c of halves)if(c.life<=0){h=c;break}const r0=b.k*7+sgn;h.m.visible=true;h.m.material=halfMat[b.hue];h.m.position.set(cam+HIT,ROWY(b.row),COLZ(b.col)+sgn*0.23);h.m.rotation.set(0,0,0);h.vx=SPD*0.8+hash(r0)*2;h.vy=1.5+hash(r0+1)*2;h.vz=sgn*(2.5+hash(r0+2)*2);h.rx=(hash(r0+3)-0.5)*14;h.rz=(hash(r0+4)-0.5)*14;h.life=0.55;h.m.scale.setScalar(1)}spark(cam+HIT,ROWY(b.row),COLZ(b.col),col,26,7);spark(cam+HIT,ROWY(b.row),COLZ(b.col),0xffffff,10,4);
    // every word that becomes arena flies from the cut to the piece it becomes
    if(b.pieceI>=0){const p=S.built[b.pieceI],f=flights[flightN++%flights.length];if(p&&f){f.piece=p;f.t0=t;f.done=false;f.from.set(cam+HIT,ROWY(b.row),COLZ(b.col));f.to.set(p.x,pieceTop(p),pieceZ(p));f.sp.material.map=wordTex(b.word);f.sp.visible=true}}}}continue}
-  if(bi>=blocks.length)break;const o=blocks[bi++];o.g.visible=true;o.g.position.set(x,ROWY(b.row)+Math.sin(t*3+b.k)*0.02,COLZ(b.col));o.shadow.visible=!b.missed;o.shadow.position.set(x,0.012,COLZ(b.col));const ss=1.1-b.row*0.2;o.shadow.scale.set(0.75*ss,1.05*ss,1);if(o.word!==b.word||o.side!==b.side){o.word=b.word;o.side=b.side;(o.face.material as any).map=wordTex(b.word);(o.cube.material as any).emissive.setHex(b.side==='L'?MAG:CYAN)}
-  const near=clamp(1-(x-cam)/20,0,1),age=clamp((t-(b.hitT-LEAD))/0.45,0,1),ent=age<1?1-Math.pow(1-age,3):1;(o.cube.material as any).emissiveIntensity=b.missed?0.25:0.45+near*0.25+(1-ent)*1.5;o.g.rotation.y=b.missed?(t-b.missed)*3:(1-ent)*Math.PI*2+Math.sin(t*2+b.k)*0.08;o.g.rotation.z=(1-ent)*0.6;o.g.scale.setScalar(b.missed?Math.max(0.01,1-(t-b.missed)*1.6):0.2+0.8*ent+(age<1?Math.sin(age*Math.PI)*0.25:0))}
+  if(bi>=blocks.length)break;const o=blocks[bi++];o.g.visible=true;o.g.position.set(x,ROWY(b.row)+Math.sin(t*3+b.k)*0.02,COLZ(b.col));o.shadow.visible=!b.missed;o.shadow.position.set(x,0.012,COLZ(b.col));const ss=1.1-b.row*0.2;o.shadow.scale.set(0.75*ss,1.05*ss,1);if(o.word!==b.word||o.hue!==b.hue){o.word=b.word;o.hue=b.hue;(o.face.material as any).map=wordTex(b.word);(o.cube.material as any).emissive.setHex(HUEX[b.hue]);if(o.edgeMat)o.edgeMat.emissive.setHex(HUEX[b.hue])}
+  const near=clamp(1-(x-cam)/20,0,1),age=clamp((t-(b.hitT-LEAD))/0.45,0,1),ent=age<1?1-Math.pow(1-age,3):1;const ei=b.missed?0.25:0.45+near*0.25+(1-ent)*1.5;(o.cube.material as any).emissiveIntensity=ei;if(o.edgeMat)o.edgeMat.emissiveIntensity=ei*3.2;o.g.rotation.y=b.missed?(t-b.missed)*3:(1-ent)*Math.PI*2+Math.sin(t*2+b.k)*0.08;o.g.rotation.z=(1-ent)*0.6;o.g.scale.setScalar(b.missed?Math.max(0.01,1-(t-b.missed)*1.6):0.2+0.8*ent+(age<1?Math.sin(age*Math.PI)*0.25:0))}
  for(;bi<blocks.length;bi++){blocks[bi].g.visible=false;blocks[bi].shadow.visible=false}
  for(const h of halves){if(h.life<=0){h.m.visible=false;continue}h.life-=dt;h.vy-=9*dt;h.m.position.x+=h.vx*dt;h.m.position.y+=h.vy*dt;h.m.position.z+=h.vz*dt;h.m.rotation.x+=h.rx*dt;h.m.rotation.z+=h.rz*dt;h.m.scale.setScalar(Math.max(0.01,h.life/0.55));if(h.life<=0)h.m.visible=false}
  for(let i=0;i<sparks.n;i++){if(sparks.life[i]<=0){sparks.pos[i*3+1]=-50;continue}sparks.life[i]-=dt;sparks.vel[i*3+1]-=6*dt;sparks.pos[i*3]+=sparks.vel[i*3]*dt;sparks.pos[i*3+1]+=sparks.vel[i*3+1]*dt;sparks.pos[i*3+2]+=sparks.vel[i*3+2]*dt}(sparks.pts.geometry.attributes.position as THREE.BufferAttribute).needsUpdate=true;(sparks.pts.geometry.attributes.color as THREE.BufferAttribute).needsUpdate=true}
 const sFwd=new THREE.Vector3(),sRight=new THREE.Vector3(),sHandle=new THREE.Vector3(),sTip=new THREE.Vector3(),bA=new THREE.Vector3(),bB=new THREE.Vector3();
-function updateSabers(S:any,t:number,cam:number){const fwd=sFwd;camera.getWorldDirection(fwd);const right=sRight.crossVectors(fwd,camera.up).normalize();const vis=t>=bar(75.6)&&t<OUT+0.3;
- for(const side of['L','R'] as const){const sb=sabers[side],h=S.hands[side];const sgn=side==='L'?-1:1;const since=t-(side==='L'?S.slashL:S.slashR);const sw=since<0.25?Math.sin(since/0.25*Math.PI):0;
-  const handle=sHandle.copy(camera.position).addScaledVector(fwd,0.42).addScaledVector(right,sgn*0.3);handle.y-=0.34;
-  // follow-through: after a cut the blade carries on down through the block and comes back up
-  const ft=since>=0&&since<0.3?Math.sin(since/0.3*Math.PI):0;const tip=sTip.set(cam+HIT,ROWY(h.r)-ft*0.55,COLZ(h.c)+sgn*ft*0.12);const len=handle.distanceTo(tip);
-  sb.g.position.copy(handle);sb.g.lookAt(tip);sb.g.rotateX(Math.PI/2);sb.g.visible=vis;
-  sb.blade.scale.y=len-0.24;sb.blade.position.y=0.24+(len-0.24)/2;sb.core.scale.y=len-0.24;sb.core.position.y=sb.blade.position.y;sb.tipG.position.y=len;sb.light.position.y=len*0.8;
-  (sb.blade.material as any).emissiveIntensity=2.4+sw*4;sb.light.intensity=1.2+sw*3;sb.tipG.scale.setScalar(0.05+sw*0.08);
-  trailPush(sb.trail,tip.x,tip.y,tip.z,vis,true,cam)}}
+const sCol=new THREE.Color();
+function updateSaber(S:any,t:number,cam:number,dt:number){const fwd=sFwd;camera.getWorldDirection(fwd);const right=sRight.crossVectors(fwd,camera.up).normalize();const vis=t>=bar(75.6)&&t<OUT+0.3;
+ const sb=saber,h=S.saber;const since=t-S.slashT;const sw=since>=0&&since<0.25?Math.sin(since/0.25*Math.PI):0;
+ // one hand: the hilt sits low right of centre and drifts a little towards the tip, so the saber reads as held, not mounted
+ const lat=clamp(COLZ(h.c)/(COLS/2*COLW),-1.2,1.2),up=clamp((h.r-1)/1.5,-1,1);
+ const handle=sHandle.copy(camera.position).addScaledVector(fwd,0.42).addScaledVector(right,0.13+lat*0.16);handle.y+=-0.35+up*0.08;
+ // follow-through: after a cut the blade carries on down through the block and comes back up
+ const ft=since>=0&&since<0.3?Math.sin(since/0.3*Math.PI):0;const tip=sTip.set(cam+HIT,ROWY(h.r)-ft*0.55,COLZ(h.c));const len=handle.distanceTo(tip);
+ sb.g.position.copy(handle);sb.g.lookAt(tip);sb.g.rotateX(Math.PI/2);sb.g.visible=vis;
+ sb.blade.scale.y=len-0.24;sb.blade.position.y=0.24+(len-0.24)/2;sb.core.scale.y=len-0.24;sb.core.position.y=sb.blade.position.y;sb.tipG.position.y=len;sb.light.position.y=len*0.8;
+ // colour eases to the line being cut
+ sb.col.lerp(sCol.setHex(HUEX[h.hue]||MAG),1-Math.pow(0.004,dt));const bm=sb.blade.material as any;bm.emissive.copy(sb.col);sb.light.color.copy(sb.col);(sb.trail.mesh.material as any).color.copy(sb.col);if(sb.emit){sb.emit.emissive.copy(sb.col);sb.emit.emissiveIntensity=2.5+sw*3}
+ bm.emissiveIntensity=2.4+sw*4;sb.light.intensity=1.2+sw*3;sb.tipG.scale.setScalar(0.05+sw*0.08);
+ trailPush(sb.trail,tip.x,tip.y,tip.z,vis,true,cam)}
 function updatePieces(S:any,t:number,cam:number){for(const o of pieces)o.g.visible=false;const from=Math.max(0,S.built.length-pieces.length);
  for(let i=from;i<S.built.length;i++){const p=S.built[i],o=pieces[i%pieces.length];if(p.x<cam-(t>=OUT?70:12)||p.x>cam+90)continue;o.g.visible=true;o.g.position.set(p.x,0,0);const sideZ=p.side==='L'?-1:1;
-  if(o.kind!==p.kind||o.word!==p.word||o.side!==p.side){o.kind=p.kind;o.word=p.word;o.side=p.side;o.arch.visible=p.kind==='arch';o.pillar.visible=p.kind==='pillar';o.panel.visible=p.kind==='panel';o.beam.visible=p.kind==='beam';o.ring.visible=p.kind==='ring';o.em.emissive.setHex(p.side==='L'?MAG:CYAN);o.pillar.position.z=PIECEZ*sideZ;o.panel.position.z=(PIECEZ+0.3)*sideZ;o.panel.rotation.y=-Math.PI/2-sideZ*0.45;(o.pp.material as any).map=wordTex(p.word)} // panels face the player, angled in towards the lane
-  const q=clamp((t-p.t)/0.35,0,1),s=q<1?lerp(0,1.15,q)-(q>0.6?(q-0.6)/0.4*0.15:0):1;o.g.scale.setScalar(Math.max(0.001,s));const nearF=clamp((p.x-cam)/7,0.12,1);const fa=flashAt.get(p);const fl=fa!==undefined?clamp(1-(t-fa)/0.5,0,1):0;o.em.emissiveIntensity=(1.0+0.4*(1-((t/BEAT)%1))+(q<1?1.5*(1-q):0)+fl*3)*nearF;if(p.kind==='ring')o.ring.rotation.x=t*0.6+p.i}}
+  if(o.kind!==p.kind||o.word!==p.word||o.side!==p.side||o.hue!==p.hue){o.kind=p.kind;o.word=p.word;o.side=p.side;o.hue=p.hue;o.arch.visible=p.kind==='arch';o.pillar.visible=p.kind==='pillar';o.panel.visible=p.kind==='panel';o.beam.visible=p.kind==='beam';o.ring.visible=p.kind==='ring';o.em.emissive.setHex(HUEX[p.hue]);o.pillar.position.z=PIECEZ*sideZ;o.panel.position.z=(PIECEZ+0.3)*sideZ;o.panel.rotation.y=-Math.PI/2-sideZ*0.45;(o.pp.material as any).map=wordTex(p.word)} // panels face the player, angled in towards the lane
+  const q=clamp((t-p.t)/0.35,0,1),s=q<1?lerp(0,1.15,q)-(q>0.6?(q-0.6)/0.4*0.15:0):1;o.g.scale.setScalar(Math.max(0.001,s));const nearF=clamp((p.x-cam)/7,0.12,1);const fa=flashAt.get(p);const fl=fa!==undefined?clamp(1-(t-fa)/0.5,0,1):0;o.em.emissiveIntensity=(1.0+0.4*(1-((t/BEAT)%1))+(q<1?1.5*(1-q):0)+fl*3)*nearF*o.kitK;if(p.kind==='ring')o.ring.rotation.x=t*0.6+p.i}}
 function updateCopilot(S:any,t:number,cam:number,dt:number){const c=copilot;let tx=cam+9,ty=2.8,tz=0;const p=S.built[S.copilot.pi];const busy=p&&S.copilot.status!=='STANDING BY'&&S.copilot.status!=='ARENA COMPLETE';if(busy){tx=p.x;ty=p.kind==='pillar'?4.6:p.kind==='panel'?3.4:p.kind==='beam'?4.9:3.2;tz=(p.kind==='pillar'||p.kind==='panel')?(p.side==='L'?-3:3):0}
  if(t>=OUT){tx=cam+16;ty=6+(t-OUT)*1.5;tz=0}
  const k=1-Math.pow(0.02,dt);c.x+=(tx-c.x)*k;c.y+=(ty-c.y)*k;c.z+=(tz-c.z)*k;if(Math.abs(tx-c.x)>30){c.x=tx;c.y=ty;c.z=tz}
- c.g.position.set(c.x,c.y+Math.sin(t*3)*0.06,c.z);c.g.visible=t>=bar(75.4);c.ring.rotation.z=t*1.7;c.ring2.rotation.x=t*1.3;c.shell.rotation.y=t*0.8;c.orbit.forEach((s,i)=>{const a=t*2.2+i*Math.PI/3;s.position.set(Math.cos(a)*0.62,Math.sin(a*1.3)*0.25,Math.sin(a)*0.62)});
+ c.g.position.set(c.x,c.y+Math.sin(t*3)*0.06,c.z);c.g.visible=t>=bar(75.4);if(c.kit){c.kit.ra.rotation.set(0.35,t*1.7,0);c.kit.rb.rotation.set(0.3+Math.sin(t*0.5)*0.2,t*1.3,0);c.kit.shell.rotation.y=t*0.8;c.kit.core.rotation.set(t*0.7,-t*1.2,0)}c.ring.rotation.z=t*1.7;c.ring2.rotation.x=t*1.3;c.shell.rotation.y=t*0.8;c.orbit.forEach((s,i)=>{const a=t*2.2+i*Math.PI/3;s.position.set(Math.cos(a)*0.62,Math.sin(a*1.3)*0.25,Math.sin(a)*0.62)});
  const working=busy&&t-S.copilot.since<BEAT*1.5&&t<OUT;c.beam.visible=!!working;if(working){const by=p.kind==='pillar'?2:p.kind==='panel'?2.4:p.kind==='beam'?4.3:1.5,bz=pieceZ(p);const a=c.g.position,b=bB.set(p.x,by,bz);c.beam.position.copy(bA.copy(a).add(b).multiplyScalar(0.5));c.beam.scale.set(0.03,a.distanceTo(b),0.03);c.beam.lookAt(b);c.beam.rotateX(Math.PI/2);(c.beam.material as any).opacity=0.25+0.35*rnd(3);if(rnd(4)<0.5)spark(b.x,b.y,b.z,GRN,2,2.5)}
  trailPush(c.trail,c.g.position.x-0.1,c.g.position.y,c.g.position.z,c.g.visible)}
 const pieceTop=(p:any)=>p.kind==='pillar'?4.3:p.kind==='panel'?2.6:p.kind==='beam'?4.5:p.kind==='ring'?3.4:2.9;const pieceZ=(p:any)=>(p.kind==='pillar'||p.kind==='panel')?(p.side==='L'?-PIECEZ:PIECEZ):0;
-function updateFlights(S:any,t:number){for(const f of flights){if(f.done)continue;const q=clamp((t-f.t0)/0.7,0,1);const e=q*q*(3-2*q);f.sp.position.lerpVectors(f.from,f.to,e);f.sp.position.y+=Math.sin(q*Math.PI)*1.2;const sc=1-q*0.3;f.sp.scale.set(1.1*sc,0.55*sc,1);(f.sp.material as any).opacity=q<0.85?1:(1-q)/0.15;if(q>=1){f.done=true;f.sp.visible=false;const p=f.piece;if(p&&S.built[p.i]===p){flashAt.set(p,t);spark(f.to.x,f.to.y,f.to.z,p.side==='L'?MAG:CYAN,30,5)}}}}
+function updateFlights(S:any,t:number){for(const f of flights){if(f.done)continue;const q=clamp((t-f.t0)/0.7,0,1);const e=q*q*(3-2*q);f.sp.position.lerpVectors(f.from,f.to,e);f.sp.position.y+=Math.sin(q*Math.PI)*1.2;const sc=1-q*0.3;f.sp.scale.set(1.1*sc,0.55*sc,1);(f.sp.material as any).opacity=q<0.85?1:(1-q)/0.15;if(q>=1){f.done=true;f.sp.visible=false;const p=f.piece;if(p&&S.built[p.i]===p){flashAt.set(p,t);spark(f.to.x,f.to.y,f.to.z,HUEX[p.hue],30,5)}}}}
 function updateArrivals(S:any,t:number,cam:number){const on=t>=s5&&t<bar(76.4);arrivals.forEach((m,i)=>{m.visible=on;if(!on)return;const q=clamp((t-s5-i*0.05)/(bar(76.3)-s5),0,1),e=q*q*(3-2*q);const sx=cam-2+i*0.3,sy=1.2+(i%4)*0.6,sz=6+(i%5)*0.8;m.position.set(lerp(sx,copilot.g.position.x,e)+Math.sin(t*5+i)*(1-e)*0.3,lerp(sy,copilot.g.position.y,e)+Math.cos(t*4+i)*(1-e)*0.3,lerp(sz,copilot.g.position.z,e));m.scale.setScalar(0.07*(1-e*0.6))})}
 function updatePillars(t:number,cam:number){const n0=Math.floor(cam/5);pillars.forEach((p,i)=>{const k=n0+Math.floor(i/2),side=i%2?1:-1;p.position.set(k*5+1.5,1.3,side*(LANEZ+0.65));const d=p.position.x-cam;p.visible=d>-2&&d<70;(p.material as any).opacity=0.25+0.35*clamp(1-d/60,0,1)})}
 function updateRings(S:any,t:number,cam:number){const on=t>=TUNNEL&&t<OUT+1;const n0=Math.floor(cam/4)+1;rings.forEach((r,i)=>{const x=(n0+i)*4;r.visible=on&&x>cam-2;if(!r.visible)return;r.position.set(x,1.9,0);r.rotation.x=t*0.9+i*0.4;const q=clamp((t-TUNNEL)/BAR-(x-cam)/120,0,1);r.scale.setScalar(Math.max(0.01,q));(r.material as any).emissiveIntensity=(0.8+0.9*(1-((t/BEAT)%1)))*clamp((x-cam)/8,0.1,1)})}
@@ -140,7 +173,7 @@ export const E5GL={init,get ok(){return ok},canvas:()=>renderer.domElement,
   const cell=1400/220;floorG.position.x=Math.floor(cam/cell)*cell;const k=Math.floor((cam-60)/SKYW);skyA.position.set(k*SKYW-60,0,0);skyB.position.set((k+1)*SKYW-60,0,0);
   cutLine.position.set(cam+HIT,0.03,0);cutLine.visible=t<OUT;(cutLine.material as any).opacity=0.35+0.4*pulse;
   skyM.position.copy(camera.position);starsM.position.copy(camera.position);const sun=(skyM as any).userData.sun;sun.position.set(camera.position.x+330,camera.position.y+30,-120);sunL.position.set(cam+16,42,24);sunL.target.position.set(cam+8,0,0);
-  updateBlocks(S,t,cam,dt);updateSabers(S,t,cam);updatePieces(S,t,cam);updatePillars(t,cam);updateCopilot(S,t,cam,dt);updateArrivals(S,t,cam);updateFlights(S,t);updateRings(S,t,cam);
+  updateBlocks(S,t,cam,dt);updateSaber(S,t,cam,dt);updatePieces(S,t,cam);updatePillars(t,cam);updateCopilot(S,t,cam,dt);updateArrivals(S,t,cam);updateFlights(S,t);updateRings(S,t,cam);
   bloom.strength=0.4+0.15*pulse+(S.flash>0?0.15:0);mood(t);composer.render()}};
 
-if(import.meta.env.DEV)(window as any).__E5GL={pieces:()=>pieces,camera:()=>camera,S:()=>E5.S};
+if(import.meta.env.DEV)(window as any).__E5GL={pieces:()=>pieces,camera:()=>camera,S:()=>E5.S,kit:()=>Object.keys(kit)};

@@ -15,12 +15,13 @@ open(os.path.join(DIST,'artifact.html'),'w',encoding='utf-8').write(body.strip()
 files={}
 assets=os.path.join(DIST,'assets')
 for f in sorted(os.listdir(assets)):files['assets/'+f]='assets/'+f
-mdir=os.path.join(DIST,'models')
-if os.path.isdir(mdir):
+for sub in ['models','models/finale']:
+    mdir=os.path.join(DIST,sub)
+    if not os.path.isdir(mdir):continue
     for f in sorted(os.listdir(mdir)):
         if f.endswith('.glb'):
             b=open(os.path.join(mdir,f),'rb').read();open(os.path.join(mdir,f+'.txt'),'w').write(base64.b64encode(b).decode())
-            files['models/'+f+'.txt']={'from':'models/'+f+'.txt','contentType':'text/plain'}
+            files[sub+'/'+f+'.txt']={'from':sub+'/'+f+'.txt','contentType':'text/plain'}
 # era3gl.ts loads textures/*.jpg via BASE_URL; without them the racer silently falls back to procedural textures
 tdir=os.path.join(DIST,'textures')
 if os.path.isdir(tdir):
