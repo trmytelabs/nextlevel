@@ -18,7 +18,7 @@ export let lastTouch=-1e9;
 export const ERAS=[
  {name:'1 · ARCADE',start:bar(0)},
  {name:'2 · 16-BIT',start:bar(19)},
- {name:'3 · 3D CONSOLE',start:bar(37)},
+ {name:'3 · 3D',start:bar(37)},
  {name:'4 · MOBILE',start:bar(56)},
  {name:'5 · VR',start:bar(75)}];
 export const TRANS=BAR*1.5;

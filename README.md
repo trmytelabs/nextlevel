@@ -19,9 +19,9 @@ One continuous take, 96 bars at 128 BPM (one bar = 1.875 s, 3:00 total). Everyth
 |---|---|---|---|
 | 0 to 19 | 1 · FIRST PROMPTS | 1978 arcade crawl on a phosphor CRT | The lyric lines come down the screen in a perspective crawl. Shoot to chip pixels off the words. |
 | 19 to 37 | 2 · LEARNING TO ASK | 1991 Mario-style platformer | The runner autoruns on the ground. "?" blocks pop phrases of the lyric when hit from below; plain bricks break. |
-| 37 to 56 | 3 · AT MY DESK | 1995 Daytona-style racer (Three.js) | One overhead gantry per lyric line. Drive under it in the lit lane to take the line. |
-| 56 to 75 | 4 · IN MY POCKET | 2013 phone on a desk running a Flappy-style game | Words sit on signs in the pipe gaps. In the bridge, green ghost birds arrive and become the AI. |
-| 75 to 96 | 5 · DIRECTING AGENTS | Now: VR saber lane (Three.js), tunnel run for the last chorus | Word blocks fly in on the beat. Cut them with sabers that follow your mouse or finger while an AI co-pilot builds the arena out of the words. |
+| 37 to 56 | 3 · DIRECTING AGENTS | 1995 Daytona-style racer (Three.js) | One overhead gantry per lyric line. Drive under it in the lit lane to take the line. |
+| 56 to 75 | 4 · WORKING FROM ANYWHERE | 2013 phone on a desk running a Flappy-style game | Words sit on signs in the pipe gaps. In the bridge, green ghost birds arrive and become the AI. |
+| 75 to 96 | 5 · FULL DEVELOPMENT | Now: VR saber lane (Three.js), tunnel run for the last chorus | Word blocks fly in on the beat. Cut them with sabers that follow your mouse or finger while an AI co-pilot builds the arena out of the words. |
 
 | | |
 |---|---|
