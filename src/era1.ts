@@ -9,7 +9,7 @@ const SHIP=['....X....','...XXX...','.XXXXXXX.','XXXXXXXXX'];
 const shatterT=bar(17);
 const K={LW,LH,GROUND,FS,ROWW,BW,TRAVEL,VPX,VPY,F,F2,ROWD,ZFAR,ZNEAR,shatterT};
 let S:any;
-function init(t){S={ship:{x:LW/2-9,y:GROUND-10,dead:false,deadT:-9,inv:0},bul:[],lines:[],debris:null,pops:[],score:0,chips:0,cool:0,rng:rngf(7),stars:[],pulse:0,seq:0,words:0,kills:0,deaths:0,oneShot:0,shots:0,n16:-1,park:null,K};
+function init(t){S={ship:{x:LW/2-9,y:GROUND-10,dead:false,deadT:-9,inv:0},bul:[],lines:[],debris:null,pops:[],score:0,chips:0,cool:0,rng:rngf(7),stars:[],pulse:0,seq:0,words:0,kills:0,deaths:0,oneShot:0,shots:0,n16:-1,park:null,_focus:null,_plan:null,planK:-1,K};
  const r=rngf(3);for(let i=0;i<150;i++)S.stars.push({a:r()*Math.PI*2,d:r()*LW*0.9,sp:0.4+r()*0.8,b:0.3+r()*0.7});
  // seek past bar 17: rebuild the lines that were still on the plane at the shatter (unchipped), shatter them and let the
  // debris fall for the time already elapsed, so a seek shows the same floor a play-through does (REVIEW-ERAS E1-4)
@@ -27,15 +27,38 @@ function compose(ln){const x=ln.tex.x;x.clearRect(0,0,BW,ln.bh);for(const w of l
 function toScreen(ln,u,row,t){const z=rowZ(ln,row,t);return{x:VPX+(u-BW/2+ln.xo)*F2/z,y:VPY+F/z,z}}
 // one hit never takes more than 45% of a word, so even a far (R=14) hit on "I" leaves it standing
 function chip(w,mx,my,R){const d=w.img.data,cap=Math.ceil(w.total*0.45);let n=0;for(let yy=-R;yy<=R&&n<cap;yy++)for(let xx=-R;xx<=R&&n<cap;xx++){if(xx*xx+yy*yy>R*R)continue;const px=mx+xx,py=my+yy;if(px<0||py<0||px>=w.w||py>=w.h)continue;const i=(py*w.w+px)*4+3;if(d[i]>0){d[i]=0;n++}}if(n){w.left-=n;w.aim=-1;w.c.x.putImageData(w.img,0,0)}return n}
-function shatter(){S.debris=[];const r=rngf(99);for(const ln of S.lines){for(const w of ln.words){if(w.dead)continue;const d=w.img.data;for(let py=0;py<w.h;py+=3)for(let px=0;px<w.w;px+=3){if(d[(py*w.w+px)*4+3]===0)continue;const sp=toScreen(ln,w.bx+px,w.by+py,shatterT);if(sp.z<2||sp.y>GROUND)continue;S.debris.push({x:sp.x,y:sp.y,vx:(r()-.5)*60,vy:-r()*40,land:GROUND-2-Math.floor(r()*6)})}}}S.lines=[];S.bul=[]}
+function shatter(){S.debris=[];const r=rngf(99);for(const ln of S.lines){for(const w of ln.words){if(w.dead)continue;const d=w.img.data;for(let py=0;py<w.h;py+=3)for(let px=0;px<w.w;px+=3){if(d[(py*w.w+px)*4+3]===0)continue;const sp=toScreen(ln,w.bx+px,w.by+py,shatterT);if(sp.z<2||sp.y>GROUND)continue;const vx=(r()-.5)*60,vy=-r()*40;S.debris.push({x:sp.x,y:sp.y,vx,vy,land:GROUND-2-Math.floor(r()*6),x0:sp.x,y0:sp.y,vx0:vx,vy0:vy,z0:sp.z})}}}S.lines=[];S.bul=[]}
 function fire(){if(S.ship.dead)return;if(S.bul.length<3&&S.cool<=0){S.bul.push({x:S.ship.x+9,y:S.ship.y-2});S.cool=0.1;S.shots++;blip(880,0.05)}}
-// autopilot aim point inside a word: the column with the most solid pixels left, ties to the centre (aiming at the
-// centre put most shots through the gap between two letters once a shot has to land on a solid pixel); cached per chip
-function aimCol(w){if(w.aim>=0)return w.aim;const d=w.img.data;let best=w.w>>1,bn=-1;for(let c=0;c<w.w;c++){let n=0;for(let r=0;r<w.h;r++)if(d[(r*w.w+c)*4+3]>0)n++;const sc=n-Math.abs(c-w.w/2)*0.01;if(sc>bn){bn=sc;best=c}}return w.aim=best}
-// would a shot from screen column x meet a solid pixel of some live word right now (any row up to the vanishing point)?
-function wouldHit(x,t){for(let y=S.ship.y-2;y>VPY+1;y--){const z=F/(y-VPY),sc=F2/z;for(const ln of S.lines){const row=ln.bh-(z-zOf(ln,t))/ROWD;if(row<0||row>=ln.bh)continue;const u=(x-VPX)/sc+BW/2-ln.xo;
-  for(const w of ln.words){if(w.dead||u<w.bx||u>=w.bx+w.w||row<w.by||row>=w.by+w.h)continue;if(w.img.data[(Math.floor(row-w.by)*w.w+Math.floor(u-w.bx))*4+3]>0)return true}}}return false}
-function target(t){let best=null,bz=1e9;for(const ln of S.lines){for(const w of ln.words){if(w.dead)continue;const sp=toScreen(ln,w.bx+aimCol(w)+0.5,w.by+w.h/2,t);if(sp.z<3||sp.y>GROUND-4)continue;const score=sp.z-w.left/w.total*20;if(score<bz){bz=score;best=sp.x}}}return best}
+// ---- autopilot aim. shotAt replays the bullet loop in update() (330 px/s, every screen row crossed, 60 fps) against the
+// crawl's motion to predict exactly which word pixel a shot fired now from screen column x would land on, and how many
+// pixels its chip would take (same circle, radius and 45% cap as chip()). Pixels inside the chip circles predicted for
+// shots already in flight count as gone, so two shots never go for the same pixels.
+// it only fires at words in the nearer two-thirds of the crawl (z <= ZFIRE), so each word is readable before it is
+// chipped (firing at any range cleared 40/45 words; this clears 27-33/45, the count shifts with tiny timing changes); a shot that would land farther is worth nothing
+const ZFIRE=ZNEAR+(ZFAR-ZNEAR)*2/3;
+const resv=()=>S.bul.filter(b=>!b.hit&&b.pred).map(b=>b.pred);
+function lit(w,c,r,rs){if(w.img.data[(r*w.w+c)*4+3]===0)return false;for(const p of rs)if((c-p.cu)*(c-p.cu)+(r-p.cy)*(r-p.cy)<=p.R*p.R)return false;return true}
+function shotAt(x,t,rs){let y=S.ship.y-2;const dt=1/60;
+ for(let k=0;k<90;k++){const tk=t+k*dt,y0=y;y-=330*dt;
+  for(let by=Math.floor(y0);by>=y;by--){if(by<=VPY+1)return null;const z=F/(by-VPY),sc=F2/z;
+   for(const ln of S.lines){const row=ln.bh-(z-zOf(ln,tk))/ROWD;if(row<0||row>=ln.bh)continue;const u=(x-VPX)/sc+BW/2-ln.xo;
+    for(const w of ln.words){if(w.dead||u<w.bx||u>=w.bx+w.w||row<w.by||row>=w.by+w.h)continue;
+     const ws=rs.filter(p=>p.w===w);if(ws.length&&w.left-ws.reduce((a,p)=>a+p.n,0)<w.total*0.16)continue; // shots in flight will finish it
+     const cu=Math.floor(u-w.bx);let hr=-1;for(let rr=Math.floor(row-w.by);rr>=0;rr--)if(lit(w,cu,rr,ws)){hr=rr;break}
+     if(hr<0)continue;const R=clamp(Math.round(10/sc),6,14),cy=Math.max(0,hr-(R>>1)),cap=Math.ceil(w.total*0.45);let n=0;
+     for(let yy=-R;yy<=R&&n<cap;yy++)for(let xx=-R;xx<=R&&n<cap;xx++){if(xx*xx+yy*yy>R*R)continue;const px=cu+xx,py=cy+yy;if(px<0||py<0||px>=w.w||py>=w.h)continue;if(lit(w,px,py,ws))n++}
+     return{w,ln,n:z>ZFIRE?0:n,cu,cy,R,k}}}}}return null}
+// worth of a predicted hit: pixels taken (/150), +1 if it finishes the word (after the shots already in flight at it),
+// x1.6 on the word we are already working on, x1.5 on the oldest line on the plane (the next to pass the cannon), all per
+// second of flight (+0.1): a shot holds one of the three bullet slots until it lands
+function value(h){const w=h.w;let pend=0;for(const b of S.bul)if(!b.hit&&b.pred&&b.pred.w===w)pend+=b.pred.n;
+ let v=h.n/150;if(h.n>=w.left-pend-Math.floor(w.total*0.16))v+=1;if(w===S._focus)v*=1.6;if(h.ln===S.lines[0])v*=1.5;return v/(h.k/60+0.1)}
+// the best column in reach (+-84 px, minus 0.03 per px of travel: a 16th note of travel costs about one shot)
+function plan(t){const rs=resv(),cx=S.ship.x+9;let best:any=null;
+ for(let x=Math.max(15,cx-84);x<=Math.min(LW-15,cx+84);x+=3){const h=shotAt(x,t,rs);if(!h||!h.n)continue;const v=value(h)-Math.abs(x-cx)*0.03;if(!best||v>best.v)best={x,v}}
+ // nothing in reach (a new line still narrow at the far end of the plane): scan the whole width, coarser
+ if(!best)for(let x=15;x<=LW-15;x+=6){const h=shotAt(x,t,rs);if(!h||!h.n)continue;const v=value(h)-Math.abs(x-cx)*0.0075;if(!best||v>best.v)best={x,v}}
+ return best}
 // does the cannon sprite at (x,y) touch a remaining pixel of word w (of line ln) at time t?
 function hitAt(ln,w,x,y,t){const zb=zOf(ln,t);for(let r=0;r<SHIP.length;r++)for(let c=0;c<SHIP[r].length;c++){if(SHIP[r][c]!=='X')continue;const px=x+c*2+1,py=y+r*2+1;if(py<=VPY+1)continue;const z=F/(py-VPY);const row=ln.bh-(z-zb)/ROWD;if(row<w.by||row>=w.by+w.h)continue;const u=(px-VPX)/(F2/z)+BW/2-ln.xo;if(u<w.bx||u>=w.bx+w.w)continue;if(w.img.data[(Math.floor(row-w.by)*w.w+Math.floor(u-w.bx))*4+3]>0)return true}return false}
 // autopilot: if a word's remaining pixels will run over the cannon within ~0.45 s, the nearest x that stays clear (a chipped tunnel, a gap, or past the row's end), else null
@@ -60,9 +83,11 @@ function update(dt,t,inp,auto){if(t>=ERAS[1].start)return;S.cool-=dt;S.pulse=Mat
  for(const st of S.stars){st.d+=st.sp*(10+st.d*0.25)*dt;if(st.d>LW*0.95){st.d=4+S.rng()*20;st.a=S.rng()*Math.PI*2}}
  sh.inv=Math.max(0,sh.inv-dt);if(sh.dead&&t-sh.deadT>0.7){sh.dead=false;sh.inv=2.6;sh.x=LW/2-9}
  if(S.park!==null){if(!sh.dead)sh.x=S.park}
- else if(t<shatterT&&!sh.dead){let dx=0;if(auto){const tx=target(t),th=threats(t);if(tx!==null)dx=clamp((tx-9-sh.x)*5,-220,220)*dt;const sx=dodge(th);if(sx!==null)dx=clamp((sx-sh.x)*8,-260,260)*dt;else if(dx&&th.length&&danger(th,sh.x+dx))dx=0;
-   // autofire on every 16th note while a live word is lined up (on8th alone fired ~2 shots/s; held space gives ~6)
-   const n16=Math.floor(t/(BEAT/4));if(n16!==S.n16){S.n16=n16;if(tx!==null&&(Math.abs(tx-(sh.x+9))<6||wouldHit(sh.x+9,t)))fire()}}
+ else if(t<shatterT&&!sh.dead){let dx=0;if(auto){const th=threats(t),pk=Math.floor(t*20);if(pk!==S.planK){S.planK=pk;S._plan=plan(t)}const p=S._plan;if(p)dx=clamp((p.x-9-sh.x)*8,-240,240)*dt;const sx=dodge(th);if(sx!==null)dx=clamp((sx-sh.x)*8,-260,260)*dt;else if(dx&&th.length&&danger(th,sh.x+dx))dx=0;
+   // fire at most once per 16th note, as soon as a shot slot frees up inside it, when the shot from here is half as good as
+   // the best one in reach or takes a real bite (40 px / 15% of the word); the word it goes for becomes the focus
+   const n16=Math.floor(t/(BEAT/4));if(p&&n16!==S.n16&&S.bul.length<3&&S.cool<=0){const h=shotAt(sh.x+9,t,resv());
+    if(h&&h.n&&(value(h)>=p.v*0.5||h.n>=40||h.n>=h.w.total*0.15)){const nb=S.bul.length;fire();if(S.bul.length>nb){S.n16=n16;S.bul[nb].pred=h;S._focus=h.w.left-h.n<h.w.total*0.16?null:h.w}}}}
   else{if(inp.left)dx=-180*dt;if(inp.right)dx=180*dt;if(inp.fire||inp.fireHeld)fire()}sh.x=clamp(sh.x+dx,6,LW-24)}
  else if(t>=shatterT){if(!S.debris)shatter();sh.x=lerp(sh.x,80/320*LW-9,1-Math.pow(0.02,dt));sh.y=lerp(sh.y,GROUND-10,1-Math.pow(0.02,dt))}
  // a shot is tested on every screen row it crossed this frame: far away one screen row spans ~3.5 texture rows, so a
@@ -89,7 +114,7 @@ function draw(x,t){x.fillStyle='#000';x.fillRect(0,0,LW,LH);x.imageSmoothingEnab
  const vg=x.createRadialGradient(VPX,VPY,0,VPX,VPY,70+S.pulse*20);vg.addColorStop(0,`rgba(255,232,31,${0.18+S.pulse*0.2})`);vg.addColorStop(1,'rgba(255,232,31,0)');x.fillStyle=vg;x.fillRect(VPX-100,VPY-100,200,200);
  // faint plane lines converging on the vanishing point
  x.strokeStyle='rgba(255,232,31,.06)';x.lineWidth=1;for(let i=-5;i<=5;i++){x.beginPath();x.moveTo(VPX,VPY);x.lineTo(VPX+i*130,GROUND+8);x.stroke()}
- if(t>=bar(2)&&t<bar(3.8)){const a=t<bar(2)+0.5?(t-bar(2))/0.5:Math.min(1,(bar(3.8)-t)/0.8);x.globalAlpha=a;x.font="8px 'Press Start 2P',monospace";x.fillStyle='#4bd5ee';x.textAlign='center';x.fillText('A long time ago, at a desk far, far away....',LW/2,LH*0.42);x.textAlign='left';x.globalAlpha=1}
+ title(x,t);
  // text blocks on the tilted plane, far to near, one screen row at a time
  const lines=S.lines.slice().sort((a,b)=>zOf(b,t)-zOf(a,t));
  for(const ln of lines){compose(ln);const zb=zOf(ln,t),a=alphaOf(ln,t);if(a<=0)continue;x.globalAlpha=a;
@@ -97,9 +122,14 @@ function draw(x,t){x.fillStyle='#000';x.fillRect(0,0,LW,LH);x.imageSmoothingEnab
   for(let y=yTop;y<=yBot;y++){const z=F/(y-VPY);const row=ln.bh-(z-zb)/ROWD;if(row<0||row>=ln.bh)continue;const sc=F2/z,dw=BW*sc;x.drawImage(ln.tex.c,0,Math.floor(row),BW,1,VPX+ln.xo*sc-dw/2,y,dw,1.05)}}
  x.globalAlpha=1;
  for(const b of S.bul){x.fillStyle='rgba(255,255,255,.35)';x.fillRect(b.x-2,b.y-2,5,12);x.fillStyle='#fff';x.fillRect(b.x-0.5,b.y,2,8)}
- for(const p of S.pops){x.globalAlpha=Math.min(1,p.l*2);x.fillStyle=p.g?'#5bff5b':YEL;x.fillRect(p.x,p.y,2,2)}x.globalAlpha=1;
+ pops(x,false);
  if(S.debris){x.fillStyle=YEL;for(const d of S.debris)x.fillRect(d.x,d.y,2,2)}
  if(!S.ship.dead&&!(S.ship.inv>0&&Math.floor(t*20)%2))pix(x,SHIP,Math.round(S.ship.x),Math.round(S.ship.y),'#5bff5b',2);
  x.fillStyle='#5bff5b';x.fillRect(0,GROUND+8,LW,2);
- x.font="8px 'Press Start 2P',monospace";x.fillStyle=YEL;x.fillText('SCORE '+String(S.score).padStart(6,'0'),8,34);x.textAlign='right';x.fillText('CHIPS '+S.chips,LW-8,34);x.textAlign='left'}
-return{init,onBeat,on8th,onLine,update,draw,SHIP,K,get S(){return S}}})();
+ hud(x)}
+// 2D pieces shared with the 3D renderer (era1gl.ts): the crawl intro line, the particle pops (gl: only the cannon's green
+// death burst, the voxel renderer bursts the chipped pixels itself) and the score / chips HUD
+function title(x,t){if(t>=bar(2)&&t<bar(3.8)){const a=t<bar(2)+0.5?(t-bar(2))/0.5:Math.min(1,(bar(3.8)-t)/0.8);x.globalAlpha=a;x.font="8px 'Press Start 2P',monospace";x.fillStyle='#4bd5ee';x.textAlign='center';x.fillText('A long time ago, at a desk far, far away....',LW/2,LH*0.42);x.textAlign='left';x.globalAlpha=1}}
+function pops(x,gl){for(const p of S.pops){if(gl&&!p.g)continue;x.globalAlpha=Math.min(1,p.l*2);x.fillStyle=p.g?'#5bff5b':YEL;x.fillRect(p.x,p.y,2,2)}x.globalAlpha=1}
+function hud(x){x.font="8px 'Press Start 2P',monospace";x.fillStyle=YEL;x.fillText('SCORE '+String(S.score).padStart(6,'0'),8,34);x.textAlign='right';x.fillText('CHIPS '+S.chips,LW-8,34);x.textAlign='left'}
+return{init,onBeat,on8th,onLine,update,draw,title,pops,hud,zOf,alphaOf,SHIP,K,get S(){return S}}})();

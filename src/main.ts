@@ -6,6 +6,7 @@ import {E4} from './era4';
 import {E5} from './era5';
 import {E5GL} from './era5gl';
 import {E3GL} from './era3gl';
+import {E1GL} from './era1gl';
 import {CRT} from './crt';
 import {MUSIC} from './music';
 import {SONG,loadSong,songTime,songSeek,songPlay,songPause,nudge,tap,clearTaps,saveTiming} from './song';
@@ -41,7 +42,7 @@ function glitch(t){if(t-lastBeatT<0.07&&hash(beatIdx)>0.5){for(let i=0;i<3;i++){
 function edge(x){const g=ctx.createLinearGradient(x-30,0,x+6,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(255,255,255,.9)');ctx.fillStyle=g;ctx.fillRect(x-30,0,36,H)}
 
 function render(t,auto){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=false;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);const e=eraAt(t),tr=transAt(t);
- if(e===0){E1.draw(lo1.x,t);if(tr){E2.draw(lo2.x,t);blitCRT(lo2,t);const ex=W*smooth(tr.p);ctx.save();ctx.beginPath();ctx.rect(ex,0,W-ex,H);ctx.clip();blitCRT(lo1,t);ctx.restore();edge(ex)}else blitCRT(lo1,t)}
+ if(e===0){if(E1GL.ok)E1GL.draw(lo1.x,t);else E1.draw(lo1.x,t);if(tr){E2.draw(lo2.x,t);blitCRT(lo2,t);const ex=W*smooth(tr.p);ctx.save();ctx.beginPath();ctx.rect(ex,0,W-ex,H);ctx.clip();blitCRT(lo1,t);ctx.restore();edge(ex)}else blitCRT(lo1,t)}
  else if(e===1){E2.draw(lo2.x,t);if(tr){drawE3(t);const p=smooth(tr.p);ctx.save();ctx.globalAlpha=1-p;const hy=H*0.5;ctx.translate(W/2,hy);ctx.scale(1+p*0.6,1-p*0.98);ctx.translate(-W/2,-hy);blitCRT(lo2,t);ctx.restore()}else blitCRT(lo2,t)}
  else if(e===2){if(tr){E4.draw(ctx,t);ctx.globalAlpha=Math.pow(1-tr.p,1.5);drawE3(t);ctx.globalAlpha=1;scan(0.07*(1-tr.p))}else{drawE3(t);scan(0.07)}}
  else if(e===3){E4.draw(ctx,t);if(tr){const p=smooth(tr.p);ctx.save();ctx.translate(W*(1-p),0);ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();drawE5(t);ctx.restore();edge(W*(1-p))}}
@@ -84,7 +85,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-las
   if(songT>=TOTAL){playing=false;ended=true;$('#play').textContent='REPLAY'}
   E1.update(dt,songT,inp,auto);E2.update(dt,songT,inp,auto);E3.update(dt,songT,inp,auto);E4.update(dt,songT,inp,auto);E5.update(dt,songT,inp,auto)}
  render(songT,auto);cards(songT);chapters(songT);touchHints(songT);hud(songT,auto);clearEdges()}
-Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek,nudge,tap,clearTaps,saveTiming,now:()=>songT,toggleQuality:()=>setQuality(QUALITY==='low'?'high':'low')});loadSong();E3GL.init();CRT.init(); // E5GL.init is deferred: see ensureGL
+Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek,nudge,tap,clearTaps,saveTiming,now:()=>songT,toggleQuality:()=>setQuality(QUALITY==='low'?'high':'low')});loadSong();E3GL.init();E1GL.init();CRT.init(); // E5GL.init is deferred: see ensureGL
 // step(secs, auto=true): `secs` is split into equal sub-steps of at most ~1/60 s that sum to exactly `secs` (the old
 // `i<secs*60` loop overshot by up to a frame for e.g. 1/24 or 0.02 s steps, so record.mjs at 24/25 fps drifted).
 // auto=false steps with the live keyboard/touch state (ETM.input()) instead of autopilot, for manual-play cases.
