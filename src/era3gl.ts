@@ -11,13 +11,43 @@ const TEXL=new THREE.TextureLoader();
 function fileTex(path:string,fallback:THREE.Texture,rx=1,ry=1,srgb=true){const t=TEXL.load(import.meta.env.BASE_URL+path,tt=>{tt.wrapS=tt.wrapT=THREE.RepeatWrapping;tt.repeat.set(rx,ry);tt.anisotropy=ANISO;if(srgb)tt.colorSpace=THREE.SRGBColorSpace;tt.needsUpdate=true},undefined,()=>{t.image=fallback.image;t.needsUpdate=true});t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.anisotropy=ANISO;if(srgb)t.colorSpace=THREE.SRGBColorSpace;return t}
 function canvasTex(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d')!);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.magFilter=THREE.NearestFilter;return t}
 function lineTex(text:string){return canvasTex(1024,256,x=>{x.fillStyle='rgba(10,12,28,.92)';x.fillRect(0,0,1024,256);x.strokeStyle='#ffe066';x.lineWidth=6;x.strokeRect(3,3,1018,250);let rows=[text];if(text.length>24){const ws=text.split(' ');let best=1e9;for(let k=1;k<ws.length;k++){const a=ws.slice(0,k).join(' '),b=ws.slice(k).join(' '),m=Math.max(a.length,b.length);if(m<best){best=m;rows=[a,b]}}}const longest=Math.max(...rows.map(r=>r.length));const fs=Math.max(22,Math.min(66,Math.floor(960/longest)));x.font=fs+"px 'Press Start 2P',monospace";x.fillStyle='#ffe066';x.textAlign='center';x.textBaseline='middle';rows.forEach((r,i)=>x.fillText(r,512,rows.length===1?128:(i?176:80)))})}
-function makeGantry(w:any){const g=new THREE.Group();const span=ROADW*2+5;for(const k of[-1,1]){const leg=new THREE.Mesh(new THREE.BoxGeometry(0.7,11,0.7),new THREE.MeshLambertMaterial({color:0x3a4a6a}));leg.position.set(k*(ROADW+2.5),3.9,0);g.add(leg)}
+// Blender scenery kit (public/models/racer/<name>.glb, built by tools/blender/racer.py). Each GLB is flattened once into
+// named parts (geometry baked to model space + a Lambert copy of its material). Repeated props become one InstancedMesh
+// per part; the procedural props built in init() stay as the fallback until (or unless) a file loads.
+type KitPart={geo:THREE.BufferGeometry,mat:THREE.Material};
+const KIT=['gantry','grandstand','pits','pine','tower','billboard'],kit:Record<string,Record<string,KitPart>>={};
+const props:Record<string,THREE.Matrix4[]>={grandstand:[],pits:[],pine:[],tower:[],billboard:[]},fallback:Record<string,THREE.Group>={};
+let billboardTex:THREE.Texture[]=[],billboardIdx:number[]=[],crowdMat:THREE.Material|null=null,pitSignTex:THREE.Texture|null=null;
+const lambert=(m:any)=>{const o=new THREE.MeshLambertMaterial({color:m.color,map:m.map||null,emissive:m.emissive||0x000000,flatShading:true});if(m.emissiveIntensity!=null)o.emissiveIntensity=m.emissiveIntensity;if(o.map)o.map.anisotropy=ANISO;return o};
+function loadKit(){const loader=new GLTFLoader(),base=import.meta.env.BASE_URL+'models/racer/';const good=(r:Response)=>r.ok&&!/text\/html/.test(r.headers.get('content-type')||'');
+ const take=(name:string,root:THREE.Object3D)=>{root.updateMatrixWorld(true);const parts:Record<string,KitPart>={};root.traverse((o:any)=>{if(!o.isMesh)return;const raw=String(o.userData.name||o.name);const nm=/^lamp_\d$/.test(raw)?raw:raw.replace(/[._]\d+$/,'');const g=(o.geometry as THREE.BufferGeometry).clone();g.applyMatrix4(o.matrixWorld);
+   // glTF stores v top-down; the text textures are canvas textures with flipY, so flip the sign/face UVs once here
+   if((nm==='sign'||nm==='face')&&g.attributes.uv){const uv=g.attributes.uv as THREE.BufferAttribute;for(let i=0;i<uv.count;i++)uv.setY(i,1-uv.getY(i))}
+   g.computeBoundingSphere();parts[nm]={geo:g,mat:lambert(o.material)}});kit[name]=parts;try{applyKit(name)}catch(e){console.warn('racer kit',name,e)}};
+ // hosts that cannot serve .glb get the same model as base64 text in <name>.glb.txt
+ for(const name of KIT)fetch(base+name+'.glb').then(r=>good(r)?r.arrayBuffer():fetch(base+name+'.glb.txt').then(r2=>good(r2)?r2.text().then(b64=>Uint8Array.from(atob(b64.trim()),c=>c.charCodeAt(0)).buffer as ArrayBuffer):null)).then(buf=>{if(buf)loader.parse(buf,'',gl=>take(name,gl.scene),()=>{})}).catch(()=>{})}
+function instanced(p:KitPart,ms:THREE.Matrix4[],mat?:THREE.Material){const im=new THREE.InstancedMesh(p.geo,mat||p.mat,ms.length);ms.forEach((m,i)=>im.setMatrixAt(i,m));im.instanceMatrix.needsUpdate=true;im.computeBoundingSphere();scene.add(im);return im}
+function applyKit(name:string){const k=kit[name];if(name==='gantry'){for(const [w,gt] of gantries){disposeGantry(gt);gantries.delete(w)}return}
+ const ms=props[name];if(!ms||!ms.length)return;
+ for(const nm in k){if(name==='billboard'&&nm==='face'){billboardTex.forEach((tex,ti)=>{const sub=ms.filter((_,i)=>billboardIdx[i]===ti);if(sub.length)instanced(k[nm],sub,new THREE.MeshLambertMaterial({map:tex}))});continue}
+  const mat=name==='grandstand'&&nm==='crowd'&&crowdMat?crowdMat:name==='pits'&&nm==='sign'&&pitSignTex?new THREE.MeshLambertMaterial({map:pitSignTex}):undefined;instanced(k[nm],ms,mat)}
+ if(fallback[name])fallback[name].visible=false}
+const LANE_OFF=0x203028,LANE_ON=0x3cff6a;
+function makeGantry(w:any){const k=kit.gantry;if(k&&k.sign){const g=new THREE.Group();const lk=w.lane??1;let text:any=null,marker:any=null;
+  for(const nm in k){const p=k[nm];let m:THREE.Material=p.mat,own=false;
+   if(nm==='sign'){m=new THREE.MeshBasicMaterial({map:lineTex(w.text),transparent:true});own=true}
+   else if(/^lamp_\d$/.test(nm)){const on=nm==='lamp_'+lk;m=new THREE.MeshBasicMaterial({color:on?LANE_ON:LANE_OFF});own=true}
+   const o=new THREE.Mesh(p.geo,m);o.userData.shared=true;o.userData.ownMat=own;g.add(o);if(nm==='sign')text=o;if(nm==='lamp_'+lk)marker=o}
+  const lx=w.x*ROADW;const chev=new THREE.Mesh(new THREE.ConeGeometry(0.9,1.3,4),new THREE.MeshBasicMaterial({color:LANE_ON}));chev.rotation.x=Math.PI;chev.rotation.y=Math.PI/4;chev.position.set(lx,4.1,1.0);g.add(chev);
+  const lane=new THREE.Mesh(new THREE.PlaneGeometry(ROADW*0.42,10),new THREE.MeshBasicMaterial({color:LANE_ON,transparent:true,opacity:0.22,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}));lane.rotation.x=-Math.PI/2;lane.position.set(lx,0.06,5);g.add(lane);
+  return{g,text,marker,chev,lane,state:'',kit:true,textY0:0,chevY0:4.1}}
+ const g=new THREE.Group();const span=ROADW*2+5;for(const k of[-1,1]){const leg=new THREE.Mesh(new THREE.BoxGeometry(0.7,11,0.7),new THREE.MeshLambertMaterial({color:0x3a4a6a}));leg.position.set(k*(ROADW+2.5),3.9,0);g.add(leg)}
  const beam=new THREE.Mesh(new THREE.BoxGeometry(span,0.9,0.9),new THREE.MeshLambertMaterial({color:0xd82a3a}));beam.position.set(0,9.5,0);g.add(beam);
  const text=new THREE.Mesh(new THREE.PlaneGeometry(ROADW*2+1,3.8),new THREE.MeshBasicMaterial({map:lineTex(w.text),transparent:true,side:THREE.DoubleSide}));text.position.set(0,7.0,0.5);g.add(text);
  const lx=w.x*ROADW;const marker=new THREE.Mesh(new THREE.BoxGeometry(ROADW*0.42,0.5,1.1),new THREE.MeshBasicMaterial({color:0x3cff6a}));marker.position.set(lx,10.15,0);g.add(marker);
  const chev=new THREE.Mesh(new THREE.ConeGeometry(0.9,1.3,4),new THREE.MeshBasicMaterial({color:0x3cff6a}));chev.rotation.x=Math.PI;chev.rotation.y=Math.PI/4;chev.position.set(lx,4.6,0.5);g.add(chev);
  const lane=new THREE.Mesh(new THREE.PlaneGeometry(ROADW*0.42,10),new THREE.MeshBasicMaterial({color:0x3cff6a,transparent:true,opacity:0.22,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}));lane.rotation.x=-Math.PI/2;lane.position.set(lx,0.06,5);g.add(lane);
- return{g,text,marker,chev,lane,state:''}}
+ return{g,text,marker,chev,lane,state:'',kit:false,textY0:7.0,chevY0:4.6}}
 function textSprite(text,color,bg='rgba(8,8,16,.75)'){const key=text+'|'+color+'|'+bg;let tex=texCache.get(key);if(!tex){tex=canvasTex(512,128,x=>{x.font="40px 'Press Start 2P',monospace";const tw=Math.min(500,x.measureText(text).width+32);x.fillStyle=bg;x.fillRect(256-tw/2,20,tw,88);x.strokeStyle=color;x.lineWidth=4;x.strokeRect(256-tw/2,20,tw,88);x.fillStyle=color;x.textAlign='center';x.textBaseline='middle';x.fillText(text,256,64)});texCache.set(key,tex)}const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));sp.scale.set(6,1.5,1);return sp}
 const flat=(color,extra={})=>new THREE.MeshLambertMaterial({color,flatShading:true,...extra} as any);
 const hex=(n:number)=>'#'+n.toString(16).padStart(6,'0');
@@ -97,16 +127,22 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false
  const curbs=new THREE.Mesh(mk(cpos,cuv,cidx),new THREE.MeshLambertMaterial({map:curb,side:THREE.DoubleSide}));scene.add(curbs);
  const eidx:number[]=[];for(let i=0;i<N;i++){const e=i*4;eidx.push(e,e+1,e+5,e,e+5,e+4,e+2,e+3,e+7,e+2,e+7,e+6)}
  const emb=new THREE.Mesh(mk(epos,euv,eidx),grassMat.clone());(emb.material as THREE.MeshLambertMaterial).side=THREE.DoubleSide;scene.add(emb);
- // static dressing is batched: one merged mesh per material instead of ~2 500 draw calls
- const buckets=new Map<THREE.Material,THREE.BufferGeometry[]>();
- const st=(m:THREE.Mesh)=>{m.updateMatrix();const g=m.geometry.clone().applyMatrix4(m.matrix);m.geometry.dispose();const mat=m.material as THREE.Material;let b=buckets.get(mat);if(!b)buckets.set(mat,b=[]);b.push(g)};
+ // static dressing is batched: one merged mesh per material instead of ~2 500 draw calls. Props that the Blender kit
+ // replaces (grandstand, pits, pine, tower, billboard) are bucketed by kind into fallback groups and their placements are
+ // recorded in props[kind] so applyKit() can instance the real models on the same spots.
+ const buckets=new Map<string,{mat:THREE.Material,geos:THREE.BufferGeometry[],kind:string}>();let kind='base';
+ const st=(m:THREE.Mesh)=>{m.updateMatrix();const g=m.geometry.clone().applyMatrix4(m.matrix);m.geometry.dispose();const mat=m.material as THREE.Material;const key=kind+'|'+mat.uuid;let b=buckets.get(key);if(!b)buckets.set(key,b={mat,geos:[],kind});b.geos.push(g)};
+ const fbGroup=(k:string)=>fallback[k]||(scene.add(fallback[k]=new THREE.Group()),fallback[k]);
  // ground height at signed horizontal offset k from the centre line: outside a banked turn the embankment rises to the road edge
  const gy=(f:any,k:number)=>{if(!f.bank||Math.sign(k)!==Math.sign(f.bank))return 0;const de=1.14*ROADW*Math.cos(f.bank),eh=f.p.y+1.14*ROADW*Math.abs(Math.sin(f.bank));const a=Math.abs(k);return a<=de?eh:Math.max(0,eh-(a-de)/1.6)};
  const G=(f:any,k:number,y=0)=>new THREE.Vector3(f.p.x,gy(f,k)+y,f.p.z).addScaledVector(f.right0,k);
- const X=new THREE.Vector3(1,0,0),Z=new THREE.Vector3(0,0,1);
+ const X=new THREE.Vector3(1,0,0),Z=new THREE.Vector3(0,0,1),UPV=new THREE.Vector3(0,1,0);
+ // a kit placement: model front (+Z) faces the track from side `side` (+1 = right/outside), x runs along the track
+ const putProp=(name:string,f:any,p:THREE.Vector3,side:number,sc:THREE.Vector3,yaw=0)=>{const h=new THREE.Vector3(f.T.x,0,f.T.z).normalize().multiplyScalar(-side);const z=f.right0.clone().setY(0).normalize().multiplyScalar(-side);const m=new THREE.Matrix4().makeBasis(h,UPV,z);if(yaw)m.multiply(new THREE.Matrix4().makeRotationY(yaw));m.scale(sc);m.setPosition(p);props[name].push(m)};
+ const heading=(s:number)=>{const t=E3.frame(s).T;return Math.atan2(t.z,t.x)};
  const concreteFb=canvasTex(64,64,x=>{x.fillStyle='#d8d8dc';x.fillRect(0,0,64,64)});const concreteTex=fileTex('textures/concrete.jpg',concreteFb,4,1);
  const wallMat=new THREE.MeshLambertMaterial({map:concreteTex}),wallBlue=flat(0x2a4ad8),poleMat=flat(0xc8ccd4),lampMat=flat(0xfff8d0),rock=flat(0x8a6a4a),rock2=flat(0x6a4e36),palmTrunk=flat(0x9a6a3a),palmLeaf=flat(0x2f9a3a,{side:THREE.DoubleSide}),
- // conifer cards drawn on a canvas (public/textures/pine.jpg is a twig/bark atlas, not a tree card)
+ // conifer cards drawn on a canvas (fallback only; the kit's pine.glb replaces them)
  pineCard=canvasTex(128,256,x=>{x.clearRect(0,0,128,256);for(let i=0;i<7;i++){const y0=6+i*27,y1=y0+64,hw=12+i*8.2;const g=x.createLinearGradient(64-hw,0,64+hw,0);g.addColorStop(0,'#143a1f');g.addColorStop(0.55,'#225a30');g.addColorStop(1,'#3a7c44');x.fillStyle=g;x.beginPath();x.moveTo(64,y0);x.lineTo(64+hw,y1);const n=6;for(let k=1;k<=n;k++){const xx=64+hw-2*hw*k/n;x.lineTo(xx+hw/n,y1-7);x.lineTo(xx,y1)}x.closePath();x.fill()}
   x.globalCompositeOperation='source-atop';for(let i=0;i<900;i++){x.fillStyle=hash(i*1.7)>0.5?'rgba(8,26,12,.55)':'rgba(130,180,110,.35)';x.fillRect(Math.floor(hash(i*3.1)*128),Math.floor(hash(i*5.3)*236),2,3)}}),
  pine=new THREE.MeshLambertMaterial({map:pineCard,alphaTest:0.5,side:THREE.DoubleSide}),
@@ -114,22 +150,38 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false
  crowd=new THREE.MeshLambertMaterial({map:canvasTex(512,128,x=>{x.fillStyle='#3a4258';x.fillRect(0,0,512,128);for(let r=0;r<6;r++){x.fillStyle='#2c3248';x.fillRect(0,8+r*20,512,3)}for(let i=0;i<9000;i++){x.fillStyle=['#f04040','#f0d040','#40a0f0','#f0f0f0','#40d060','#f080c0','#202030','#ffb080'][i%8];x.fillRect(Math.floor(hash(i*1.3)*512),4+Math.floor(hash(i*2.9)*120),2,3)}})}),
  garage=new THREE.MeshLambertMaterial({map:canvasTex(256,64,x=>{x.fillStyle='#e8e8ec';x.fillRect(0,0,256,64);for(let i=0;i<6;i++){x.fillStyle='#8a92a0';x.fillRect(8+i*42,22,30,42);x.fillStyle='#b8c0cc';for(let j=0;j<4;j++)x.fillRect(8+i*42,26+j*9,30,2)}x.fillStyle='#d82a3a';x.fillRect(0,0,256,10)})});
  pineCard.magFilter=THREE.LinearFilter;
+ // kit seat rows: 16 seats x 4 rows of 8x8 px fans (grandstand.glb maps u = 1 per 8 m, v = 1 per 4 rows)
+ const crowdKit=canvasTex(128,32,x=>{const shirts=['#f04040','#f0d040','#40a0f0','#f0f0f0','#40d060','#f080c0','#202030','#ff8a30'],skins=['#ffd0a8','#e0a070','#9a6040','#f0c090'];
+  for(let r=0;r<4;r++)for(let c=0;c<16;c++){const X0=c*8,Y0=r*8;x.fillStyle=(c+r)%2?'#2a4ad8':'#3050e0';x.fillRect(X0,Y0,8,8);x.fillStyle='#1a2050';x.fillRect(X0,Y0+7,8,1);if(hash(c*7+r*13+0.5)<0.12)continue;
+   x.fillStyle=shirts[Math.floor(hash(c*3+r*5+0.25)*8)];x.fillRect(X0+1,Y0+3,6,4);x.fillStyle=skins[Math.floor(hash(c*11+r+0.75)*4)];x.fillRect(X0+2,Y0,4,3)}});
+ crowdKit.wrapS=crowdKit.wrapT=THREE.RepeatWrapping;crowdKit.anisotropy=ANISO;crowdMat=new THREE.MeshLambertMaterial({map:crowdKit});
+ pitSignTex=canvasTex(512,40,x=>{x.fillStyle='#1a2a7a';x.fillRect(0,0,512,40);x.fillStyle='#ffe066';x.font="20px 'Press Start 2P',monospace";x.textAlign='center';x.textBaseline='middle';x.fillText('PIT  ·  MAXIMAL RACING',256,21)});
+ const BBTXT=['MAXIMALIST','SPEED OF LIGHT','TURN IT UP','ONE DESK','ROLLING START'];
+ billboardTex=BBTXT.map((txt,i)=>canvasTex(512,180,x=>{x.fillStyle=['#1a2a7a','#d82a3a','#f2c230','#ffffff','#1a2a7a'][i];x.fillRect(0,0,512,180);x.fillStyle=i===3?'#1a2a7a':'#fff';x.font="52px 'Press Start 2P',monospace";x.textAlign='center';x.textBaseline='middle';x.fillText(txt,256,90)}));
  const box=(w:number,h:number,d:number,mat:THREE.Material,p:THREE.Vector3,dir?:THREE.Vector3)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.copy(p);if(dir)m.quaternion.setFromUnitVectors(X,dir);st(m);return m};
  for(let s=0;s<L;s+=9){const f=E3.frame(s);const u=s/L,T=f.T,n9=Math.floor(s/9);
   // walls follow the banked road edge
-  for(const side of[-1,1]){const p=f.p.clone().addScaledVector(f.right,side*(ROADW+1.5));p.y+=0.5;box(9,1.0,0.4,n9%2?wallMat:wallBlue,p,T)}
-  // stadium on the start straight and first banking: tiered stands outside, pits inside
-  if(u<0.26||u>0.93){const by=gy(f,ROADW+6);for(let tier=0;tier<3;tier++){const p=G(f,ROADW+6+tier*9);p.y=by+2+tier*3.4;box(9.2,4,10,crowd,p,T)}
+  kind='base';for(const side of[-1,1]){const p=f.p.clone().addScaledVector(f.right,side*(ROADW+1.5));p.y+=0.5;box(9,1.0,0.4,n9%2?wallMat:wallBlue,p,T)}
+  // stadium on the start straight and first banking: tiered stands outside, pits inside. Kit stand sections are 10 m
+  // wide; on the outside of a turn they are widened so their backs (~22 m out) still meet.
+  if(u<0.26||u>0.93){kind='grandstand';const by=gy(f,ROADW+6);for(let tier=0;tier<3;tier++){const p=G(f,ROADW+6+tier*9);p.y=by+2+tier*3.4;box(9.2,4,10,crowd,p,T)}
    const rp=G(f,ROADW+16);rp.y=by+14;box(9.2,0.5,30,wallMat,rp,T);
    if(n9%4===0){const p=G(f,ROADW+32);p.y=by+7;box(0.6,14,0.6,poleMat,p)}
-   if(u<0.2&&n9%3===0)box(27,5,8,garage,G(f,-(ROADW+10),2.5),T)}
+   const kF=ROADW+2.6,dth=Math.abs(((heading(s+4.5)-heading(s-4.5)+Math.PI*3)%(Math.PI*2))-Math.PI);
+   putProp('grandstand',f,G(f,kF),1,new THREE.Vector3(Math.max(1,(9.6+dth*(kF+20))/10),1,1));
+   if(u<0.2&&n9%3===0){kind='pits';box(27,5,8,garage,G(f,-(ROADW+10),2.5),T)}}
   // forest on the back section
-  if(u>0.3&&u<0.6){for(const side of[-1,1]){for(let j=0;j<5;j++){const k=side*(ROADW+7+j*7+hash(s+j)*6);const p=G(f,k).addScaledVector(T,(hash(s*5+j)-0.5)*8);const h=9+hash(s*3+j)*7,w=h*0.55;const tr=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.42,h*0.45,6),trunk);tr.position.copy(p).add(new THREE.Vector3(0,h*0.22,0));st(tr);
-   for(let a=0;a<2;a++){const leaf=new THREE.Mesh(new THREE.PlaneGeometry(w,h),pine);leaf.position.copy(p).add(new THREE.Vector3(0,h/2+0.3,0));leaf.rotation.y=a*Math.PI/2+hash(s+j+a);st(leaf)}}}}
+  if(u>0.3&&u<0.6){kind='pine';for(const side of[-1,1]){for(let j=0;j<5;j++){const k=side*(ROADW+7+j*7+hash(s+j)*6);const p=G(f,k).addScaledVector(T,(hash(s*5+j)-0.5)*8);const h=9+hash(s*3+j)*7,w=h*0.55;const tr=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.42,h*0.45,6),trunk);tr.position.copy(p).add(new THREE.Vector3(0,h*0.22,0));st(tr);
+   for(let a=0;a<2;a++){const leaf=new THREE.Mesh(new THREE.PlaneGeometry(w,h),pine);leaf.position.copy(p).add(new THREE.Vector3(0,h/2+0.3,0));leaf.rotation.y=a*Math.PI/2+hash(s+j+a);st(leaf)}
+   const sc=h/10*(0.9+hash(s*7+j)*0.2);putProp('pine',f,p,1,new THREE.Vector3(sc*(0.9+hash(s*11+j)*0.25),sc,sc),hash(s*13+j)*6.28)}}}
   // light towers everywhere else
-  if(n9%6===0&&u>0.26&&u<0.93){box(0.35,14,0.35,poleMat,G(f,ROADW+4,7));box(3,0.5,1,lampMat,G(f,ROADW+4,14))}
+  if(n9%6===0&&u>0.26&&u<0.93){kind='tower';box(0.35,14,0.35,poleMat,G(f,ROADW+4,7));box(3,0.5,1,lampMat,G(f,ROADW+4,14));putProp('tower',f,G(f,ROADW+4),1,new THREE.Vector3(1,1,1))}
   // lyric billboards on the final banking, facing the track
-  if(u>0.72&&u<0.92&&n9%5===0){const p=G(f,-(ROADW+9));const txt=['MAXIMALIST','SPEED OF LIGHT','TURN IT UP','ONE DESK','ROLLING START'][Math.floor(s/45)%5];const b=new THREE.Mesh(new THREE.PlaneGeometry(14,5),new THREE.MeshLambertMaterial({map:canvasTex(512,180,x=>{x.fillStyle=['#1a2a7a','#d82a3a','#f2c230','#ffffff'][Math.floor(s/45)%4];x.fillRect(0,0,512,180);x.fillStyle=Math.floor(s/45)%4===3?'#1a2a7a':'#fff';x.font="52px 'Press Start 2P',monospace";x.textAlign='center';x.textBaseline='middle';x.fillText(txt,256,90)}),side:THREE.DoubleSide}));b.position.copy(p).add(new THREE.Vector3(0,5,0));b.quaternion.setFromUnitVectors(Z,f.right0);scene.add(b);box(0.4,5,0.4,poleMat,p.clone().add(new THREE.Vector3(0,1.5,0)))}}
+  if(u>0.72&&u<0.92&&n9%5===0){kind='billboard';const p=G(f,-(ROADW+9));const ti=Math.floor(s/45)%5;const b=new THREE.Mesh(new THREE.PlaneGeometry(14,5),new THREE.MeshLambertMaterial({map:billboardTex[ti],side:THREE.DoubleSide}));b.position.copy(p).add(new THREE.Vector3(0,5,0));b.quaternion.setFromUnitVectors(Z,f.right0);fbGroup('billboard').add(b);box(0.4,5,0.4,poleMat,p.clone().add(new THREE.Vector3(0,1.5,0)));
+   putProp('billboard',f,p,-1,new THREE.Vector3(1,1,1));billboardIdx.push(ti)}}
+ // kit pit garages: 12 m sections along the inside of the start straight
+ for(let s=0;s<L*0.2;s+=12){const f=E3.frame(s);putProp('pits',f,G(f,-(ROADW+5.5)),-1,new THREE.Vector3(1,1,1))}
+ kind='base';
  // start gantry with big screen
  {const f=E3.frame(4);const g=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.8,ROADW*2+8),flat(0xd82a3a));g.position.copy(f.p).add(new THREE.Vector3(0,7.5,0));g.quaternion.setFromUnitVectors(X,f.T);scene.add(g);for(const k of[-1,1]){const leg=new THREE.Mesh(new THREE.BoxGeometry(1,7.5,1),wallMat);leg.position.copy(f.p).add(f.right.clone().multiplyScalar(k*(ROADW+3.5))).add(new THREE.Vector3(0,3.75,0));scene.add(leg)}
   const chk=new THREE.Mesh(new THREE.PlaneGeometry(ROADW*2,2.4),new THREE.MeshBasicMaterial({map:canvasTex(128,32,x=>{for(let i=0;i<16;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)%2?'#111':'#eee';x.fillRect(i*8,j*8,8,8)}})}));chk.rotation.x=-Math.PI/2;chk.position.copy(f.p).add(new THREE.Vector3(0,0.06,0));chk.quaternion.multiply(new THREE.Quaternion().setFromUnitVectors(X,f.T));scene.add(chk);
@@ -141,11 +193,15 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false
   for(let i=-1;i<=1;i++){const reel=new THREE.Mesh(new THREE.CylinderGeometry(3,3,4.5,16),reelMat);reel.position.copy(f.p).add(f.right.clone().multiplyScalar(i*5.5)).add(new THREE.Vector3(0,10.5,0));reel.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),f.right);reel.userData.q0=reel.quaternion.clone();reel.userData.ph=i*1.3;scene.add(reel);reels.push(reel);const frame=new THREE.Mesh(new THREE.BoxGeometry(0.6,7.5,5),frameMat);frame.position.copy(reel.position).add(f.right.clone().multiplyScalar(2.9));frame.quaternion.setFromUnitVectors(X,f.right);scene.add(frame)}}
  // palms in the infield
  for(let i=0;i<30;i++){const u=hash(i*1.7);const f=E3.frame(u*L);const p=G(f,-(ROADW+16+hash(i*3)*40));const th=7+hash(i)*3;const tr=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.4,th,5),palmTrunk);tr.position.copy(p).add(new THREE.Vector3(0,th/2,0));st(tr);for(let l=0;l<6;l++){const leaf=new THREE.Mesh(new THREE.PlaneGeometry(4.5,1.3),palmLeaf);leaf.position.copy(p).add(new THREE.Vector3(0,th-0.4,0));leaf.rotation.y=l*Math.PI/3;leaf.rotation.z=-0.5;leaf.translateX(2);st(leaf)}}
- for(const[mat,geos]of buckets){const g=mergeGeometries(geos,false);for(const q of geos)q.dispose();if(g)scene.add(new THREE.Mesh(g,mat))}
+ for(const b of buckets.values()){const g=mergeGeometries(b.geos,false);for(const q of b.geos)q.dispose();if(!g)continue;const mesh=new THREE.Mesh(g,b.mat);if(b.kind==='base')scene.add(mesh);else fbGroup(b.kind).add(mesh)}
+ loadKit();
  // cars
  playerCar=makeCar(LIVERY[0],0);scene.add(playerCar.g);for(let i=0;i<12;i++){const c=makeCar(LIVERY[1+i%12],1+i);scene.add(c.g);cars.push(c)}
  // optional real models: public/models/car_<i>.glb (or car.glb for all) replace the procedural bodies
- const loader=new GLTFLoader();const allCars=[playerCar,...cars];const fit=(c,gl)=>{const box=new THREE.Box3().setFromObject(gl.scene);const size=box.getSize(new THREE.Vector3());const sc=4.7/Math.max(size.x,size.z);for(const m of c.body)m.visible=false;const inst=gl.scene.clone(true);inst.scale.setScalar(sc);inst.position.y=-box.min.y*sc;if(size.x>size.z)inst.rotation.y=Math.PI/2;inst.traverse(o=>{if((o as any).isMesh){(o as any).castShadow=false;const mm=(o as any).material;if(mm&&mm.map)mm.map.anisotropy=4}});c.g.add(inst)};
+ // GLB cars come as ~68 primitives each; merge them per material (11 per car) so 13 cars cost ~140 draw calls, not ~900
+ const mergeCar=(root:THREE.Object3D)=>{root.updateMatrixWorld(true);const by=new Map<THREE.Material,THREE.BufferGeometry[]>();root.traverse((o:any)=>{if(!o.isMesh)return;const g=(o.geometry as THREE.BufferGeometry).clone().applyMatrix4(o.matrixWorld);for(const k of Object.keys(g.attributes))if(k!=='position'&&k!=='normal'&&k!=='uv')g.deleteAttribute(k);let a=by.get(o.material);if(!a)by.set(o.material,a=[]);a.push(g)});
+  const out=new THREE.Group();for(const[m,gs]of by){const same=gs.every(g=>!!g.index)||gs.every(g=>!g.index);const mg=mergeGeometries(same?gs:gs.map(g=>g.index?g.toNonIndexed():g),false);if(mg){out.add(new THREE.Mesh(mg,m));for(const g of gs)g.dispose()}else for(const g of gs)out.add(new THREE.Mesh(g,m))}return out};
+ const loader=new GLTFLoader();const allCars=[playerCar,...cars];const fit=(c,gl)=>{const box=new THREE.Box3().setFromObject(gl.scene);const size=box.getSize(new THREE.Vector3());const sc=4.7/Math.max(size.x,size.z);for(const m of c.body)m.visible=false;const inst=mergeCar(gl.scene);inst.scale.setScalar(sc);inst.position.y=-box.min.y*sc;if(size.x>size.z)inst.rotation.y=Math.PI/2;inst.traverse(o=>{if((o as any).isMesh){(o as any).castShadow=false;const mm=(o as any).material;if(mm&&mm.map)mm.map.anisotropy=4}});c.g.add(inst)};
  const probe=(url)=>fetch(url,{method:'HEAD'}).then(r=>r.ok&&!/text\/html/.test(r.headers.get('content-type')||'')).catch(()=>false);
  // hosts that cannot serve .glb get the same model as base64 text in <name>.glb.txt
  const loadAny=(base,cb)=>probe(base+'.glb').then(okk=>{if(okk){loader.load(base+'.glb',cb);return}fetch(base+'.glb.txt').then(r=>r.ok&&!/text\/html/.test(r.headers.get('content-type')||'')?r.text():null).then(b64=>{if(!b64)return;const bin=Uint8Array.from(atob(b64.trim()),c=>c.charCodeAt(0));loader.parse(bin.buffer,'',cb,()=>{})}).catch(()=>{})});
@@ -157,7 +213,7 @@ const _fa=E3.newFrame(),_fb=E3.newFrame(),_fc=E3.newFrame(),_m4=new THREE.Matrix
 // orient g on the banked track frame: local x = right, y = up, z = backwards (toward the chasing camera)
 function orient(g:THREE.Object3D,f:any){_m4.makeBasis(f.right,f.up,_v.copy(f.T).negate());g.quaternion.setFromRotationMatrix(_m4)}
 function place(car,s,x,t){const f=E3.frame(s,_fa);car.g.position.copy(f.p).addScaledVector(f.right,x*ROADW).addScaledVector(f.up,0.02);orient(car.g,f);car.g.rotateY(Math.PI);for(const w of car.wheels)w.rotation.x=t*18}
-function disposeGantry(gt){scene.remove(gt.g);gt.g.traverse((o:any)=>{if(o.isMesh){o.geometry.dispose();if(o.material.map)o.material.map.dispose();o.material.dispose()}})}
+function disposeGantry(gt){scene.remove(gt.g);gt.g.traverse((o:any)=>{if(o.isMesh){const sh=o.userData.shared;if(!sh)o.geometry.dispose();if(!sh||o.userData.ownMat){if(o.material.map)o.material.map.dispose();o.material.dispose()}}})}
 export const E3GL={init,get ok(){return ok},canvas:()=>renderer.domElement,
  render(t:number){if(!ok)return;const S=E3.S;if(!S)return;_tick++;
   place(playerCar,S.s,S.x,t);playerCar.g.rotateZ(-S.vx*0.08);playerCar.g.position.y+=Math.abs(Math.sin(t*22))*0.012;
@@ -168,7 +224,7 @@ export const E3GL={init,get ok(){return ok},canvas:()=>renderer.domElement,
    const f=E3.frame(w.s,_fb);gt.g.position.copy(f.p);orient(gt.g,f);
    const d=w.s-S.s,gotA=w.got?clamp((t-w.got)/0.8,0,1):0;const st=w.got?'got':w.missed?'missed':'live';if(st!==gt.state){gt.state=st;(gt.text.material as any).color.setHex(st==='got'?0xb8ffc4:st==='missed'?0x5a5a66:0xffffff);(gt.marker.material as any).color.setHex(st==='got'?0xffffff:st==='missed'?0x553333:0x3cff6a);(gt.chev.material as any).color.copy((gt.marker.material as any).color);(gt.lane.material as any).opacity=st==='live'?0.22:0.06}
    const rise=clamp((t-w.t0)/0.35,0,1);gt.g.scale.y=Math.max(0.01,1-(1-rise)*(1-rise)); // gantry drops in instead of popping
-   gt.marker.scale.y=1+(st==='live'?Math.sin(t*10)*0.3+0.3:0);gt.chev.position.y=4.6+(st==='live'?Math.sin(t*6)*0.25:0);gt.text.position.y=7.0+gotA*4;(gt.text.material as any).opacity=w.got?1-gotA:1;gt.g.visible=d>-60&&d<240}
+   if(gt.kit){if(st==='live')(gt.marker.material as any).color.setHex(LANE_ON).multiplyScalar(0.75+0.25*Math.sin(t*10))}else gt.marker.scale.y=1+(st==='live'?Math.sin(t*10)*0.3+0.3:0);gt.chev.position.y=gt.chevY0+(st==='live'?Math.sin(t*6)*0.25:0);gt.text.position.y=gt.textY0+gotA*4;(gt.text.material as any).opacity=w.got?1-gotA:1;gt.g.visible=d>-60&&d<240}
   for(const [w,gt] of gantries){if(gt.tick!==_tick){disposeGantry(gt);gantries.delete(w)}}
   for(const r of reels){_q.setFromAxisAngle(_Y,t*2.4+r.userData.ph);r.quaternion.copy(r.userData.q0).multiply(_q)}
   // chase camera: 10.5 behind, rolls with 60% of the banking so the horizon tilts without swinging
