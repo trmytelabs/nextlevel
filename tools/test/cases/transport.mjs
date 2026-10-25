@@ -22,7 +22,9 @@ export default [
  {name:'T3 clock label matches bar',era:null,bar:50,fn:async(p,h,page)=>{await page.evaluate(()=>ETM.step(0));const s=await page.$eval('#clock',e=>e.textContent);const want='BAR '+(Math.floor(p.t/BAR)+1);return s.startsWith(want)||`clock "${s}" expected "${want}"`}},
  {name:'T3b restart / play / era key keep the clock consistent',era:null,bar:3,fn:async(p,h,page)=>{
   const r=await page.evaluate(()=>{const out=[];const clock=()=>document.querySelector('#clock').textContent;const play=()=>document.querySelector('#play').textContent;
-   document.querySelector('#restart').click();const restarted=ETM.now()===0&&play()==='PAUSE';ETM.step(0);out.push(['restart -> bar 1, playing',restarted&&clock().startsWith('BAR 1 ')]);
+   // RESTART goes back to the title screen (clock 0, paused); PLAY on it starts the song
+   document.querySelector('#restart').click();const restarted=ETM.now()===0&&play()==='PLAY'&&ETM.probe().start&&!ETM.probe().playing;out.push(['restart -> bar 1, title screen up, paused',restarted]);
+   document.querySelector('#play').click();out.push(['PLAY on the title screen starts the song',!ETM.probe().start&&ETM.probe().playing&&play()==='PAUSE']);ETM.step(0);out.push(['restart -> bar 1',clock().startsWith('BAR 1 ')]);
    const p0=play();document.querySelector('#play').click();const p1=play();document.querySelector('#play').click();const p2=play();out.push(['play button toggles PAUSE/PLAY and back',p0!==p1&&p1!==p2&&p0===p2&&/^(PLAY|PAUSE)$/.test(p1)]);ETM.setPlaying(false);
    dispatchEvent(new KeyboardEvent('keydown',{key:'3'}));ETM.step(0);out.push(['key 3 -> bar 38',clock().startsWith('BAR 38 ')&&ETM.probe().era===2]);
    const sc=document.querySelector('#scrub'),b=sc.getBoundingClientRect();sc.dispatchEvent(new PointerEvent('pointerdown',{clientX:b.left+b.width*0.5,clientY:b.top+b.height/2,bubbles:true}));dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));ETM.step(0);const t=ETM.now();out.push(['scrubber mid -> ~bar 49',Math.abs(t/1.875-48)<1.5&&clock().startsWith('BAR '+(Math.floor(t/1.875)+1)+' ')]);
@@ -30,7 +32,7 @@ export default [
   await page.evaluate(t=>{ETM.seek(t);ETM.step(0)},p.t);const bad=r.filter(x=>!x[1]).map(x=>x[0]);return bad.length===0||'failed: '+bad.join(', ')}},
  {name:'T4 music hooks do not throw with sound on; SOUND label toggles; clock still advances',era:null,bar:10,fn:async(p,h,page)=>{const r=await page.evaluate(()=>{const btn=document.querySelector('#click');if(btn.textContent.includes('ON'))btn.click();const was=btn.textContent;btn.click();const on1=btn.textContent;btn.click();const off=btn.textContent;btn.click();const on2=btn.textContent;const lab=on1==='SOUND: ON'&&off==='SOUND: OFF'&&on2==='SOUND: ON'&&btn.classList.contains('on');if(!lab)return `label sequence ${was} -> ${on1} -> ${off} -> ${on2}`;
   const t=ETM.now();ETM.errs.splice(0);const adv=[];try{for(const b of [1,20,38,58,67,76,90,94.5]){ETM.seek(b*1.875);const a=ETM.probe().t;ETM.step(2.2);const c=ETM.probe().t;if(c-a<2.1)adv.push(`bar ${b}: advanced only ${(c-a).toFixed(2)}s`)}}catch(e){return String(e)}ETM.seek(t);ETM.step(0);const errs=ETM.errs.splice(0);return (errs.length?'errs: '+errs.join(';'):'')+(adv.length?' '+adv.join(';'):'')||'ok'});return r==='ok'||r}},
- {name:'T5 title card at bar 0.6 and end card at bar 95.3 are drawn (non-black centre)',era:null,bar:3,fn:async(p,h,page)=>{
+ {name:'T5 title flourish at bar 0.6 and end card at bar 95.3 are drawn (non-black centre)',era:null,bar:3,fn:async(p,h,page)=>{
   const bright=async t=>{await at(page,t);return page.evaluate(()=>{ETM.render();const c=document.querySelector('#c'),x=c.getContext('2d');const w=c.width,hh=c.height;const d=x.getImageData(Math.floor(w*0.3),Math.floor(hh*0.25),Math.floor(w*0.4),Math.floor(hh*0.25)).data;let n=0;for(let i=0;i<d.length;i+=4)if(d[i]+d[i+1]+d[i+2]>300)n++;return n})};
   // the end card is the era-5 3D card (voxel title + type) when WebGL is up, else the flat 2D card; either way it is drawn by 95.3,
   // and the full type block (name / invite / prompt) is on screen by the last beat
@@ -38,6 +40,26 @@ export default [
   const lower=async t=>{await at(page,t);return page.evaluate(()=>{ETM.render();const c=document.querySelector('#c'),x=c.getContext('2d');const w=c.width,hh=c.height;const d=x.getImageData(Math.floor(w*0.25),Math.floor(hh*0.5),Math.floor(w*0.5),Math.floor(hh*0.34)).data;let n=0;for(let i=0;i<d.length;i+=4)if(d[i]+d[i+1]+d[i+2]>500)n++;return ETM.probe().gl.e5?n:999})};
   const c=await lower(95.9*BAR);
   await page.evaluate(t=>{ETM.seek(t);ETM.step(0)},p.t);return(a>200&&b>200&&c>300)||`bright pixels: card0=${a} card95=${b} typeBlock95.9=${c}`}},
+ {name:'S1 title screen: up on RESTART with the clock held at 0; a click / tap / key starts the song with sound on; ETM dismisses it',era:null,bar:3,fn:async(p,h,page)=>{
+  const r=await page.evaluate(async()=>{const out=[];const pr=()=>ETM.probe();const c=document.querySelector('#c'),b=c.getBoundingClientRect();const snd=document.querySelector('#click');const soundOff=()=>{if(snd.textContent.includes('ON'))snd.click()};
+   const bright=()=>{ETM.render();const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height).data;let n=0;for(let i=0;i<d.length;i+=16)if(d[i]+d[i+1]+d[i+2]>300)n++;return n};
+   const tick=()=>new Promise(r=>setTimeout(r,120));
+   // 1) RESTART -> title screen: paused at 0, drawn, HUD tags hidden, and the clock does not run while it is up
+   soundOff();document.querySelector('#restart').click();await tick();await tick();let q=pr();out.push(['restart shows the title screen, paused at 0',q.start&&!q.playing&&q.t===0&&document.body.classList.contains('start')]);
+   out.push(['title screen is drawn',bright()>2000]);out.push(['HUD tags hidden on the title screen',getComputedStyle(document.querySelector('#auto')).display==='none']);
+   // 2) a mouse click on the canvas starts the song and turns the sound on
+   c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:21,pointerType:'mouse',clientX:b.left+b.width/2,clientY:b.top+b.height/2,bubbles:true,cancelable:true}));q=pr();
+   out.push(['click starts the song',!q.start&&q.playing]);out.push(['click turns the sound on',q.sound&&snd.textContent==='SOUND: ON']);await tick();out.push(['clock runs after start',ETM.now()>0]);
+   // 3) a tap (touch) starts it too, and the tap is not also a fire / move input
+   soundOff();document.querySelector('#restart').click();c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:22,pointerType:'touch',clientX:b.left+b.width*0.5,clientY:b.top+b.height*0.75,bubbles:true,cancelable:true}));const i=ETM.input();c.dispatchEvent(new PointerEvent('pointerup',{pointerId:22,pointerType:'touch',bubbles:true}));q=pr();
+   out.push(['tap starts the song with sound',!q.start&&q.playing&&q.sound]);out.push(['the starting tap is not a fire',!i.fire]);
+   // 4) a key starts it (and P does not immediately pause it again)
+   soundOff();document.querySelector('#restart').click();dispatchEvent(new KeyboardEvent('keydown',{key:'p',bubbles:true,cancelable:true}));q=pr();out.push(['key starts the song with sound',!q.start&&q.playing&&q.sound]);
+   // 5) ETM (harness / recorder) dismisses it without starting anything
+   ETM.showStart();out.push(['ETM.showStart',pr().start]);ETM.seek(1);q=pr();out.push(['ETM.seek dismisses it, paused',!q.start&&!q.playing]);
+   ETM.showStart();ETM.step(0.1);q=pr();out.push(['ETM.step dismisses it',!q.start]);ETM.showStart();ETM.setPlaying(false);out.push(['ETM.setPlaying dismisses it',!pr().start]);
+   soundOff();ETM.setPlaying(false);return out});
+  await page.evaluate(t=>{ETM.seek(t);ETM.step(0)},p.t);const bad=r.filter(x=>!x[1]).map(x=>x[0]);return bad.length===0||'failed: '+bad.join(', ')}},
  {name:'G5b space / tap edges reach readInput (synchronous, no rAF race)',era:null,bar:3,fn:async(p,h,page)=>{const r=await page.evaluate(async()=>{const out=[];const tick=()=>new Promise(r=>requestAnimationFrame(()=>setTimeout(r,0)));const kd=k=>dispatchEvent(new KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true})),ku=k=>dispatchEvent(new KeyboardEvent('keyup',{key:k,bubbles:true}));
   const c=document.querySelector('#c'),b=c.getBoundingClientRect();const pd=(fx,fy,id)=>c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:id,pointerType:'touch',clientX:b.left+b.width*fx,clientY:b.top+b.height*fy,bubbles:true,cancelable:true})),pu=id=>c.dispatchEvent(new PointerEvent('pointerup',{pointerId:id,pointerType:'touch',bubbles:true}));
   await tick();pd(0.5,0.25,8);const j=ETM.input();pu(8);out.push(['tap upper middle -> jump (not fire)',j.jump&&j.upEdge&&!j.fire]);

@@ -2,7 +2,7 @@
 // Record the autopilot run to an MP4 by stepping the deterministic sim frame by frame in headless Edge/Chrome
 // and encoding the screenshots with ffmpeg. No audio (mux the Suno track later:
 //   ffmpeg -i out/run.mp4 -i public/song.mp3 -c:v copy -c:a aac -shortest out/run-with-song.mp4 ).
-//   node tools/test/record.mjs [--fps 30] [--from 0 --to 96] [--width 1280] [--out out/run.mp4] [--url ...] [--q high]
+//   node tools/test/record.mjs [--fps 30] [--from 0 --to 96] [--title 2] [--width 1280] [--out out/run.mp4] [--url ...] [--q high]
 import puppeteer from 'puppeteer-core';
 import fs from 'node:fs';import path from 'node:path';import {spawnSync} from 'node:child_process';
 const argv=process.argv.slice(2);const opt=(k,d)=>{const i=argv.indexOf('--'+k);return i>=0?argv[i+1]:d};
@@ -17,11 +17,14 @@ const url=new URL(BASE);url.searchParams.set('q',Q);await page.goto(url.href,{wa
 await page.waitForFunction('window.ETM&&window.ETM.probe',{timeout:90000});await new Promise(r=>setTimeout(r,2000));await page.waitForFunction('window.ETM&&window.ETM.probe',{timeout:90000});
 await page.evaluate(()=>{ETM.setAuto('on');ETM.setPlaying(false);document.querySelector('#bar').style.visibility='hidden';document.querySelector('#help').style.display='none';document.querySelector('#auto').style.display='none'});
 await page.evaluate(t=>ETM.seek(t),FROM*BAR);
+// from bar 0 the video opens on the title screen for --title seconds (default 2), then the run starts as if PRESS START was hit
+const TITLE=FROM===0?+opt('title',2):0,nt=Math.round(TITLE*FPS);
+if(nt){await page.evaluate(()=>ETM.showStart());for(let i=0;i<nt;i++){await page.evaluate(dt=>{ETM.idle(dt);ETM.render()},1/FPS);fs.writeFileSync(path.join(frames,String(i).padStart(5,'0')+'.jpg'),await page.screenshot({type:'jpeg',quality:90,captureBeyondViewport:false}))}await page.evaluate(()=>ETM.seek(0))}
 const total=Math.round((TO-FROM)*BAR*FPS);const t0=Date.now();
-for(let i=0;i<total;i++){
+for(let j=0;j<total;j++){const i=j+nt;
   await page.evaluate(dt=>{ETM.step(dt);ETM.render()},1/FPS);
   const buf=await page.screenshot({type:'jpeg',quality:90,captureBeyondViewport:false});fs.writeFileSync(path.join(frames,String(i).padStart(5,'0')+'.jpg'),buf);
-  if(i%(FPS*5)===0){const el=(Date.now()-t0)/1000;process.stdout.write(`frame ${i}/${total}  bar ${(FROM+i/FPS/BAR).toFixed(1)}  ${el.toFixed(0)}s elapsed, eta ${(el/(i+1)*(total-i)).toFixed(0)}s\n`)}
+  if(j%(FPS*5)===0){const el=(Date.now()-t0)/1000;process.stdout.write(`frame ${j}/${total}  bar ${(FROM+j/FPS/BAR).toFixed(1)}  ${el.toFixed(0)}s elapsed, eta ${(el/(j+1)*(total-j)).toFixed(0)}s\n`)}
 }
 await browser.close();
 const r=spawnSync(FF,['-y','-framerate',String(FPS),'-i',path.join(frames,'%05d.jpg'),'-c:v','libx264','-pix_fmt','yuv420p','-crf','18','-movflags','+faststart',path.resolve(OUT)],{stdio:'inherit'});

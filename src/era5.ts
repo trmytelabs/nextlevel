@@ -1,4 +1,5 @@
 import {ERAS,TRANS,BAR,BEAT,bar,W,H,LYRICS,hash,clamp,lerp,smooth,blip,noise,ptr,MOBILE,TOTAL} from './core';
+import {plate,drawPlate} from './startgl';
 
 // ---------- ERA 5: NOW. A VR rhythm game (saber lane) with an AI co-pilot that builds the arena out of every word you cut ----------
 // The whole lyric table is known, so blocks are planned up front: each word of each line is a block that reaches the
@@ -68,10 +69,9 @@ function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;S.dist=xAt(t);S.tunnel
 // voxel NEXT LEVEL (era5gl.ts) that locks on the bar-95 downbeat; then this 2D type layer drops the name in with a light
 // sweep, types the invite word by word on 16ths and pulses the prompt. The caption hides at capOff (main.ts) so the sung
 // "Ready when you are. Press start." and the card's prompt are never on screen together. Times in bars.
-const CARD={fly:94.0,lock:95.0,name:95.0,nameIn:0.125,invite:95.25,credit:95.42,capOff:95.5,prompt:95.625,
- nameY:0.535,inviteY:0.625,creditY:0.685,promptY:0.80,nameFont:13,copilotX:0.875}; // layout: canvas fractions / px
+const CARD={fly:94.0,lock:95.0,name:95.0,nameIn:0.125,prog:95.19,invite:95.3,credit:95.45,capOff:95.5,prompt:95.625,
+ nameY:0.48,progY:0.567,inviteY:0.64,creditY:0.69,promptY:0.80,nameFont:40,progFont:11,copilotX:0.875}; // layout: canvas fractions / px
 const CT={name:'IAN GINN',sep:'  ·  ',prog:"FOR THE DEPUTY'S MAXIMALISTS",invite:'Imagine what we could build together.',credit:'Built with AI agents, asking to build with people.',prompt:'READY WHEN YOU ARE  ·  PRESS START'};
-let nameCv:HTMLCanvasElement|null=null,nameDpr=0;
 const ease3=(x:number)=>1-Math.pow(1-clamp(x,0,1),3);
 function card(ctx:CanvasRenderingContext2D,t:number){const b=t/BAR;if(b<CARD.fly)return;const dpr=ctx.getTransform().a||1;
  // the hold after the song ends keeps the prompt alive on the wall clock (t stops at TOTAL)
@@ -80,24 +80,18 @@ function card(ctx:CanvasRenderingContext2D,t:number){const b=t/BAR;if(b<CARD.fly
  const sinceLock=t-bar(CARD.lock);if(sinceLock>=0&&sinceLock<0.5){ctx.fillStyle=`rgba(255,240,255,${0.32*Math.exp(-sinceLock*14)})`;ctx.fillRect(0,0,W,H)}
  if(b<CARD.name)return;
  // a soft dark bed under the type block (the floor reflects the title right where the lines sit)
- const bed=smooth(clamp((b-CARD.name)/0.25,0,1));if(bed>0){const y0=H*0.47,y1=H*0.86;const g=ctx.createLinearGradient(0,y0,0,y1);g.addColorStop(0,'rgba(4,2,12,0)');g.addColorStop(0.18,`rgba(4,2,12,${0.62*bed})`);g.addColorStop(0.8,`rgba(4,2,12,${0.62*bed})`);g.addColorStop(1,'rgba(4,2,12,0)');ctx.fillStyle=g;ctx.fillRect(0,y0,W,y1-y0)}
+ const bed=smooth(clamp((b-CARD.name)/0.25,0,1));if(bed>0){const y0=H*0.40,y1=H*0.86;const g=ctx.createLinearGradient(0,y0,0,y1);g.addColorStop(0,'rgba(4,2,12,0)');g.addColorStop(0.18,`rgba(4,2,12,${0.62*bed})`);g.addColorStop(0.8,`rgba(4,2,12,${0.62*bed})`);g.addColorStop(1,'rgba(4,2,12,0)');ctx.fillStyle=g;ctx.fillRect(0,y0,W,y1-y0)}
  ctx.save();ctx.textBaseline='middle';
- // 1) name: pre-rendered crisp at device resolution, drops in from above with weight, lands on the 8th after the lock, then a light sweep runs across it
- const fs=CARD.nameFont,f1=`${fs}px 'Press Start 2P',monospace`;
- if(!nameCv||nameDpr!==dpr){nameDpr=dpr;nameCv=document.createElement('canvas');const x=nameCv.getContext('2d')!;x.font=f1;const w1=x.measureText(CT.name).width,w2=x.measureText(CT.sep).width,w3=x.measureText(CT.prog).width;const tw=Math.ceil(w1+w2+w3)+8,th=fs+10;
-  nameCv.width=Math.ceil(tw*dpr);nameCv.height=Math.ceil(th*dpr);(nameCv as any).tw=tw;(nameCv as any).th=th}
- const nc=nameCv!,ncx=nc.getContext('2d')!,tw=(nc as any).tw,th=(nc as any).th;
- // redraw the strip each frame (cheap): base type + the sweep band clipped to the glyphs
- ncx.setTransform(dpr,0,0,dpr,0,0);ncx.clearRect(0,0,tw,th);ncx.globalCompositeOperation='source-over';ncx.font=f1;ncx.textBaseline='middle';ncx.textAlign='left';
- {const w1=ncx.measureText(CT.name).width,w2=ncx.measureText(CT.sep).width;ncx.fillStyle='#000';ncx.fillText(CT.name+CT.sep+CT.prog,5,th/2+2);ncx.fillStyle='#ffffff';ncx.fillText(CT.name,4,th/2);ncx.fillStyle='#8a8aa0';ncx.fillText(CT.sep,4+w1,th/2);ncx.fillStyle='#5bff5b';ncx.fillText(CT.prog,4+w1+w2,th/2)}
- const sw=(b-(CARD.name+CARD.nameIn))/0.3;if(sw>0&&sw<1.2){const sx=lerp(-60,tw+60,sw);ncx.globalCompositeOperation='source-atop';const g=ncx.createLinearGradient(sx-46,0,sx+46,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(0.5,'rgba(255,255,255,.95)');g.addColorStop(1,'rgba(255,255,255,0)');ncx.fillStyle=g;ncx.fillRect(0,0,tw,th);ncx.globalCompositeOperation='source-over'}
- {const q=clamp((b-CARD.name)/CARD.nameIn,0,1),e=q*q,land=b-(CARD.name+CARD.nameIn);const cy=H*CARD.nameY,dy=-46*(1-e);
-  const squash=land>=0&&land<0.12?Math.sin(land/0.12*Math.PI)*0.28*(1-land/0.12):0;const sy=1-squash,sxs=1+squash*0.6;
-  const dw=tw*sxs,dh=th*sy,x0=W/2-dw/2,y0=cy-dh/2+dy+(th-dh)/2;
-  if(q<1){ctx.globalAlpha=0.25*q;ctx.drawImage(nc,x0,y0-18*(1-q),dw,dh*1.6);ctx.globalAlpha=0.45*q;ctx.drawImage(nc,x0,y0-8*(1-q),dw,dh*1.25)} // speed smear on the way down
-  ctx.globalAlpha=Math.min(1,q*1.6);ctx.drawImage(nc,x0,y0,dw,dh);ctx.globalAlpha=1;
-  // a thin underline that draws out from the centre as it lands
-  if(land>0){const u=ease3(land/0.2);ctx.fillStyle='rgba(91,255,91,.7)';ctx.fillRect(W/2-u*tw*0.5,cy+th*0.5+4,u*tw,1)}}
+ // 1) name: IAN GINN on its own line as a voxel plate (white tiles, violet extrusion, cyan glow; startgl.ts, shared with the
+ // title screen), the second-largest thing on the card. Drops in from above with weight, squashes as it lands on the 8th
+ // after the lock, then a light sweep runs across it. The program line follows, smaller, with an underline drawing out.
+ {const p=plate(CT.name,CARD.nameFont),q=clamp((b-CARD.name)/CARD.nameIn,0,1),e=q*q,land=b-(CARD.name+CARD.nameIn),cy=H*CARD.nameY,dy=-46*(1-e);
+  const squash=land>=0&&land<0.12?Math.sin(land/0.12*Math.PI)*0.28*(1-land/0.12):0;
+  if(q<1)drawPlate(ctx,p,W/2,cy+dy-14*(1-q),{a:0.3*q,sy:1.5}); // speed smear on the way down
+  drawPlate(ctx,p,W/2,cy+dy,{a:Math.min(1,q*1.6),sx:1+squash*0.6,sy:1-squash,sweep:land/0.3});
+  if(b>=CARD.prog){const a=smooth(clamp((b-CARD.prog)/0.1,0,1)),py=H*CARD.progY+(1-a)*4;ctx.globalAlpha=a;ctx.textAlign='center';ctx.font=`${CARD.progFont}px 'Press Start 2P',monospace`;
+   ctx.fillStyle='#000';ctx.fillText(CT.prog,W/2+1,py+1);ctx.fillStyle='#5bff5b';ctx.fillText(CT.prog,W/2,py);
+   const tw=ctx.measureText(CT.prog).width,u=ease3((b-CARD.prog)/0.2);ctx.fillStyle='rgba(91,255,91,.6)';ctx.fillRect(W/2-u*tw*0.5,H*CARD.progY+CARD.progFont*0.5+6,u*tw,1);ctx.globalAlpha=1}}
  // 2) invite: types on word by word on 16ths, with a block cursor
  if(b>=CARD.invite){ctx.font="11px 'Press Start 2P',monospace";ctx.textAlign='left';const words=CT.invite.split(' ');const full=ctx.measureText(CT.invite).width,x0=W/2-full/2,cy=H*CARD.inviteY;let x=x0,last=-1;
   for(let k=0;k<words.length;k++){const tk=bar(CARD.invite+k*0.0625),pre=words.slice(0,k).join(' ')+(k?' ':'');const wx=x0+ctx.measureText(pre).width;if(t<tk)break;last=k;const a=clamp((t-tk)/0.07,0,1);ctx.globalAlpha=a;ctx.fillStyle='#000';ctx.fillText(words[k],wx+1,cy+1+(1-a)*5);ctx.fillStyle=k===words.length-1?'#ffe14d':'#ffffff';ctx.fillText(words[k],wx,cy+(1-a)*5);x=wx+ctx.measureText(words[k]).width}

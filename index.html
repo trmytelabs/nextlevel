@@ -43,7 +43,11 @@ button.on{border-color:var(--accent);color:var(--accent)}
 .mark span{position:absolute;top:-1.9em;left:3px;font-size:clamp(5px,.65vw,8px);color:var(--dim);white-space:nowrap}
 #time{color:var(--dim);font-size:clamp(6px,.85vw,10px);min-width:5.5em;text-align:right}
 #bar{overflow:hidden}
+/* title screen (startgl.ts): the canvas carries everything; the HUD tags hide until the game starts */
+body.start #hud .tag{display:none}
+body.start canvas#c{cursor:pointer}
 body.e1 #lyric{bottom:26%}
+body.endcard #auto,body.endcard #help{display:none}
 body.e4 #lyric{left:3%;right:64%;bottom:30%;text-align:left}
 #rotate{display:none;position:fixed;inset:0;z-index:9;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:1.6em;text-align:center;font-size:clamp(9px,3.2vw,14px);line-height:1.9;color:var(--fg);padding:24px;box-sizing:border-box}
 #rotate .ph{width:34px;height:60px;border:3px solid var(--accent);border-radius:6px;animation:turn 1.8s ease-in-out infinite}
