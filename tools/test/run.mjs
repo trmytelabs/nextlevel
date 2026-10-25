@@ -73,6 +73,7 @@ if(flag('controls')){
   // settings keys must not move the player
   for(const k of ['q','m','l']){await page.keyboard.press(k);const i=await inp();if(i.left||i.right||i.up||i.down)fail('settings key '+k,'moved player '+JSON.stringify(i));else pass('settings key '+k+' does not move')}
   const autoLabel=await page.$eval('#autoBtn',e=>e.textContent);if(/AUTOPILOT: (ON|OFF|WHEN IDLE)/.test(autoLabel))pass('Q cycles autopilot label: '+autoLabel);else fail('Q autopilot','label '+autoLabel);
+  await page.keyboard.press('l'); // the settings-key check above toggled captions off; turn them back on for later cases
   const sound=await page.$eval('#click',e=>e.textContent);if(/SOUND: (ON|OFF)/.test(sound))pass('M toggles sound label: '+sound);else fail('M sound','label '+sound);
   for(let e=1;e<=5;e++){await page.keyboard.press(String(e));const p=await probe();if(p.era===e-1)pass('key '+e+' -> era '+e);else fail('key '+e,'era '+p.era+' bar '+p.bar.toFixed(2))}
   await page.keyboard.press('1');
