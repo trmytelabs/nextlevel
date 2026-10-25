@@ -73,4 +73,20 @@ export default [
  {name:'L1 HUD layout: help/auto inside frame, caption clear of auto line, no scrubber label pile-up, bar fits',era:null,bar:2.5,fn:async(p,h,page)=>{
   await at(page,2.3*BAR);const m=await page.evaluate(()=>{const R=s=>document.querySelector(s).getBoundingClientRect();const wrap=R('#wrap');const inside=(r)=>r.left>=wrap.left-0.5&&r.right<=wrap.right+0.5&&r.top>=wrap.top-0.5&&r.bottom<=wrap.bottom+0.5;const vis=e=>getComputedStyle(e).display!=='none'&&e.getBoundingClientRect().width>0;const hit=(a,b)=>a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom;const help=document.querySelector('#help'),auto=R('#auto'),ly=R('#lyric'),bar=document.querySelector('#bar');const spans=[...document.querySelectorAll('.mark span')].filter(vis).map(e=>e.getBoundingClientRect());let pile=0;for(let i=1;i<spans.length;i++)if(spans[i].left<spans[i-1].right)pile++;return{helpIn:!vis(help)||inside(R('#help')),autoIn:inside(auto),lyricVis:ly.height>0,lyricHitsAuto:hit(ly,auto),lyricHitsHelp:vis(help)&&hit(ly,R('#help')),pile,barOverflow:bar.scrollWidth-bar.clientWidth,bodyScroll:document.documentElement.scrollWidth-innerWidth}});
   await page.evaluate(t=>{ETM.seek(t);ETM.step(0)},p.t);const bad=[];if(!m.helpIn)bad.push('#help overflows #wrap');if(!m.autoIn)bad.push('#auto overflows #wrap');if(!m.lyricVis)bad.push('caption not visible at bar 2.3');if(m.lyricHitsAuto)bad.push('caption overlaps #auto');if(m.lyricHitsHelp)bad.push('caption overlaps #help');if(m.pile)bad.push(m.pile+' scrubber era labels overlap');if(m.barOverflow>1)bad.push('control bar overflows by '+m.barOverflow+'px');if(m.bodyScroll>1)bad.push('horizontal page scroll');return bad.length===0||bad.join('; ')}},
+ {name:'N1 end card: SOURCE CODE and PATCH NOTES buttons show at the end, sit inside the frame, and the panel opens, swallows keys and closes on Escape',era:null,bar:3,fn:async(p,h,page)=>{
+  const t0=p.t;
+  const r=await page.evaluate(async t=>{ETM.seek(t-0.5);ETM.step(0.5);ETM.render();
+   const R=s=>document.querySelector(s).getBoundingClientRect(),wrap=R('#wrap'),src=R('#src'),nb=R('#notesBtn'),vis=s=>getComputedStyle(document.querySelector(s)).display!=='none';
+   const out={shown:vis('#endbtns'),inside:[src,nb].every(b=>b.width>0&&b.left>=wrap.left&&b.right<=wrap.right&&b.top>=wrap.top&&b.bottom<=wrap.bottom),
+    href:document.querySelector('#src').href,target:document.querySelector('#src').target,secs:document.querySelectorAll('#notesBody h3').length,items:document.querySelectorAll('#notesBody li').length};
+   document.querySelector('#notesBtn').click();out.open=!document.querySelector('#notes').hidden;
+   const pl=document.querySelector('#play').textContent;(document.activeElement||document.body).dispatchEvent(new KeyboardEvent('keydown',{key:'p',bubbles:true}));out.keySwallowed=document.querySelector('#play').textContent===pl;
+   (document.activeElement||document.body).dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));out.closed=document.querySelector('#notes').hidden;
+   ETM.seek(40*1.875);ETM.step(0.1);out.hiddenMid=!vis('#endbtns');return out},95.6*BAR);
+  await page.evaluate(t=>{ETM.seek(t);ETM.step(0)},t0);
+  const bad=[];if(!r.shown)bad.push('buttons hidden on the end card');if(!r.inside)bad.push('a button sits outside the frame');
+  if(!/github\.com\/trmytelabs\/maximalist/.test(r.href)||r.target!=='_blank')bad.push('source link '+r.href+' '+r.target);
+  if(r.secs<5||r.items<15)bad.push(`panel has ${r.secs} sections / ${r.items} items`);if(!r.open)bad.push('PATCH NOTES did not open the panel');
+  if(!r.keySwallowed)bad.push('a key reached the game while the panel was open');if(!r.closed)bad.push('Escape did not close the panel');if(!r.hiddenMid)bad.push('buttons visible mid-song');
+  return bad.length===0||bad.join('; ')}},
 ];

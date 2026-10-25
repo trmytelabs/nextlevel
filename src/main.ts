@@ -8,6 +8,7 @@ import {E5GL} from './era5gl';
 import {E3GL} from './era3gl';
 import {E1GL} from './era1gl';
 import {CRT} from './crt';
+import {NOTES} from './patchnotes';
 import {START} from './startgl';
 import {MUSIC} from './music';
 import {SONG,loadSong,songTime,songSeek,songPlay,songPause,nudge,tap,clearTaps,saveTiming} from './song';
@@ -23,6 +24,13 @@ const AUTO_MODES=['idle','on','off'],AUTO_LABEL:any={idle:'AUTOPILOT: WHEN IDLE'
 function cycleAuto(){autoMode=AUTO_MODES[(AUTO_MODES.indexOf(autoMode)+1)%3];$('#autoBtn').textContent=AUTO_LABEL[autoMode];$('#autoBtn').classList.toggle('on',autoMode==='on')}
 function isAuto(now){const last=eraAt(songT)===4?Math.max(lastInputReal,ptr.t):lastInputReal;return autoMode==='on'?true:autoMode==='off'?false:now-last>2000}
 $('#qBtn').textContent='FX: '+QUALITY.toUpperCase();$('#qBtn').onclick=()=>setQuality(QUALITY==='low'?'high':'low');$('#rotate').onclick=()=>document.body.classList.add('pok');
+// PATCH NOTES panel (end card and start screen): what was built and how. Keys are swallowed while it is open.
+{const esc=(x:string)=>x.replace(/&/g,'&amp;').replace(/</g,'&lt;');const nb=$('#notesBody'),np=$('#notes');
+ nb.innerHTML='<div class="sub">'+esc(NOTES.sub)+'</div>'+NOTES.secs.map(s=>'<h3>'+esc(s.h)+'</h3><ul>'+s.items.map(i=>'<li>'+esc(i)+'</li>').join('')+'</ul>').join('');
+ const close=()=>{np.hidden=true;$('#notesBtn').focus()};
+ $('#notesBtn').onclick=()=>{np.hidden=false;nb.scrollTop=0;if(playing&&!ended)setPlaying(false);$('#notesX').focus()};$('#notesX').onclick=close;np.onclick=e=>{if(e.target===np)close()};
+ addEventListener('keydown',e=>{if(np.hidden)return;e.stopImmediatePropagation();if(e.key==='Escape'){e.preventDefault();close()}},true);
+ (window as any).__notes={open:()=>$('#notesBtn').click(),close,count:()=>NOTES.secs.length}}
 $('#play').onclick=togglePlay;$('#restart').onclick=()=>{seek(0);showStart()};$('#click').onclick=toggleClick;$('#autoBtn').onclick=cycleAuto;
 // a clicked button keeps focus, and the next Space (fire) would click it again (pause, sound, ...): drop focus after every click
 for(const b of document.querySelectorAll('#bar button'))b.addEventListener('click',()=>(b as HTMLElement).blur());
@@ -36,7 +44,7 @@ function hideStart(){if(!startUp)return;startUp=false;document.body.classList.re
 function startGame(){if(!startUp)return;ensureAC();if(!clickOn&&!soundChosen)toggleClick();sway0=START.swayAt(idleT);hideStart();if(songT>0.01)seek(0);setPlaying(true)}
 const ignoreKey=(k:string)=>/^(Shift|Control|Alt|Meta|Tab|CapsLock|F\d+|Unidentified|Dead|AudioVolume.*|Media.*)$/.test(k);
 addEventListener('keydown',e=>{if(!startUp||e.repeat||ignoreKey(e.key))return;startGame();if(!/^[1-5]$/.test(e.key)){e.stopImmediatePropagation();if(e.key===' '||e.key.startsWith('Arrow'))e.preventDefault()}},true);
-addEventListener('pointerdown',e=>{if(!startUp)return;const el=e.target as HTMLElement;if(el&&el.closest&&(el.closest('#rotate')||el.closest('#bar')||el.closest('#src')))return;startGame();e.stopPropagation()},true);
+addEventListener('pointerdown',e=>{if(!startUp)return;const el=e.target as HTMLElement;if(el&&el.closest&&(el.closest('#rotate')||el.closest('#bar')||el.closest('#endbtns')||el.closest('#notes')))return;startGame();e.stopPropagation()},true);
 const scrub=$('#scrub');let drag=false;const sc=e=>{const r=scrub.getBoundingClientRect();seek(clamp((e.clientX-r.left)/r.width,0,1)*TOTAL)};
 // pointercancel (iOS edge swipe, notification shade) must end the drag too, or the next touch anywhere scrubs the song
 scrub.addEventListener('pointerdown',e=>{drag=true;try{scrub.setPointerCapture(e.pointerId)}catch{}sc(e)});addEventListener('pointermove',e=>{if(drag)sc(e)});const endDrag=()=>{drag=false};addEventListener('pointerup',endDrag);addEventListener('pointercancel',endDrag);

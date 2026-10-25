@@ -35,7 +35,7 @@ function fire(){if(S.ship.dead)return;if(S.bul.length<3&&S.cool<=0){S.bul.push({
 // shots already in flight count as gone, so two shots never go for the same pixels.
 // it only fires at words in the nearer two-thirds of the crawl (z <= ZFIRE), so each word is readable before it is
 // chipped (firing at any range cleared 40/45 words; this clears 27-33/45, the count shifts with tiny timing changes); a shot that would land farther is worth nothing
-const ZFIRE=ZNEAR+(ZFAR-ZNEAR)*2/3;
+const ZFIRE=ZNEAR+(ZFAR-ZNEAR)*0.75;
 const resv=()=>S.bul.filter(b=>!b.hit&&b.pred).map(b=>b.pred);
 function lit(w,c,r,rs){if(w.img.data[(r*w.w+c)*4+3]===0)return false;for(const p of rs)if((c-p.cu)*(c-p.cu)+(r-p.cy)*(r-p.cy)<=p.R*p.R)return false;return true}
 function shotAt(x,t,rs){let y=S.ship.y-2;const dt=1/60;

@@ -44,9 +44,22 @@ button.on{border-color:var(--accent);color:var(--accent)}
 #time{color:var(--dim);font-size:clamp(6px,.85vw,10px);min-width:5.5em;text-align:right}
 #bar{overflow:hidden}
 /* title screen (startgl.ts): the canvas carries everything; the HUD tags hide until the game starts */
-#src{display:none;position:absolute;left:2%;top:3.5%;z-index:3;pointer-events:auto;font-size:clamp(6px,.85vw,10px);color:var(--accent);text-decoration:none;letter-spacing:.5px;text-shadow:0 0 6px #000,0 0 2px #000;padding:.6em .8em;border:1px solid rgba(91,255,91,.45);background:rgba(7,7,11,.6)}
-#src:hover{border-color:var(--accent);background:rgba(91,255,91,.12)}
-body.start #src,body.endcard #src{display:block}
+#endbtns{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:13%;z-index:3;gap:1.2em;pointer-events:auto}
+body.endcard #endbtns{display:flex}
+body.start #endbtns{display:flex;left:2%;top:3.5%;bottom:auto;transform:none}
+.eb{font:inherit;font-size:clamp(7px,1vw,12px);color:var(--accent);text-decoration:none;letter-spacing:.5px;padding:.9em 1.1em;border:1px solid rgba(91,255,91,.55);background:rgba(7,7,11,.72);cursor:pointer;text-shadow:0 0 6px #000;white-space:nowrap}
+.eb:hover,.eb:focus-visible{border-color:var(--accent);background:rgba(91,255,91,.14);outline:none}
+#notes{position:absolute;left:0;right:0;top:0;bottom:9.1%;z-index:5;background:rgba(5,4,12,.9);display:flex;align-items:center;justify-content:center;pointer-events:auto}
+#notes[hidden]{display:none}
+#notes .np{width:min(88%,860px);max-height:88%;display:flex;flex-direction:column;border:1px solid #ff3fb4;background:#0b0818;box-shadow:0 0 28px rgba(255,63,180,.35),inset 0 0 0 1px rgba(63,240,255,.15)}
+#notes .nh{display:flex;justify-content:space-between;align-items:center;gap:1em;padding:1em 1.2em;border-bottom:1px solid #2c2240}
+#notes .nh b{color:#ffd23f;font-size:clamp(9px,1.4vw,16px);font-weight:normal;letter-spacing:1px;text-shadow:0 0 10px rgba(255,210,63,.5)}
+#notesBody{overflow:auto;touch-action:pan-y;overscroll-behavior:contain;padding:1em 1.4em 1.4em;font-size:clamp(6px,.85vw,10px);line-height:2.1;color:#d8d4ea;-webkit-user-select:text;user-select:text}
+#notesBody .sub{color:#8f86b0}
+#notesBody h3{font:inherit;color:#3ff0ff;margin:1.5em 0 .4em;font-weight:normal;letter-spacing:1px}
+#notesBody ul{margin:0;padding-left:1.5em}
+#notesBody li::marker{color:#ff3fb4}
+@media (pointer:coarse){.eb{font-size:clamp(8px,1.4vw,12px)}#notesBody{font-size:clamp(7px,1.25vw,11px)}}
 body.start #hud .tag{display:none}
 body.start canvas#c{cursor:pointer}
 body.e1 #lyric{bottom:26%}
@@ -67,7 +80,8 @@ body.e4 #lyric{left:3%;right:64%;bottom:30%;text-align:left}
 <div id="rotate"><div class="ph"></div><div>TURN YOUR PHONE SIDEWAYS<br><small>it is a widescreen game</small></div><small>or tap here to play small</small></div>
 <div id="stage"><div id="wrap">
 <canvas id="c"></canvas>
-<a id="src" href="https://github.com/trmytelabs/maximalist" target="_blank" rel="noopener">SOURCE CODE ON GITHUB</a>
+<div id="endbtns"><a id="src" class="eb" href="https://github.com/trmytelabs/maximalist" target="_blank" rel="noopener">SOURCE CODE</a><button id="notesBtn" class="eb" type="button">PATCH NOTES</button></div>
+<div id="notes" hidden role="dialog" aria-modal="true" aria-labelledby="notesT"><div class="np"><div class="nh"><b id="notesT">PATCH NOTES</b><button id="notesX" class="eb" type="button">CLOSE</button></div><div id="notesBody"></div></div></div>
 <div id="hud">
   <div class="tag" id="era">1 · ARCADE</div>
   <div class="tag" id="clock">BAR 1 · 1</div>
