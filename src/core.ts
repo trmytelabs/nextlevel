@@ -16,11 +16,11 @@ export const QUALITY:'high'|'low'=(qp==='low'||qp==='high')?qp:(qs==='low'||qs==
 export function setQuality(q:'high'|'low'){try{localStorage.setItem('etm.q',q)}catch{}const u=new URL(location.href);u.searchParams.set('q',q);u.searchParams.set('t',(HK.now?HK.now():0).toFixed(2));location.href=u.toString()}
 export let lastTouch=-1e9;
 export const ERAS=[
- {name:'1978 · ARCADE',start:bar(0)},
- {name:'1991 · 16-BIT',start:bar(19)},
- {name:'1995 · SATURN 3D',start:bar(37)},
- {name:'2013 · MOBILE',start:bar(56)},
- {name:'NOW · AGENTS',start:bar(75)}];
+ {name:'1 · ARCADE',start:bar(0)},
+ {name:'2 · 16-BIT',start:bar(19)},
+ {name:'3 · 3D CONSOLE',start:bar(37)},
+ {name:'4 · MOBILE',start:bar(56)},
+ {name:'5 · VR',start:bar(75)}];
 export const TRANS=BAR*1.5;
 export const eraAt=t=>{let e=0;for(let i=0;i<ERAS.length;i++)if(t>=ERAS[i].start)e=i;return e};
 export const transAt=t=>{for(let i=1;i<ERAS.length;i++){const s=ERAS[i].start;if(t>=s-TRANS&&t<s)return{from:i-1,to:i,p:(t-(s-TRANS))/TRANS}}return null};

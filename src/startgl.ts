@@ -93,7 +93,7 @@ export function drawPlate(x:CanvasRenderingContext2D,p:any,cx:number,cy:number,o
 const PF=(s:number)=>`${s}px 'Press Start 2P',monospace`;
 function fit(x:CanvasRenderingContext2D,txt:string,size:number,maxW:number){x.font=PF(size);const w=x.measureText(txt).width;if(w>maxW){size=Math.max(6,Math.floor(size*maxW/w));x.font=PF(size)}return size}
 function text(x:CanvasRenderingContext2D,txt:string,cx:number,cy:number,size:number,col:string,maxW=W-40,shadow=true){fit(x,txt,size,maxW);x.textAlign='center';x.textBaseline='middle';if(shadow){x.fillStyle='rgba(0,0,0,.85)';x.fillText(txt,cx+1,cy+1)}x.fillStyle=col;x.fillText(txt,cx,cy)}
-const CH=[['1978','FIRST PROMPTS','#5bff5b'],['1991','LEARNING TO ASK','#ff6b5b'],['1995','AT MY DESK','#4df0ff'],['2013','IN MY POCKET','#ffe14d'],['NOW','DIRECTING AGENTS','#ff5be0']];
+const CH=[['ARCADE','FIRST PROMPTS','#5bff5b'],['16-BIT','LEARNING TO ASK','#ff6b5b'],['3D CONSOLE','AT MY DESK','#4df0ff'],['MOBILE','IN MY POCKET','#ffe14d'],['VR','DIRECTING AGENTS','#ff5be0']];
 const NAMEY=MOBILE?160:166; // IAN GINN plate centre row
 const TOUCH=MOBILE||matchMedia('(pointer: coarse)').matches;
 
@@ -105,11 +105,11 @@ function type(x:CanvasRenderingContext2D,a:number,it:number,nameA:number){if(a<=
  const pl=plate('IAN GINN',MOBILE?40:36);drawPlate(x,pl,W/2,NAMEY,{a:nameA,sweep:((it%5)-0.6)/1.1});
  if(a<=0){x.restore();return}x.globalAlpha=a;
  text(x,"FOR THE DEPUTY'S MAXIMALISTS",W/2,MOBILE?214:204,Math.round(12*k),'#5bff5b');
- text(x,'My AI journey, told through five generations of games.',W/2,238,Math.round(11*k),'#ffffff');
- text(x,'The tools got better. So did I.',W/2,261,Math.round(11*k),'#ffe14d');
+ text(x,'I leveled up the way gaming did.',W/2,238,Math.round(11*k),'#ffffff');
+ text(x,'Just a lot faster.',W/2,261,Math.round(11*k),'#ffe14d');
  // five chapters: a compact row of cartridges
  const top=294,cw=172,gap=8,x0=W/2-(cw*5+gap*4)/2,chH=MOBILE?52:46;
- text(x,'FIVE CHAPTERS  ·  GAME ERAS, NOT DATES',W/2,top,Math.round(8*k),'#9a93c4',W-40,false);
+ text(x,'FIVE GENERATIONS OF GAMES  ·  FIVE STAGES WITH AI',W/2,top,Math.round(8*k),'#9a93c4',W-40,false);
  for(let i=0;i<5;i++){const bx=x0+i*(cw+gap),by=top+12,[yr,tt,col]=CH[i];x.fillStyle='rgba(10,6,28,.85)';x.fillRect(bx,by,cw,chH);x.fillStyle=col;x.fillRect(bx,by,cw,2);x.globalAlpha=a*0.35;x.fillRect(bx,by+chH-1,cw,1);x.globalAlpha=a;
   text(x,yr,bx+cw/2,by+16,Math.round(11*k),col,cw-12);text(x,tt,bx+cw/2,by+(MOBILE?38:34),Math.round(8*k),'#eef0ff',cw-12)}
  // how to play
