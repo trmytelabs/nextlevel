@@ -16,8 +16,8 @@ Plain section tags only. Style cues go in the style field (section 3), not in br
 [Verse 1]
 One prompt, one box, one line to hold
 Green text on glass, half right, half wrong
-Ask, read, retry, that's how I learned
-It made things up, I caught it, and I took my turn
+Ask, read, retry, take another turn
+It made things up, and that's how I learned
 But I wanted it faster
 And it kept getting new
 
@@ -34,10 +34,10 @@ Ask on the beat, every answer's a drum
 I was learning in weeks what took years to come
 
 [Verse 3]
-Brought it back to my desk at the speed of light
-Fog at the edge where the backlog quits
-Foot to the floor and the floor is a pipeline
-Every meeting, every thread, I know what matters tonight
+Back at my desk, and I built me a crew
+One sums up the meetings, one gets the inbox through
+I call out the turns and they race down the line
+Every lap they come back, and I check what they find
 
 [Chorus]
 Turn it all the way up, then a little bit more
@@ -47,27 +47,27 @@ I don't do a little, I do everything, then some
 
 [Verse 4]
 Now the whole toolbox fits in my hand
-One thumb, one prompt, and I'm prepared again
-Every week I'm evolving, I don't slow down
-Wherever I ask is a place I can go
+Coaching on the bus, a deck before I land
+Every week I'm evolving, every week it grows
+The office is anywhere my signal goes
 
 [Bridge]
-Wait, who's drafting that?
-I didn't write that there
-I said what I needed out loud
-And a hundred hands appeared
+Wait, what if I built it?
+Not a draft, the real thing
+I said what I wanted out loud
+And it came back running
 
 [Final Verse]
-A hundred little hands and they all learned from mine
+From the plan to the push, every call is mine
 Maximalist at heart, I don't wait in line
-Brief the room, plan the sprint, code the fix on the fly
-I point at the problem, then I question what it thinks
+Brief the team, plan the sprint, code the fix on the fly
+Write the tests, ship the build, and I still ask why
 
 [Final Chorus]
 Turn it all the way up, then a little bit more
-Every tool I ever learned is in here
+Every tool I ever learned, now I know what it's for
 Turn it all the way up, let the whole thing run
-Deputy, I'm ready, make me a Maximalist
+Deputy, I'm ready, next level, here I come
 
 [Outro]
 Imagine what we could build.
@@ -80,50 +80,50 @@ Time = bar x 1.875 s. Era switches are the rows with no lyric.
 
 | Bar | Time | Section | Era | Line |
 |---|---|---|---|---|
-| 0 | 0:00.0 | Intro | 1 · Arcade | (title card, instrumental) |
-| 2 | 0:03.8 | Verse 1 | 1 · Arcade | One prompt, one box, one line to hold |
-| 4 | 0:07.5 | Verse 1 | 1 · Arcade | Green text on glass, half right, half wrong |
-| 6 | 0:11.3 | Verse 1 | 1 · Arcade | Ask, read, retry, that's how I learned |
-| 8 | 0:15.0 | Verse 1 | 1 · Arcade | It made things up, I caught it, and I took my turn |
-| 12 | 0:22.5 | Verse 1 (lift) | 1 · Arcade | But I wanted it faster |
-| 14 | 0:26.3 | Verse 1 (lift) | 1 · Arcade | And it kept getting new |
-| 17 | 0:31.9 | Verse 1 (lift) | 1 · Arcade | (screen shatters, build into the drop) |
-| 19 | 0:35.6 | Chorus | 2 · 16-bit | Turn it all the way up, then a little bit more |
-| 21 | 0:39.4 | Chorus | 2 · 16-bit | That's the only setting I've been looking for |
-| 23 | 0:43.1 | Chorus | 2 · 16-bit | Turn it all the way up, let the whole thing run |
-| 25 | 0:46.9 | Chorus | 2 · 16-bit | I don't do a little, I do everything, then some |
-| 27.5 | 0:51.6 | Verse 2 | 2 · 16-bit | Then the box talked back, and I talked back too |
-| 29.5 | 0:55.3 | Verse 2 | 2 · 16-bit | Taught myself the questions till the answers came true |
-| 31.5 | 0:59.1 | Verse 2 | 2 · 16-bit | Ask on the beat, every answer's a drum |
-| 33.5 | 1:02.8 | Verse 2 | 2 · 16-bit | I was learning in weeks what took years to come |
-| 37 | 1:09.4 | Verse 3 | 3 · Saturn 3D | (racer begins) |
-| 38 | 1:11.3 | Verse 3 | 3 · Saturn 3D | Brought it back to my desk at the speed of light |
-| 40 | 1:15.0 | Verse 3 | 3 · Saturn 3D | Fog at the edge where the backlog quits |
-| 42 | 1:18.8 | Verse 3 | 3 · Saturn 3D | Foot to the floor and the floor is a pipeline |
-| 44 | 1:22.5 | Verse 3 | 3 · Saturn 3D | Every meeting, every thread, I know what matters tonight |
-| 47 | 1:28.1 | Chorus | 3 · Saturn 3D | Turn it all the way up, then a little bit more |
-| 49 | 1:31.9 | Chorus | 3 · Saturn 3D | That's the only setting I've been looking for |
-| 51 | 1:35.6 | Chorus | 3 · Saturn 3D | Turn it all the way up, let the whole thing run |
-| 53 | 1:39.4 | Chorus | 3 · Saturn 3D | I don't do a little, I do everything, then some |
-| 56 | 1:45.0 | Verse 4 | 4 · Mobile | (phone begins) |
-| 57 | 1:46.9 | Verse 4 | 4 · Mobile | Now the whole toolbox fits in my hand |
-| 59 | 1:50.6 | Verse 4 | 4 · Mobile | One thumb, one prompt, and I'm prepared again |
-| 61 | 1:54.4 | Verse 4 | 4 · Mobile | Every week I'm evolving, I don't slow down |
-| 63 | 1:58.1 | Verse 4 | 4 · Mobile | Wherever I ask is a place I can go |
-| 66.5 | 2:04.7 | Bridge | 4 · Mobile | Wait, who's drafting that? |
-| 68 | 2:07.5 | Bridge | 4 · Mobile | I didn't write that there |
-| 69.5 | 2:10.3 | Bridge | 4 · Mobile | I said what I needed out loud |
-| 71 | 2:13.1 | Bridge | 4 · Mobile | And a hundred hands appeared |
-| 75 | 2:20.6 | Final Verse | 5 · Agents | A hundred little hands and they all learned from mine |
-| 77 | 2:24.4 | Final Verse | 5 · Agents | Maximalist at heart, I don't wait in line |
-| 79 | 2:28.1 | Final Verse | 5 · Agents | Brief the room, plan the sprint, code the fix on the fly |
-| 81 | 2:31.9 | Final Verse | 5 · Agents | I point at the problem, then I question what it thinks |
-| 83 | 2:35.6 | Final Chorus | 5 · Agents | Turn it all the way up, then a little bit more |
-| 85 | 2:39.4 | Final Chorus | 5 · Agents | Every tool I ever learned is in here |
-| 87 | 2:43.1 | Final Chorus | 5 · Agents | Turn it all the way up, let the whole thing run |
-| 89 | 2:46.9 | Final Chorus (peak) | 5 · Agents | Deputy, I'm ready, make me a Maximalist |
-| 94 | 2:56.3 | Outro | 5 · Agents | Imagine what we could build. |
-| 95 | 2:58.1 | Outro | 5 · Agents | Ready when you are. Press start. |
+| 0 | 0:00.0 | Intro | 1 · Arcade, first prompts | (title card, instrumental) |
+| 2 | 0:03.8 | Verse 1 | 1 · Arcade, first prompts | One prompt, one box, one line to hold |
+| 4 | 0:07.5 | Verse 1 | 1 · Arcade, first prompts | Green text on glass, half right, half wrong |
+| 6 | 0:11.3 | Verse 1 | 1 · Arcade, first prompts | Ask, read, retry, take another turn |
+| 8 | 0:15.0 | Verse 1 | 1 · Arcade, first prompts | It made things up, and that's how I learned |
+| 12 | 0:22.5 | Verse 1 (lift) | 1 · Arcade, first prompts | But I wanted it faster |
+| 14 | 0:26.3 | Verse 1 (lift) | 1 · Arcade, first prompts | And it kept getting new |
+| 17 | 0:31.9 | Verse 1 (lift) | 1 · Arcade, first prompts | (screen shatters, build into the drop) |
+| 19 | 0:35.6 | Chorus | 2 · 16-bit, learning to ask | Turn it all the way up, then a little bit more |
+| 21 | 0:39.4 | Chorus | 2 · 16-bit, learning to ask | That's the only setting I've been looking for |
+| 23 | 0:43.1 | Chorus | 2 · 16-bit, learning to ask | Turn it all the way up, let the whole thing run |
+| 25 | 0:46.9 | Chorus | 2 · 16-bit, learning to ask | I don't do a little, I do everything, then some |
+| 27.5 | 0:51.6 | Verse 2 | 2 · 16-bit, learning to ask | Then the box talked back, and I talked back too |
+| 29.5 | 0:55.3 | Verse 2 | 2 · 16-bit, learning to ask | Taught myself the questions till the answers came true |
+| 31.5 | 0:59.1 | Verse 2 | 2 · 16-bit, learning to ask | Ask on the beat, every answer's a drum |
+| 33.5 | 1:02.8 | Verse 2 | 2 · 16-bit, learning to ask | I was learning in weeks what took years to come |
+| 37 | 1:09.4 | Verse 3 | 3 · 3D console, directing agents | (racer begins) |
+| 38 | 1:11.3 | Verse 3 | 3 · 3D console, directing agents | Back at my desk, and I built me a crew |
+| 40 | 1:15.0 | Verse 3 | 3 · 3D console, directing agents | One sums up the meetings, one gets the inbox through |
+| 42 | 1:18.8 | Verse 3 | 3 · 3D console, directing agents | I call out the turns and they race down the line |
+| 44 | 1:22.5 | Verse 3 | 3 · 3D console, directing agents | Every lap they come back, and I check what they find |
+| 47 | 1:28.1 | Chorus | 3 · 3D console, directing agents | Turn it all the way up, then a little bit more |
+| 49 | 1:31.9 | Chorus | 3 · 3D console, directing agents | That's the only setting I've been looking for |
+| 51 | 1:35.6 | Chorus | 3 · 3D console, directing agents | Turn it all the way up, let the whole thing run |
+| 53 | 1:39.4 | Chorus | 3 · 3D console, directing agents | I don't do a little, I do everything, then some |
+| 56 | 1:45.0 | Verse 4 | 4 · Mobile, working from anywhere | (phone begins) |
+| 57 | 1:46.9 | Verse 4 | 4 · Mobile, working from anywhere | Now the whole toolbox fits in my hand |
+| 59 | 1:50.6 | Verse 4 | 4 · Mobile, working from anywhere | Coaching on the bus, a deck before I land |
+| 61 | 1:54.4 | Verse 4 | 4 · Mobile, working from anywhere | Every week I'm evolving, every week it grows |
+| 63 | 1:58.1 | Verse 4 | 4 · Mobile, working from anywhere | The office is anywhere my signal goes |
+| 66.5 | 2:04.7 | Bridge | 4 · Mobile, working from anywhere | Wait, what if I built it? |
+| 68 | 2:07.5 | Bridge | 4 · Mobile, working from anywhere | Not a draft, the real thing |
+| 69.5 | 2:10.3 | Bridge | 4 · Mobile, working from anywhere | I said what I wanted out loud |
+| 71 | 2:13.1 | Bridge | 4 · Mobile, working from anywhere | And it came back running |
+| 75 | 2:20.6 | Final Verse | 5 · VR, full development | From the plan to the push, every call is mine |
+| 77 | 2:24.4 | Final Verse | 5 · VR, full development | Maximalist at heart, I don't wait in line |
+| 79 | 2:28.1 | Final Verse | 5 · VR, full development | Brief the team, plan the sprint, code the fix on the fly |
+| 81 | 2:31.9 | Final Verse | 5 · VR, full development | Write the tests, ship the build, and I still ask why |
+| 83 | 2:35.6 | Final Chorus | 5 · VR, full development | Turn it all the way up, then a little bit more |
+| 85 | 2:39.4 | Final Chorus | 5 · VR, full development | Every tool I ever learned, now I know what it's for |
+| 87 | 2:43.1 | Final Chorus | 5 · VR, full development | Turn it all the way up, let the whole thing run |
+| 89 | 2:46.9 | Final Chorus (peak) | 5 · VR, full development | Deputy, I'm ready, next level, here I come |
+| 94 | 2:56.3 | Outro | 5 · VR, full development | Imagine what we could build. |
+| 95 | 2:58.1 | Outro | 5 · VR, full development | Ready when you are. Press start. |
 | 96 | 3:00.0 | End | | |
 
 ## 3. Suno style prompts
@@ -156,13 +156,13 @@ Same tempo, same key centre, every section. Each sound switch lands on the bar w
 | Verse 1 | 2–19 | Arcade | Add noise-channel hats and the four-note descending march. Vocal half-spoken. Bars 12–16 ("But I wanted it faster") speed the march up; bar 17 is a short riser and glitch as the screen shatters. | Builds from sparse to tense. |
 | Chorus 1 | 19–27.5 | 16-bit | 16-bit FM synthpop arrives on the downbeat of bar 19: FM bass, bright PCM drums, brass stabs, chanted hook. | First big lift; full colour. |
 | Verse 2 | 27.5–37 | 16-bit | Stay 16-bit, bouncier: chimes on the offbeats, drums pulled back a little. Bars 35.5–37 tilt the beat into breaks. | Medium, playful. |
-| Verse 3 | 37–47 | Saturn 3D | 90s breakbeat rave: chopped breaks, hoover and supersaw stabs, filtered pads, reverb opens up. Half-time feel under the verse. | Driving, wider. |
-| Chorus 2 | 47–56 | Saturn 3D | Full-time rave chorus, filter fully open, stabs on the hook. | Bigger than chorus 1. |
+| Verse 3 | 37–47 | 3D console | 90s breakbeat rave: chopped breaks, hoover and supersaw stabs, filtered pads, reverb opens up. Half-time feel under the verse. | Driving, wider. |
+| Chorus 2 | 47–56 | 3D console | Full-time rave chorus, filter fully open, stabs on the hook. | Bigger than chorus 1. |
 | Verse 4 | 56–66.5 | Mobile | Bright 2013 EDM pop: clean plucks, sidechain pump on the chords, hi-hat rolls, phone taps and pings as percussion. | Light, quick, confident. |
 | Bridge | 66.5–75 | Mobile | Thin to a heartbeat kick and one voice. Whispered doubles grow under "a hundred hands appeared". Riser through bars 73–75. | The breath before the drop. |
-| Final Verse | 75–83 | Agents | Hyperpop synthwave drop on bar 75, stacking everything: chiptune lead on top, FM bass, breaks under the kick, EDM plucks, vocoded doubles, glitch edits on the beat. | Full. |
-| Final Chorus | 83–94 | Agents | Biggest moment. Keep building through bars 83–89 so the ask, "Deputy, I'm ready, make me a Maximalist", lands on the peak at bar 89 (the game's tunnel run starts there). Hold the peak to bar 94. | Maximum. |
-| Outro | 94–96 | Agents | Everything strips away; one lonely square-wave note, dry, under a spoken outro. | Quiet, an invitation. |
+| Final Verse | 75–83 | VR | Hyperpop synthwave drop on bar 75, stacking everything: chiptune lead on top, FM bass, breaks under the kick, EDM plucks, vocoded doubles, glitch edits on the beat. | Full. |
+| Final Chorus | 83–94 | VR | Biggest moment. Keep building through bars 83–89 so the ask, "Deputy, I'm ready, next level, here I come", lands on the peak at bar 89 (the game's tunnel run starts there). Hold the peak to bar 94. | Maximum. |
+| Outro | 94–96 | VR | Everything strips away; one lonely square-wave note, dry, under a spoken outro. | Quiet, an invitation. |
 
 Getting Suno to change sound on the bar: it rarely holds five genres in one generation. Build with Extend: (1) Intro, Verse 1 and Chorus 1 with a chiptune-into-16-bit style, keeping a take where the chorus arrives near 0:36; (2) extend with Verse 2 in 16-bit style; (3) Verse 3 and Chorus 2 in the rave style; (4) Verse 4 and Bridge in the EDM pop style; (5) Final Verse, Final Chorus and Outro in the hyperpop synthwave style. Put "128 BPM" in every style field and listen for the kick holding tempo across joins.
 

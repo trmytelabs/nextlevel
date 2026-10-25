@@ -36,7 +36,7 @@ function hideStart(){if(!startUp)return;startUp=false;document.body.classList.re
 function startGame(){if(!startUp)return;ensureAC();if(!clickOn&&!soundChosen)toggleClick();sway0=START.swayAt(idleT);hideStart();if(songT>0.01)seek(0);setPlaying(true)}
 const ignoreKey=(k:string)=>/^(Shift|Control|Alt|Meta|Tab|CapsLock|F\d+|Unidentified|Dead|AudioVolume.*|Media.*)$/.test(k);
 addEventListener('keydown',e=>{if(!startUp||e.repeat||ignoreKey(e.key))return;startGame();if(!/^[1-5]$/.test(e.key)){e.stopImmediatePropagation();if(e.key===' '||e.key.startsWith('Arrow'))e.preventDefault()}},true);
-addEventListener('pointerdown',e=>{if(!startUp)return;const el=e.target as HTMLElement;if(el&&el.closest&&(el.closest('#rotate')||el.closest('#bar')))return;startGame();e.stopPropagation()},true);
+addEventListener('pointerdown',e=>{if(!startUp)return;const el=e.target as HTMLElement;if(el&&el.closest&&(el.closest('#rotate')||el.closest('#bar')||el.closest('#src')))return;startGame();e.stopPropagation()},true);
 const scrub=$('#scrub');let drag=false;const sc=e=>{const r=scrub.getBoundingClientRect();seek(clamp((e.clientX-r.left)/r.width,0,1)*TOTAL)};
 // pointercancel (iOS edge swipe, notification shade) must end the drag too, or the next touch anywhere scrubs the song
 scrub.addEventListener('pointerdown',e=>{drag=true;try{scrub.setPointerCapture(e.pointerId)}catch{}sc(e)});addEventListener('pointermove',e=>{if(drag)sc(e)});const endDrag=()=>{drag=false};addEventListener('pointerup',endDrag);addEventListener('pointercancel',endDrag);

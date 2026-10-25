@@ -4,7 +4,7 @@ Paste everything below this line into a new session (Claude, ChatGPT, a coding a
 
 ---
 
-You are helping Ian Ginn finish **"Next Level"** (working title was "Everything, Then More", now the chorus hook), a three-minute **playable music video** he is submitting to join the **Deputy's Maximalists**, a new program announced by the Deputy Minister of Technology and Innovation (Government of Alberta, "GoA"). The post asked people to make a music video explaining why they want to join. Ian's angle: show, through five eras of video games that he actually plays as the song runs, how far technology came, how far the tools at work came, and how far he personally came learning to use AI in his work: from doing everything by hand, to asking an AI questions, to bringing it to his desk, to AI in his pocket, to the work building the work. The ask at the end is the chorus line: *"Deputy, I'm ready, make me a Maximalist."* He is **not** claiming to already be on the team.
+You are helping Ian Ginn finish **"Next Level"** (working title was "Everything, Then More", now the chorus hook), a three-minute **playable music video** he is submitting to join the **Deputy's Maximalists**, a new program announced by the Deputy Minister of Technology and Innovation (Government of Alberta, "GoA"). The post asked people to make a music video explaining why they want to join. Ian's angle: show, through five eras of video games that he actually plays as the song runs, how far technology came, how far the tools at work came, and how far he personally came learning to use AI in his work: from doing everything by hand, to asking an AI questions, to bringing it to his desk, to AI in his pocket, to the work building the work. The ask at the end is the chorus line: *"Deputy, I'm ready, next level, here I come."* He is **not** claiming to already be on the team.
 
 ## The thing itself
 
@@ -29,8 +29,8 @@ You are helping Ian Ginn finish **"Next Level"** (working title was "Everything,
 ```
 2    One prompt, one box, one line to hold
 4    Green text on glass, half right, half wrong
-6    Ask, read, retry, that's how I learned
-8    It made things up, I caught it, and I took my turn
+6    Ask, read, retry, take another turn
+8    It made things up, and that's how I learned
 12   But I wanted it faster
 14   And it kept getting new
 19   Turn it all the way up, then a little bit more          (CHORUS)
@@ -41,35 +41,35 @@ You are helping Ian Ginn finish **"Next Level"** (working title was "Everything,
 29.5 Taught myself the questions till the answers came true
 31.5 Ask on the beat, every answer's a drum
 33.5 I was learning in weeks what took years to come
-38   Brought it back to my desk at the speed of light
-40   Fog at the edge where the backlog quits
-42   Foot to the floor and the floor is a pipeline
-44   Every meeting, every thread, I know what matters tonight
+38   Back at my desk, and I built me a crew
+40   One sums up the meetings, one gets the inbox through
+42   I call out the turns and they race down the line
+44   Every lap they come back, and I check what they find
 47   Turn it all the way up, then a little bit more          (CHORUS)
 49   That's the only setting I've been looking for
 51   Turn it all the way up, let the whole thing run
 53   I don't do a little, I do everything, then some
 57   Now the whole toolbox fits in my hand
-59   One thumb, one prompt, and I'm prepared again
-61   Every week I'm evolving, I don't slow down
-63   Wherever I ask is a place I can go
-66.5 Wait, who's drafting that?                               (BRIDGE)
-68   I didn't write that there
-69.5 I said what I needed out loud
-71   And a hundred hands appeared
-75   A hundred little hands and they all learned from mine   (FINAL VERSE)
+59   Coaching on the bus, a deck before I land
+61   Every week I'm evolving, every week it grows
+63   The office is anywhere my signal goes
+66.5 Wait, what if I built it?                               (BRIDGE)
+68   Not a draft, the real thing
+69.5 I said what I wanted out loud
+71   And it came back running
+75   From the plan to the push, every call is mine   (FINAL VERSE)
 77   Maximalist at heart, I don't wait in line
-79   Brief the room, plan the sprint, code the fix on the fly
-81   I point at the problem, then I question what it thinks
+79   Brief the team, plan the sprint, code the fix on the fly
+81   Write the tests, ship the build, and I still ask why
 83   Turn it all the way up, then a little bit more          (FINAL CHORUS)
-85   Every tool I ever learned is in here
+85   Every tool I ever learned, now I know what it's for
 87   Turn it all the way up, let the whole thing run
-89   Deputy, I'm ready, make me a Maximalist
+89   Deputy, I'm ready, next level, here I come
 94   Imagine what we could build.                                       (OUTRO)
 95   Ready when you are. Press start.
 ```
 
-Story arc of the lyrics: verse 1 = first clumsy prompts into a basic tool, learning to check it; verse 2 = the first time the "box talked back" and teaching himself to ask; verse 3 = bringing it to the desk at the speed of light, the backlog melting; verse 4 = AI in his pocket, evolving every week; bridge = the moment the work started doing itself; final verse/chorus = a hundred hands, full automation, and the ask.
+Story arc of the lyrics (rewritten 2026-10-25 so each verse matches its stage): verse 1 (ARCADE · FIRST PROMPTS) = first clumsy prompts, catching it making things up; chorus + verse 2 (16-BIT · LEARNING TO ASK) = the box talks back and he teaches himself to ask; verse 3 (3D CONSOLE · DIRECTING AGENTS) = building a crew of agents at his desk for meetings and email, calling the turns and checking their work; verse 4 + bridge (MOBILE · WORKING FROM ANYWHERE) = coaching and decks on the go, then "what if I built it?"; final verse + chorus (VR · FULL DEVELOPMENT) = plan, code, test and ship himself, still asking why, then the ask to the Deputy.
 
 The **Suno brief** lives in `LYRICS.md`: genre-evolving 128 BPM pop (8-bit chiptune intro → 16-bit FM synthpop → 90s breakbeat rave → bright 2013 EDM → hyperpop synthwave finale → one lonely square-wave note), with section tags, a bar map, and sync instructions. Ian could not sign in to Suno from his phone yet; the track is still to come.
 

@@ -44,6 +44,9 @@ button.on{border-color:var(--accent);color:var(--accent)}
 #time{color:var(--dim);font-size:clamp(6px,.85vw,10px);min-width:5.5em;text-align:right}
 #bar{overflow:hidden}
 /* title screen (startgl.ts): the canvas carries everything; the HUD tags hide until the game starts */
+#src{display:none;position:absolute;left:2%;top:3.5%;z-index:3;pointer-events:auto;font-size:clamp(6px,.85vw,10px);color:var(--accent);text-decoration:none;letter-spacing:.5px;text-shadow:0 0 6px #000,0 0 2px #000;padding:.6em .8em;border:1px solid rgba(91,255,91,.45);background:rgba(7,7,11,.6)}
+#src:hover{border-color:var(--accent);background:rgba(91,255,91,.12)}
+body.start #src,body.endcard #src{display:block}
 body.start #hud .tag{display:none}
 body.start canvas#c{cursor:pointer}
 body.e1 #lyric{bottom:26%}
@@ -64,6 +67,7 @@ body.e4 #lyric{left:3%;right:64%;bottom:30%;text-align:left}
 <div id="rotate"><div class="ph"></div><div>TURN YOUR PHONE SIDEWAYS<br><small>it is a widescreen game</small></div><small>or tap here to play small</small></div>
 <div id="stage"><div id="wrap">
 <canvas id="c"></canvas>
+<a id="src" href="https://github.com/trmytelabs/maximalist" target="_blank" rel="noopener">SOURCE CODE ON GITHUB</a>
 <div id="hud">
   <div class="tag" id="era">1 · ARCADE</div>
   <div class="tag" id="clock">BAR 1 · 1</div>

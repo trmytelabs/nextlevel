@@ -1,8 +1,8 @@
 # Next Level
 
-![The finale: the tunnel run under the line "Deputy, I'm ready, make me a Maximalist"](docs/era5-tunnel.jpg)
+![The finale: the tunnel run under the line "Deputy, I'm ready, next level, here I come"](docs/era5-tunnel.jpg)
 
-**Next Level** is a three-minute music video you can play. It is Ian Ginn's application to join the Deputy's Maximalists (Government of Alberta). Five generations of games stand for two curves rising together: what AI can do, and how well Ian uses it. The piece starts as a 1978 arcade crawl where you shoot the lyrics and ends in a VR saber lane where an AI co-pilot builds the arena out of every word you cut. The ask is the last chorus line, *"Deputy, I'm ready, make me a Maximalist"*, and the end card says *"Imagine what we could build together."*
+**Next Level** is a three-minute music video you can play. It is Ian Ginn's application to join the Deputy's Maximalists (Government of Alberta). Five generations of games stand for two curves rising together: what AI can do, and how well Ian uses it. The piece starts as a 1978 arcade crawl where you shoot the lyrics and ends in a VR saber lane where an AI co-pilot builds the arena out of every word you cut. The ask is the last chorus line, *"Deputy, I'm ready, next level, here I come"*, and the end card says *"Imagine what we could build together."*
 
 - Play it now: https://trmytelabs.github.io/maximalist/
 - Coming soon: https://nextlevel.patchnotes.ca

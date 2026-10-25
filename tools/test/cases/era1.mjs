@@ -81,7 +81,7 @@ export default [
     if(Math.abs(r.x-231)>0.5)return `respawned at x=${r.x}, expected centre`}}
   if(c.ships.length<2)return 'could not sample both blink phases';
   const [a,b]=c.ships,lo=Math.min(a.green,b.green),hi=Math.max(a.green,b.green);
-  if(!(lo*6<=hi&&hi>=40))return `blink: ship pixels ${a.green} / ${b.green} in the two phases (CRT glow leaves a few in the off phase)`;
+  if(!(lo*4<=hi&&hi>=40)) // 4x, not 6x: the small phone-landscape viewport keeps ~1/5 of the glow in the off phasereturn `blink: ship pixels ${a.green} / ${b.green} in the two phases (CRT glow leaves a few in the off phase)`;
   if(c.debris)return 'crawl shattered before bar 17';
   return true}},
 
