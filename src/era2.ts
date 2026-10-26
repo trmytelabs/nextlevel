@@ -45,10 +45,15 @@ function frame(rows:string[],front?:any[],back?:any[]){return [0,1].map(fl=>{con
  const put=(pat,dx,dy)=>{const w=pat[0].length;x.drawImage(build(pat,!!fl),OX-1+(fl?16-dx-w:dx),OY-1+dy)};
  if(back)put(dark(back[0]),back[1],back[2]);put(rows,0,0);if(front)put(front[0],front[1],front[2]);return c})}
 const DEATH=['.....RRRRRR.....','...RRRRRRRRRR...','..RRRRRRRRRRRR..','..RRRRRRRRRRRR..','SSRRRRRRRRRRRRSS','SSHSSSSSSSSSSHSS','.RHSWKSSSSKWSHR.','.RSSWKSSSSKWSSR.','.RRSSSSSSSSSSRR.','..RSSSKKKKSSSR..','..RRSSSKKSSSRR..','...RRRRRRRRRR...','...RRBRRRRBRR...','....BBBBBBBB....','....BYBBBBYB....','....BBBBBBBB....','....BBBBBBBB....','....BBB..BBB....','....BBB..BBB....','....BBB..BBB....','...NNNN..NNNN...','..NNNNN..NNNNN..',E8,E8];
-// walker (a purple glitch-bug), 16 x 15, three steps and a squash; flyer (a blue moth), 16 x 8, three wing beats
-const WK_TOP=['......PPPP......','....PPPPPPPP....','...PPPPPPPPPP...','..PPPPPPPPPPPP..','.PPPKPPPPPPKPPP.','.PPPWKPPPPKWPPP.','PPPWWKPPPPKWWPPP','PPPWWKPPPPKWWPPP','PPPPPPPPPPPPPPPP','.PPPPPPPPPPPPPP.','...TTTTTTTTTT...'];
-const WK=[['..NNNTTTTTTNNN..','.NNNNN....NNNNN.','.NNNN......NNNN.',E8],['...NNTTTTTTNN...','..NNNN...NNNNN..','..NNN.....NNNNN.',E8],['..NNNTTTTTTNN...','.NNNNN...NNNN...','NNNNN.....NNN...',E8]].map(f=>WK_TOP.concat(f));
-const WK_SQ=['..PPPPPPPPPPPP..','.PPPKKPPPPKKPPP.','PPPPWWPPPPWWPPPP','PPPPPPPPPPPPPPPP','.TTTTTTTTTTTTTT.','NNNN........NNNN',E8];
+// walker (a caterpillar: green segments, yellow spots, red-tipped antennae), 16 x 15, faces right, three crawl frames
+// where the hump travels along the body and the legs ripple, plus a squash; flyer (a blue moth), 16 x 8, three wing beats
+const CAT_HEAD=['...........R..R.','............g.g.','...........GGGG.','..........GGGGGG'];
+const CAT_TAIL=['GGGGGGGGGGGGGGKG','GGGGGGGGGGGGGGG.','gGGGGGGGGGGGGGG.','.gggggggggggggg.'];
+const WK=[
+ [E8,E8,E8,...CAT_HEAD,'.GG....GG.GGGWWG','GGGG..GGGGGGGWKG','GYGG..GYGGGGGGGG',...CAT_TAIL,'.n.n.n.n.n.n.n..'],
+ [E8,E8,E8,...CAT_HEAD,'....GGG...GGGWWG','...GGGGG..GGGWKG','GG.GGYGG.GGGGGGG',...CAT_TAIL,'n.n.n.n.n.n.n.n.'],
+ [E8,E8,E8,...CAT_HEAD,'.GG....GG.GGGWWG','GGGG..GGGGGGGWKG','GYGG..GYGGGGGGGG',...CAT_TAIL,'.n..n..n..n..n..']];
+const WK_SQ=[E8,E8,'..........GGGG..','.GGGGGGGGGGGKKG.','GYGGYGGYGGGGGGGG','gggggggggggggggg','n.n.n.n.n.n.n.n.'];
 const FLY=[['CC............CC','CCC..........CCC','.CCC........CCC.','..CCCC.cc.CCCC..','...CCCccccCCC...','....cWKccKWc....','.....cccccc.....','......OOOO......'],
  [E8,E8,E8,'.CCCCC.cc.CCCCC.','CCCCCCccccCCCCCC','....cWKccKWc....','.....cccccc.....','......OOOO......'],
  [E8,E8,E8,'......cccc......','...CCccccccCC...','.CCCcWKccKWcCCC.','CCC..cccccc..CCC','CC....OOOO....CC']];
@@ -227,7 +232,7 @@ function cam(){const p=S.pl,sx=p.x-S.camX;if(sx>156)S.camX=p.x-156;else if(sx<10
 function foes(ft,p,jh){for(const f of S.foes){if(!f.alive)continue;if(f.sq){f.sq+=DT;if(f.sq>0.45)f.alive=false;continue}
  if(f.t==='walk'){f.x+=f.dir*22*DT;if(f.x<f.x0){f.x=f.x0;f.dir=1}if(f.x>f.x1){f.x=f.x1;f.dir=-1}}else{f.x-=10*DT;f.y=f.base+Math.sin(ft*2.2+f.ph)*18}
  if(!p)continue;const fh=f.t==='walk'?14:8,r=contact(p,f.x,f.y-fh,fh,jh);
- if(r===1){f.sq=DT;S.score+=200;S.stomps++;noise(0.06,0.3,1500);blip(330,0.08,0.12);for(let i=0;i<8;i++)S.pops.push({x:f.x+8,y:f.y-fh+6,vx:(hash(ft*13+i)-.5)*90,vy:-hash(ft*29+i)*80,l:.5,g:300,c:'#e0b0ff'})}
+ if(r===1){f.sq=DT;S.score+=200;S.stomps++;noise(0.06,0.3,1500);blip(330,0.08,0.12);for(let i=0;i<8;i++)S.pops.push({x:f.x+8,y:f.y-fh+6,vx:(hash(ft*13+i)-.5)*90,vy:-hash(ft*29+i)*80,l:.5,g:300,c:'#a8f07a'})}
  else if(r===-1){S.hits++;S.plan=null;S.score=Math.max(0,S.score-50);S.shake=0.3;blip(110,0.25,0.15)}}}
 // one fixed 60 Hz tick: decide (autopilot or the player), move, bump, foes, camera
 function tick(auto,hd,hj){const p=S.pl;S.ft+=DT;const ft=S.ft;
