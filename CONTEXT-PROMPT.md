@@ -77,7 +77,7 @@ The **Suno brief** lives in `LYRICS.md`: genre-evolving 128 BPM pop (8-bit chipt
 
 WASD / arrows move (A/D steer; W/up jump; space fire; the mouse or finger drives the saber in the finale). Settings keys are separate: **Q** autopilot mode, **M** sound, **L** captions, **G** graphics tier (reloads at the same bar), **P / Esc** pause, **1–5** jump to an era, **[ ]** nudge song offset, **T / U / Y** tap a lyric start / clear taps / download timing.json. Touch: hold left/right edge, tap top to jump, tap bottom to fire.
 
-## Code map (repo `trmytelabs/maximalist`, branch `scaffold-vite`, PR #1 open to `main`)
+## Code map (repo `trmytelabs/nextlevel`, branch `scaffold-vite`, PR #1 open to `main`)
 
 - `index.html` markup/CSS/HUD; `src/main.ts` transport, compositing, cards, HUD, `window.ETM` debug/test hook (seek/step/probe/render/input).
 - `src/core.ts` constants, `ERAS`, `LYRICS`, canvases, input (keyboard + touch), audio helpers, quality tier, `MOBILE`.
@@ -117,7 +117,7 @@ Full three-minute autopilot run under the harness: 69 cases pass, 0 page errors,
 
 ## Still open / needs Ian
 
-1. **Merge PR #1, make the repo public, enable GitHub Pages** (the coding agent's permission classifier blocked these): `gh pr merge 1 --repo trmytelabs/maximalist --merge`, `gh repo edit trmytelabs/maximalist --visibility public --accept-visibility-change-consequences`, `gh api -X POST repos/trmytelabs/maximalist/pages -f build_type=workflow`. Site then lives at https://trmytelabs.github.io/maximalist/. A custom domain = a CNAME DNS record to `trmytelabs.github.io` + `public/CNAME`.
+1. **Merge PR #1, make the repo public, enable GitHub Pages** (the coding agent's permission classifier blocked these): `gh pr merge 1 --repo trmytelabs/nextlevel --merge`, `gh repo edit trmytelabs/nextlevel --visibility public --accept-visibility-change-consequences`, `gh api -X POST repos/trmytelabs/nextlevel/pages -f build_type=workflow`. Site then lives at https://trmytelabs.github.io/nextlevel/. A custom domain = a CNAME DNS record to `trmytelabs.github.io` + `public/CNAME`.
 2. **Suno track** from `LYRICS.md` → `public/song.mp3`, then nudge `[ ]`, tap-sync `T`, save `Y` (writes `public/timing.json`).
 3. (done) Verse 5 line 3 is now grounded in Ian's real work: briefing meetings, planning projects, coding his own tools.
 4. Confirm the name on the cards ("IAN GINN") and the credit line.
@@ -125,4 +125,4 @@ Full three-minute autopilot run under the harness: 69 cases pass, 0 page errors,
 
 ## How to work on it
 
-`cd C:\dev\maximalist`, `npm install`, `npx vite` (note the port), open `/maximalist/`. Type-check with `npx tsc --noEmit -p .`. Verify with `node tools/test/run.mjs --url http://localhost:<port>/maximalist/` (add `--era N` to focus). In the browser, `ETM.seek(bar*1.875); ETM.step(seconds); ETM.probe()` drives the sim deterministically. Commit messages end with `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. Keep everything deterministic (seeded `hash`/`rngf`, never `Math.random` in sim code), keep lyrics readable, and keep each era reading as a clearly different kind of game.
+`cd C:\dev\maximalist`, `npm install`, `npx vite` (note the port), open `/nextlevel/`. Type-check with `npx tsc --noEmit -p .`. Verify with `node tools/test/run.mjs --url http://localhost:<port>/nextlevel/` (add `--era N` to focus). In the browser, `ETM.seek(bar*1.875); ETM.step(seconds); ETM.probe()` drives the sim deterministically. Commit messages end with `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. Keep everything deterministic (seeded `hash`/`rngf`, never `Math.random` in sim code), keep lyrics readable, and keep each era reading as a clearly different kind of game.

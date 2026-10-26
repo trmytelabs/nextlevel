@@ -7,7 +7,7 @@ __DOMAIN__ {
 	encode zstd gzip
 	file_server
 
-	# Single-page app under /maximalist/ paths is not needed: the build uses base "/" on the server.
+	# Single-page app under /nextlevel/ paths is not needed: the build uses base "/" on the server.
 	handle_errors {
 		rewrite * /index.html
 		file_server

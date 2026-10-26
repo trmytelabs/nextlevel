@@ -1,12 +1,12 @@
 import { defineConfig } from 'vite';
 
-// Served from https://trmytelabs.github.io/maximalist/ on GitHub Pages (default base).
+// Served from https://trmytelabs.github.io/nextlevel/ on GitHub Pages (default base).
 // Other targets override base on the command line and nothing here depends on its value:
 //   npx vite build --base /            (VPS, .github/workflows/deploy.yml)
 //   npx vite build --base ./           (single-file artifact, tools/artifact_prep.py)
 // src/ reads import.meta.env.BASE_URL for models/ and textures/, which works with all three.
 export default defineConfig({
-  base: '/maximalist/',
+  base: '/nextlevel/',
   build: {
     // Anything that runs the game needs WebGL2 + Web Audio + ES modules, so the baseline is
     // already a 2022-era browser; compiling to es2022 skips the class-field / async / optional-

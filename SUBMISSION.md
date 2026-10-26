@@ -9,7 +9,7 @@ That second curve is real, and it shows up in my work every day. AI summarizes m
 What I want next is to build alongside ambitious peers who will push me further than I'd get on my own. Imagine what we could build together.
 
 Play it: https://nextlevel.patchnotes.ca (coming soon)
-Or right now: https://trmytelabs.github.io/maximalist/
+Or right now: https://trmytelabs.github.io/nextlevel/
 
 ---
 

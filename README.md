@@ -4,7 +4,7 @@
 
 **Next Level** is a three-minute music video you can play. It is Ian Ginn's application to join the Deputy's Maximalists (Government of Alberta). Five generations of games stand for two curves rising together: what AI can do, and how well Ian uses it. The piece starts as a 1978 arcade crawl where you shoot the lyrics and ends in a VR saber lane where an AI co-pilot builds the arena out of every word you cut. The ask is the last chorus line, *"Deputy, I'm ready, next level, here I come"*, and the end card says *"Imagine what we could build together."*
 
-- Play it now: https://trmytelabs.github.io/maximalist/
+- Play it now: https://trmytelabs.github.io/nextlevel/
 - Coming soon: https://nextlevel.patchnotes.ca
 
 It plays itself. Press a movement key or touch the screen to take over; autopilot picks back up after two idle seconds.
@@ -58,7 +58,7 @@ npm install
 npx vite
 ```
 
-Open http://localhost:5173/maximalist/ (add `?q=high` or `?q=low` to force a graphics tier). `npm run build` type-checks and writes the static site to `dist/`.
+Open http://localhost:5173/nextlevel/ (add `?q=high` or `?q=low` to force a graphics tier). `npm run build` type-checks and writes the static site to `dist/`.
 
 ## Verify
 
@@ -83,7 +83,7 @@ In a browser console, `ETM.seek(bar*1.875); ETM.step(seconds); ETM.render(); ETM
 
 ## Deploy
 
-- **Now:** every push to `main` runs `.github/workflows/pages.yml`, which builds and publishes `dist/` to GitHub Pages at https://trmytelabs.github.io/maximalist/ (`vite.config.ts` sets `base` to `/maximalist/`).
+- **Now:** every push to `main` runs `.github/workflows/pages.yml`, which builds and publishes `dist/` to GitHub Pages at https://trmytelabs.github.io/nextlevel/ (`vite.config.ts` sets `base` to `/nextlevel/`).
 - **Next:** a VPS behind Caddy at https://nextlevel.patchnotes.ca. After the headless verification passes on `main`, `.github/workflows/deploy.yml` builds with `--base /` and rsyncs `dist/` to the server as a restricted `deploy` user (enabled by the `DEPLOY_ENABLED` repository variable). Server setup is in `deploy/`: `server-setup.sh`, the `Caddyfile` (HTTPS, security headers, CSP, caching) and `landing-deploy.md`.
 
 ## Soundtrack

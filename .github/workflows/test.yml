@@ -17,7 +17,7 @@ jobs:
       run:
         shell: bash
     env:
-      # Git bash on Windows rewrites arguments like /maximalist/ into C:/Program Files/Git/maximalist/; turn that off
+      # Git bash on Windows rewrites arguments like /nextlevel/ into C:/Program Files/Git/nextlevel/; turn that off
       MSYS_NO_PATHCONV: '1'
       MSYS2_ARG_CONV_EXCL: '*'
     steps:
@@ -31,12 +31,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit -p .
-      - run: npx vite build --base /maximalist/
+      - run: npx vite build --base /nextlevel/
       - name: Serve the build
         run: |
           powershell -NoProfile -Command "(Start-Process -PassThru -WindowStyle Hidden cmd -ArgumentList '/c npx vite preview --port 5174 --strictPort').Id" > preview.pid
-          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:5174/maximalist/ && break; sleep 1; done
-          curl -sf -o /dev/null http://localhost:5174/maximalist/
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:5174/nextlevel/ && break; sleep 1; done
+          curl -sf -o /dev/null http://localhost:5174/nextlevel/
       - name: Controls + phone layout
         run: node tools/test/run.mjs --controls --from 0 --to 4 --tag ctl && node tools/test/run.mjs --mobile --from 0 --to 4 --tag mob
       - name: Full three-minute autopilot run

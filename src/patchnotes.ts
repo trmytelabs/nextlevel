@@ -1,6 +1,6 @@
 // ---------- PATCH NOTES: the end-card panel that shows what was built and how ----------
 // Plain data so it is easy to keep current. No lyric text here (lyrics appear only in the caption and as gameplay).
-export const REPO_URL='https://github.com/trmytelabs/maximalist';
+export const REPO_URL='https://github.com/trmytelabs/nextlevel';
 
 type Sec={h:string,items:string[]};
 export const NOTES:{title:string,sub:string,secs:Sec[]}={

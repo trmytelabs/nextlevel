@@ -6,7 +6,7 @@
 //   node tools/test/visual/snap.mjs --update        # capture and copy current/ over baseline/
 //   node tools/test/visual/snap.mjs --tolerance 2   # default per-frame tolerance in percent (tolerances.json overrides per bar)
 //   node tools/test/visual/snap.mjs --bars 1,20,76  # subset of the frame list
-//   node tools/test/visual/snap.mjs --url http://localhost:5174/maximalist/?q=high
+//   node tools/test/visual/snap.mjs --url http://localhost:5174/nextlevel/?q=high
 //   node tools/test/visual/snap.mjs --no-hud        # hide the DOM HUD overlay (captions, clock) and shoot the bare canvas
 //
 // Exit codes: 0 all frames within tolerance, 1 a frame differs / baseline missing / size mismatch, 2 setup failure.
@@ -23,7 +23,7 @@ const argv=process.argv.slice(2);
 const opt=(k,d)=>{const i=argv.indexOf('--'+k);return i>=0?argv[i+1]:d};
 const flag=k=>argv.includes('--'+k);
 
-const BASE=opt('url',process.env.ETM_URL||'http://localhost:5173/maximalist/?q=high');
+const BASE=opt('url',process.env.ETM_URL||'http://localhost:5173/nextlevel/?q=high');
 const UPDATE=flag('update');
 const NO_HUD=flag('no-hud');
 const CFG_PATH=opt('config',path.join(HERE,'tolerances.json'));

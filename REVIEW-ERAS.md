@@ -531,7 +531,7 @@ five `[colour,name]` pairs into `core.ts` and import them in `era4.ts`.
 ## 9. Case files (`tools/test/cases/*.mjs`) — brittleness
 
 **C-1 · High · `era1.mjs:15, 89`, pattern `import(new URL('src/era1.ts',location.href).href)`.** Only the Vite dev server
-serves TypeScript at `/maximalist/src/era1.ts`; against `vite preview`, GitHub Pages or the artifact host the import
+serves TypeScript at `/nextlevel/src/era1.ts`; against `vite preview`, GitHub Pages or the artifact host the import
 404s, the harness matches `dynamically imported module|Failed to fetch` and **silently skips** E1.4 and E1.6 (the two
 cases that actually test the pixel-exact death and readability). Patch: expose what the cases need from the page and
 import nothing.

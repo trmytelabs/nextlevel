@@ -71,10 +71,10 @@ switches to the light graphics tier; phones default to it. Sound is off until yo
 
 **Needs you (a few minutes)**
 1. Merge PR #1 and make the repo public + enable Pages: the permission classifier blocked me from doing both. From a
-   terminal: `gh pr merge 1 --repo trmytelabs/maximalist --merge`, then
-   `gh repo edit trmytelabs/maximalist --visibility public --accept-visibility-change-consequences`, then
-   `gh api -X POST repos/trmytelabs/maximalist/pages -f build_type=workflow`. The site then deploys to
-   https://trmytelabs.github.io/maximalist/ on every push to main. A custom domain is a CNAME record pointing at
+   terminal: `gh pr merge 1 --repo trmytelabs/nextlevel --merge`, then
+   `gh repo edit trmytelabs/nextlevel --visibility public --accept-visibility-change-consequences`, then
+   `gh api -X POST repos/trmytelabs/nextlevel/pages -f build_type=workflow`. The site then deploys to
+   https://trmytelabs.github.io/nextlevel/ on every push to main. A custom domain is a CNAME record pointing at
    `trmytelabs.github.io` plus `public/CNAME` containing the domain.
 2. Suno: make the track from `LYRICS.md`, drop it at `public/song.mp3`, then nudge `[ ]` and tap-sync `T` / save `Y`.
 3. Verse 5 still has the placeholder "Spawn a plan, spawn a form, spawn a fix on the fly" — give me three real examples.
@@ -91,8 +91,8 @@ clock (96 bars = 3:00). Owner: Ian Ginn. The user's standing instruction: *"Work
 submission. I approve all actions. I want to wake up with something incredible. Don't stop, keep improving."*
 
 ## How to resume (for a fresh session)
-1. `cd C:\dev\maximalist` — repo `trmytelabs/maximalist`, branch `scaffold-vite`, PR #1 open.
-2. Dev server: `npx vite` (prints the port; currently http://localhost:5173/maximalist/). Pass `--url <that>/` to the harness if it is not 5174.
+1. `cd C:\dev\maximalist` — repo `trmytelabs/nextlevel`, branch `scaffold-vite`, PR #1 open.
+2. Dev server: `npx vite` (prints the port; currently http://localhost:5173/nextlevel/). Pass `--url <that>/` to the harness if it is not 5174.
 3. Verify: `node tools/test/run.mjs` (full run), `--era N`, `--controls`, `--mobile`, `--q low`. Cases live in
    `tools/test/cases/`, spec in `tools/test/CASES.md`, screenshots in `tools/test/shots/`.
 4. Type-check: `npx tsc --noEmit -p .`. Commit with `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.

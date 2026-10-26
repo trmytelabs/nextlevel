@@ -26,7 +26,7 @@ jobs:
       run:
         shell: bash
     env:
-      # Git bash on Windows rewrites arguments like /maximalist/ into C:/Program Files/Git/maximalist/; turn that off
+      # Git bash on Windows rewrites arguments like /nextlevel/ into C:/Program Files/Git/nextlevel/; turn that off
       MSYS_NO_PATHCONV: '1'
       MSYS2_ARG_CONV_EXCL: '*'
     environment: production

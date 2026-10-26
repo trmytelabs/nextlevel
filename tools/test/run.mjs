@@ -10,7 +10,7 @@
 //   node tools/test/run.mjs --controls       # keyboard + touch input mapping
 //   node tools/test/run.mjs --mobile         # iPhone landscape emulation + layout checks (+ portrait rotate card)
 //   node tools/test/run.mjs --q low          # low quality tier
-//   node tools/test/run.mjs --url http://localhost:5174/maximalist/
+//   node tools/test/run.mjs --url http://localhost:5174/nextlevel/
 import puppeteer from 'puppeteer-core';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,7 +19,7 @@ import {pathToFileURL} from 'node:url';
 const argv=process.argv.slice(2);
 const opt=(k,d)=>{const i=argv.indexOf('--'+k);return i>=0?argv[i+1]:d};
 const flag=k=>argv.includes('--'+k);
-const BASE=opt('url',process.env.ETM_URL||'http://localhost:5174/maximalist/');
+const BASE=opt('url',process.env.ETM_URL||'http://localhost:5174/nextlevel/');
 const ERA=opt('era',null)?+opt('era'):null;
 const CHUNK=+opt('chunk',2);
 const Q=opt('q','high');

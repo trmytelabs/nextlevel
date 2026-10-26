@@ -7,7 +7,7 @@ import puppeteer from 'puppeteer-core';
 import fs from 'node:fs';import path from 'node:path';import {spawnSync} from 'node:child_process';
 const argv=process.argv.slice(2);const opt=(k,d)=>{const i=argv.indexOf('--'+k);return i>=0?argv[i+1]:d};
 const FPS=+opt('fps',30),FROM=+opt('from',0),TO=+opt('to',96),WIDTH=+opt('width',1280),HEIGHT=Math.round(WIDTH*9.9/16/2)*2,OUT=opt('out','out/run.mp4'),Q=opt('q','high');
-const BASE=opt('url',process.env.ETM_URL||'http://localhost:5174/maximalist/');const BAR=60/128*4;
+const BASE=opt('url',process.env.ETM_URL||'http://localhost:5174/nextlevel/');const BAR=60/128*4;
 const EDGE=process.env.EDGE||['C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe','C:/Program Files/Microsoft/Edge/Application/msedge.exe','/usr/bin/google-chrome'].find(p=>fs.existsSync(p));
 const FF=process.env.FFMPEG||[path.join(process.env.LOCALAPPDATA||'','Microsoft/WinGet/Links/ffmpeg.exe'),path.join(process.env.LOCALAPPDATA||'','Microsoft/WinGet/Packages/Gyan.FFmpeg.Essentials_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-9.0.1-essentials_build/bin/ffmpeg.exe')].find(p=>fs.existsSync(p))||'ffmpeg';
 const frames=path.resolve('out/frames');fs.rmSync(frames,{recursive:true,force:true});fs.mkdirSync(frames,{recursive:true});fs.mkdirSync(path.dirname(path.resolve(OUT)),{recursive:true});

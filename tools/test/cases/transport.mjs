@@ -97,7 +97,7 @@ export default [
    ETM.seek(40*1.875);ETM.step(0.1);out.hiddenMid=!vis('#endbtns');return out},95.6*BAR);
   await page.evaluate(t=>{ETM.seek(t);ETM.step(0)},t0);
   const bad=[];if(!r.shown)bad.push('buttons hidden on the end card');if(!r.inside)bad.push('a button sits outside the frame');
-  if(!/github\.com\/trmytelabs\/maximalist/.test(r.href)||r.target!=='_blank')bad.push('source link '+r.href+' '+r.target);
+  if(!/github\.com\/trmytelabs\/nextlevel/.test(r.href)||r.target!=='_blank')bad.push('source link '+r.href+' '+r.target);
   if(r.secs<5||r.items<15)bad.push(`panel has ${r.secs} sections / ${r.items} items`);if(!r.open)bad.push('PATCH NOTES did not open the panel');
   if(!r.keySwallowed)bad.push('a key reached the game while the panel was open');if(!r.closed)bad.push('Escape did not close the panel');if(!r.hiddenMid)bad.push('buttons visible mid-song');
   return bad.length===0||bad.join('; ')}},
