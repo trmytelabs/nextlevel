@@ -77,6 +77,8 @@ if(flag('controls')){
   const sound=await page.$eval('#click',e=>e.textContent);if(/SOUND: (ON|OFF)/.test(sound))pass('M toggles sound label: '+sound);else fail('M sound','label '+sound);
   for(let e=1;e<=5;e++){await page.keyboard.press(String(e));const p=await probe();if(p.era===e-1)pass('key '+e+' -> era '+e);else fail('key '+e,'era '+p.era+' bar '+p.bar.toFixed(2))}
   await page.keyboard.press('1');
+  // fire: accept fireHeld too, like the space-key case (a frame may consume the edge first; G5b checks the edge synchronously)
+  const got=(i,f)=>f==='fire'?(i.fire||i.fireHeld):i[f];
   // touch zones (pointer events with pointerType touch)
   const zones=[['left edge',box.x+box.width*0.10,box.y+box.height*0.5,'left'],['right edge',box.x+box.width*0.90,box.y+box.height*0.5,'right'],['upper middle',box.x+box.width*0.5,box.y+box.height*0.25,'jump'],['lower middle',box.x+box.width*0.5,box.y+box.height*0.75,'fire']];
   // phones show the side pads instead: drive them with real touches (stick left/right/up, then the action button)
@@ -84,9 +86,9 @@ if(flag('controls')){
   if(P.l&&P.r){zones.length=0;
    for(const [name,pt,d,f] of [['pad stick left',P.l,[-30,0],'left'],['pad stick right',P.l,[30,0],'right'],['pad stick up',P.l,[0,-30],'up'],['pad action button',P.r,null,'fire']]){
     await page.touchscreen.touchStart(pt.x,pt.y);if(d)await page.touchscreen.touchMove(pt.x+d[0],pt.y+d[1]);const i=await inp();
-    if(i[f])pass('touch '+name+' -> '+f);else fail('touch '+name,'expected '+f+' got '+JSON.stringify(i));
+    if(got(i,f))pass('touch '+name+' -> '+f);else fail('touch '+name,'expected '+f+' got '+JSON.stringify(i));
     await page.touchscreen.touchEnd();const j=await inp();if((f==='left'||f==='right')&&j[f])fail('touch '+name+' release','still '+f+' after touchEnd')}}
-  for(const [name,x,y,f] of zones){await page.touchscreen.touchStart(x,y);const i=await inp();if(i[f])pass('touch '+name+' -> '+f);else fail('touch '+name,'expected '+f+' got '+JSON.stringify(i));await page.touchscreen.touchEnd();const j=await page.evaluate(()=>{const i=ETM.input();return i});if((f==='left'||f==='right')&&j[f])fail('touch '+name+' release','still '+f+' after touchEnd')}
+  for(const [name,x,y,f] of zones){await page.touchscreen.touchStart(x,y);const i=await inp();if(got(i,f))pass('touch '+name+' -> '+f);else fail('touch '+name,'expected '+f+' got '+JSON.stringify(i));await page.touchscreen.touchEnd();const j=await page.evaluate(()=>{const i=ETM.input();return i});if((f==='left'||f==='right')&&j[f])fail('touch '+name+' release','still '+f+' after touchEnd')}
   await page.evaluate(()=>{ETM.seek(0)});
 }
 

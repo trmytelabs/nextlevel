@@ -1,0 +1,164 @@
+name: CI/CD
+
+# Every push and pull request: type-check, build, headless verification, and a container build + smoke test.
+# Pushes to main then publish the image to GHCR and deploy it to https://nextlevel.patchnotes.ca.
+#
+# Everything runs on GitHub-hosted runners. Pull requests from forks get no secrets and a read-only token, and the
+# publish and deploy steps never run for pull requests.
+#
+# Deploy: SSH as the server's `deploy` user, whose key is forced to one command (`nextlevel <commit sha>`), which runs
+# `deploy-app nextlevel <sha>`: pull the image, start it, wait for its healthcheck, roll back on failure. The pipeline
+# then waits until /version.txt on the live site (through Cloudflare) reports this commit.
+# Secrets (environment "production"): DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  # superseded pull request runs can stop; runs on main always finish so a deploy is never cut off halfway
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IMAGE: ghcr.io/trmytelabs/nextlevel
+
+jobs:
+  build:
+    name: Type-check and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit -p .
+      - run: npx vite build --base /nextlevel/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 3
+
+  headless:
+    name: Headless verification
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      # tools/test/run.mjs looks for Edge/Chrome at Windows paths unless EDGE is set; GitHub's Ubuntu image ships Chrome
+      EDGE: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Serve the build
+        run: |
+          nohup npx vite preview --port 5174 --strictPort > preview.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:5174/nextlevel/ && break; sleep 1; done
+          curl -sf -o /dev/null http://localhost:5174/nextlevel/
+      - name: Controls + phone layout
+        run: node tools/test/run.mjs --controls --from 0 --to 4 --tag ctl && node tools/test/run.mjs --mobile --from 0 --to 4 --tag mob
+      - name: Full three-minute autopilot run
+        run: node tools/test/run.mjs --tag full --chunk 2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification
+          path: |
+            tools/test/report*.json
+            tools/test/shots/
+            preview.log
+
+  image:
+    name: Container image
+    needs: headless
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          build-args: GIT_SHA=${{ github.sha }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test the image (read-only, no capabilities, like production)
+        run: |
+          docker run -d --name smoke --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true \
+            -p 8080:8080 "$IMAGE:${{ github.sha }}"
+          for i in $(seq 1 30); do curl -sf http://localhost:8080/health && break; sleep 1; done
+          test "$(curl -sf http://localhost:8080/version.txt)" = "${{ github.sha }}"
+          curl -sf -o /dev/null http://localhost:8080/
+          curl -sfI http://localhost:8080/ | grep -i '^content-security-policy'
+          docker rm -f smoke
+      - name: Push to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker push "$IMAGE:${{ github.sha }}"
+
+  deploy:
+    name: Deploy to production
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://nextlevel.patchnotes.ca
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Install the deploy key
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts_deploy
+      - name: Deploy (server pulls the image, waits for healthy, rolls back on failure)
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy -o UserKnownHostsFile=~/.ssh/known_hosts_deploy -o StrictHostKeyChecking=yes \
+            -o BatchMode=yes -o ConnectTimeout=20 "$USER@$HOST" "nextlevel ${{ github.sha }}"
+      - name: Verify the live site serves this commit
+        run: |
+          for i in $(seq 1 24); do
+            live=$(curl -sf "https://nextlevel.patchnotes.ca/version.txt?nocache=$RANDOM$RANDOM" || true)
+            [ "$live" = "${{ github.sha }}" ] && break
+            sleep 5
+          done
+          echo "live version: ${live:-unreachable}"
+          test "$live" = "${{ github.sha }}"
+          curl -sSf -o /dev/null -w "home page: HTTP %{http_code} in %{time_total}s\n" https://nextlevel.patchnotes.ca/
+      - name: Remove the deploy key
+        if: always()
+        run: rm -f ~/.ssh/deploy

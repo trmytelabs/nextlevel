@@ -4,7 +4,7 @@
 
 **Next Level** is a three-minute music video you can play, made by Ian Ginn for the Deputy's Maximalists (Government of Alberta). Five generations of games stand for how he leveled up with AI, the same way gaming did, just a lot faster: from first prompts in a retro arcade to full development in a synthwave VR finale. The song, the stages and the end card all tell that story.
 
-- Play it: https://trmytelabs.github.io/nextlevel/ (and on the project's own server, https://nextlevel.patchnotes.ca, once its first deploy lands)
+- Play it: https://nextlevel.patchnotes.ca (mirror: https://trmytelabs.github.io/nextlevel/)
 - It plays itself. Press any key or touch a pad to take over; the autopilot picks back up after two idle seconds. Leave the title screen alone and a muted demo runs.
 
 ## The five stages
@@ -89,11 +89,16 @@ Screenshot regression: `node tools/test/visual/snap.mjs` compares frames against
 
 ## CI/CD and hosting
 
-- **Tests:** `.github/workflows/test.yml` runs the harness on every push, on a self-hosted runner. Pull requests from forks are skipped, so outside code never runs on it.
-- **GitHub Pages:** every push to `main` runs `pages.yml`, which builds and publishes https://trmytelabs.github.io/nextlevel/.
-- **Own server:** after the tests pass on `main`, `deploy.yml` builds with `--base /` and rsyncs `dist/` to the VPS as a restricted `deploy` user whose key can only sync files into the site folder (rrsync, no shell). It is switched on by the `DEPLOY_ENABLED` repository variable; `deploy/set-github-secrets.cmd <server-ip>` stores the key and host as secrets.
-- **The server** (`deploy/server-setup.sh`): Caddy with automatic Let's Encrypt HTTPS and security headers (HSTS, a strict Content-Security-Policy, caching rules in `deploy/Caddyfile`), ufw locked to SSH and web, fail2ban, unattended security upgrades and key-only SSH. DNS for patchnotes.ca is on Cloudflare; deploys use the server's IP because SSH does not go through Cloudflare's proxy.
-- **WordPress on the same box:** `deploy/wp/` (Docker Compose, backup and restore scripts, `REBUILD.md`).
+`.github/workflows/ci-cd.yml` runs on GitHub-hosted runners:
+
+1. **CI** on every push and pull request: type-check, build, the headless verification above (controls, phone layout and a full autopilot run on Chrome), then a container build from the `Dockerfile` and a smoke test of the image, run read-only with every Linux capability dropped, as in production.
+2. **Publish** on `main`: the image goes to `ghcr.io/trmytelabs/nextlevel:<commit sha>`.
+3. **Deploy** to the `production` environment: an SSH key that is forced to a single command asks the server to run `deploy-app nextlevel <sha>`. That pulls the image, starts it, waits for its `/health` check and rolls back automatically if it never gets healthy.
+4. **Verify:** the pipeline waits until https://nextlevel.patchnotes.ca/version.txt, read through Cloudflare, reports the new commit.
+
+The image serves `dist/` with Caddy on port 8080 as an unprivileged user, on a read-only filesystem (`deploy/container.Caddyfile` holds the Content-Security-Policy, security headers and caching rules). On the VPS, the host's own Caddy terminates HTTPS with a Cloudflare origin certificate and only accepts connections from Cloudflare; DNS for patchnotes.ca is on Cloudflare. Pull requests from forks get no secrets and a read-only token, and never publish or deploy.
+
+`pages.yml` also publishes every push to `main` to https://trmytelabs.github.io/nextlevel/. The WordPress site on the same server has its Docker Compose setup, backup and restore scripts in `deploy/wp/`.
 
 ## Architecture
 

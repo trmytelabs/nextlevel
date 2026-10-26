@@ -33,12 +33,12 @@ export const NOTES:{title:string,sub:string,secs:Sec[]}={
    'Gameplay checks cover collisions, deaths and respawns, lyric timing, autopilot coverage, the secrets and seeking to any moment.',
    'Visual-regression screenshots and a per-stage performance budget are checked on every run.']},
   {h:'CI/CD AND HOSTING',items:[
-   'Public GitHub repo. GitHub Actions runs the full test suite on every push, on a self-hosted runner.',
-   'Every merge to main builds and publishes to GitHub Pages, and deploys to my own server only if the tests pass.',
-   'Deploys go through a restricted user that can only sync files into the site folder: no shell, no other access.',
-   'The server: Caddy with automatic Let\'s Encrypt HTTPS and security headers (HSTS, a strict content policy), a firewall locked to SSH and web, fail2ban, unattended security updates and key-only SSH.',
-   'My own domain, patchnotes.ca, with DNS on Cloudflare.',
-   'Pull requests from forks never reach the build machine.']},
+   'Public GitHub repo. GitHub Actions runs on every push and pull request: type-check, build, the full headless test suite, then a container build and smoke test.',
+   'Merges to main publish a Docker image to the GitHub container registry and deploy it to my own server, only if every test passes.',
+   'The container runs read-only, as an unprivileged user with every Linux capability dropped. The server checks its health and rolls back automatically if a deploy fails.',
+   'Deploys use an SSH key locked to one command, and the pipeline confirms the live site reports the new version before it calls it done.',
+   'HTTPS end to end on my own domain, patchnotes.ca: Cloudflare in front, an origin certificate on the server, which only accepts Cloudflare traffic, and strict security headers (CSP, HSTS).',
+   'Pull requests from forks get no secrets and can never publish or deploy.']},
   {h:'HOW IT WAS MADE',items:[
    'Directed with AI agents (Claude Code) over about 100 commits: I set the vision, reviewed the work and asked why.',
    'Review agents played through every stage and reported problems. Each fix was confirmed by a test.',
