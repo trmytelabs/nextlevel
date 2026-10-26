@@ -3,7 +3,7 @@ import {eggFind} from './eggs';
 
 // ---------- ERA 1: arcade. Lyrics crawl toward you on a tilted plane; you chip the letters away ----------
 export const E1=(()=>{
-const LW=480,LH=270,GROUND=LH-26,FS=16,ROWW=300,BW=ROWW+24,TRAVEL=BAR*2.6,YEL='#ffe81f',VPX=LW/2,VPY=30;
+const LW=480,LH=270,GROUND=LH-26,FS=18,ROWW=300,BW=ROWW+24,TRAVEL=BAR*2.6,YEL='#ffe81f',VPX=LW/2,VPY=30;
 // perspective: a point at depth z on the plane lands at screen y = VPY + F/z, with horizontal scale F2/z
 const F=4000,F2=27,ROWD=0.56,ZFAR=112,ZNEAR=18;
 const SHIP=['....X....','...XXX...','.XXXXXXX.','XXXXXXXXX'];
@@ -137,5 +137,9 @@ function draw(x,t){x.fillStyle='#000';x.fillRect(0,0,LW,LH);x.imageSmoothingEnab
 // death burst, the voxel renderer bursts the chipped pixels itself) and the score / chips HUD
 function title(x,t){if(t>=cb(2)&&t<cb(3.8)){const a=t<cb(2)+0.5?(t-cb(2))/0.5:Math.min(1,(cb(3.8)-t)/0.8);x.globalAlpha=a;x.font="8px 'Press Start 2P',monospace";x.fillStyle='#4bd5ee';x.textAlign='center';x.fillText('A long time ago, at a desk far, far away....',LW/2,LH*0.42);x.textAlign='left';x.globalAlpha=1}}
 function pops(x,gl){for(const p of S.pops){if(gl&&!p.g)continue;x.globalAlpha=Math.min(1,p.l*2);x.fillStyle=p.g?'#5bff5b':YEL;x.fillRect(p.x,p.y,2,2)}x.globalAlpha=1}
-function hud(x){x.font="8px 'Press Start 2P',monospace";x.fillStyle=YEL;x.fillText('SCORE '+String(S.score).padStart(6,'0'),8,34);x.textAlign='right';x.fillText('CHIPS '+S.chips,LW-8,34);x.textAlign='left'}
+// the gold word (secret 1) gets a bouncing arrow and a SECRET tag above it while it is on the plane and readable
+function secretTag(x,t){for(const ln of S.lines){if(alphaOf(ln,t)<0.35)continue;for(const w of ln.words){if(!w.gold||w.dead)continue;const p=toScreen(ln,w.bx+w.w/2,w.by,t);if(p.z<2||p.y<VPY+6)continue;
+ const bob=Math.floor(t*4)%2*2,y=Math.round(p.y)-10-bob,cx=Math.round(p.x),r=[9,7,5,3,1];x.fillStyle='#1a0a00';for(let i=0;i<5;i++)x.fillRect(cx-(r[i]>>1)-1,y+i-1,r[i]+2,3);x.fillStyle='#ffa31a';for(let i=0;i<5;i++)x.fillRect(cx-(r[i]>>1),y+i,r[i],1);
+ x.font="6px 'Press Start 2P',monospace";x.textAlign='center';x.lineWidth=2;x.strokeStyle='#1a0a00';x.strokeText('SECRET',cx,y-4);x.fillStyle=Math.floor(t*6)%2?'#ffd23f':'#ffa31a';x.fillText('SECRET',cx,y-4);x.textAlign='left'}}}
+function hud(x,t=-1){if(t>=0)secretTag(x,t);x.font="8px 'Press Start 2P',monospace";x.fillStyle=YEL;x.fillText('SCORE '+String(S.score).padStart(6,'0'),8,34);x.textAlign='right';x.fillText('CHIPS '+S.chips,LW-8,34);x.textAlign='left'}
 return{init,onBeat,on8th,onLine,update,draw,title,pops,hud,zOf,alphaOf,SHIP,K,get S(){return S}}})();

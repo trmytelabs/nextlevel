@@ -11,10 +11,10 @@ const LOW=QUALITY==='low';
 const {LW,LH,GROUND,BW,VPX,VPY,F,F2,ROWD,ZFAR,ZNEAR,TRAVEL,shatterT}=E1.K;
 const FPX=270,CAMH=F/FPX,SU=F2/FPX,SPD=(ZFAR-ZNEAR)/TRAVEL; // focal length (px), eye height over the plane, world width of a texture column, crawl speed
 const CELL=LOW?4:2,C0=LOW?3:1; // voxel = one 'Press Start 2P' pixel (2x2 texels from x=y=3); low tier: 2x2 font pixels
-const EXT=0.34,MAXV=LOW?2600:9000,MAXD=LOW?360:1200,MAXS=LOW?1200:3200,NSTAR=LOW?90:170;
+const EXT=0.22,MAXV=LOW?2600:9000,MAXD=LOW?360:1200,MAXS=LOW?1200:3200,NSTAR=LOW?90:170;
 const RAIL=6.4,BARZ=9,TX=6,TZ=11; // grid pitch (world units) and the floor tiles that fall away at the shatter (2TX x TZ)
 let ok=false,renderer:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.PerspectiveCamera;
-let vox:THREE.InstancedMesh,deb:THREE.InstancedMesh,shards:THREE.InstancedMesh,tiles:THREE.InstancedMesh,gridMats:THREE.Material[]=[],ship:THREE.Group,bolts:THREE.Mesh[]=[],glows:THREE.Mesh[]=[],stars:THREE.LineSegments,cross:THREE.Group;
+let pan:THREE.InstancedMesh,vox:THREE.InstancedMesh,deb:THREE.InstancedMesh,shards:THREE.InstancedMesh,tiles:THREE.InstancedMesh,gridMats:THREE.Material[]=[],ship:THREE.Group,bolts:THREE.Mesh[]=[],glows:THREE.Mesh[]=[],stars:THREE.LineSegments,cross:THREE.Group;
 // renderer-side state: per-word voxel occupancy (to see which voxels the sim just chipped) and the debris they burst into
 let track:any[]=[],recs=new WeakMap<object,any>(),lastS:any=null,lastT=-1,lastShipX=0,bank=0;
 const D={p:new Float32Array(MAXD*3),v:new Float32Array(MAXD*3),t0:new Float32Array(MAXD).fill(-99),n:0};
@@ -68,6 +68,7 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:false,alpha:fals
   camera.projectionMatrix.makePerspective(-VPX/FPX*n,(LW-VPX)/FPX*n,VPY/FPX*n,-(LH-VPY)/FPX*n,n,2000);camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
   makeGrid();stars=makeStars();
   vox=instanced(voxelGeo(0xffe81f,0xa86a08,0x5e3a04),MAXV);
+  pan=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x05030c,transparent:true,opacity:0.78,depthWrite:false}),16);pan.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(16*3).fill(1),3);pan.frustumCulled=false;pan.count=0;scene.add(pan);
   deb=instanced(voxelGeo(0xfff27a,0xd08a10,0x7a4a06),MAXD);
   shards=instanced(voxelGeo(0xffe81f,0xb87410,0x6a4206),MAXS);
   tiles=instanced(tileGeo(),(2*TX)*TZ);ship=makeShip();
@@ -112,7 +113,10 @@ function render(t:number){const S=E1.S;if(!S)return;
  // voxel words
  syncWords(S,t);let n=0;const pulse=1+S.pulse*0.18;
  for(const r of track){if(r.dead)continue;const a=E1.alphaOf(r.ln,t)*pulse;if(a<=0)continue;
-  for(let k=0;k<r.on.length&&n<MAXV;k++){if(!r.on[k])continue;cellPos(r,k,t,v3);if(-v3.z<ZDECK)continue;setM(vox,n,v3.x,v3.y,v3.z,CELL*SU*0.9,EXT,CELL*ROWD*0.94);if(r.w.gold){const s=0.85+0.4*(0.5+0.5*Math.sin(t*7+k*0.6));setC(vox,n,a*1.25*s,a*0.72*s,a*0.16)}else setC(vox,n,a,a,a);n++}}
+  for(let k=0;k<r.on.length&&n<MAXV;k++){if(!r.on[k])continue;cellPos(r,k,t,v3);if(-v3.z<ZDECK)continue;const gold=r.w.gold;setM(vox,n,v3.x,v3.y,v3.z,CELL*SU,gold?EXT*2.2+0.08*Math.sin(t*6):EXT,CELL*ROWD);if(gold){const s=0.85+0.4*(0.5+0.5*Math.sin(t*7+k*0.6));setC(vox,n,a*1.3*s,a*0.5*s,a*0.06)}else setC(vox,n,a,a,a);n++}}
+ // a dark slab under each line hides the grid between the letters, so the words read as solid shapes
+ {let np=0;for(const ln of S.lines){const a=E1.alphaOf(ln,t);if(a<=0||np>=16)continue;let u0=1e9,u1=-1e9;for(const w of ln.words){if(w.dead)continue;u0=Math.min(u0,w.bx);u1=Math.max(u1,w.bx+w.w)}if(u0>u1)continue;
+  const zc=E1.zOf(ln,t)+ln.bh*ROWD*0.5;if(zc-ln.bh*ROWD*0.5>ZFAR+40||zc+ln.bh*ROWD*0.5<ZDECK)continue;setM(pan,np,((u0+u1)/2-BW/2+ln.xo)*SU,-CAMH+0.004,-zc,(u1-u0+10)*SU,1,ln.bh*ROWD);setC(pan,np,a,a,a);np++}commit(pan,np)}
  commit(vox,n);
  // chip debris
  let nd=0;for(let i=0;i<MAXD;i++){const s=t-D.t0[i];if(s<0||s>LIFE)continue;const y=Math.max(-CAMH,D.p[i*3+1]+D.v[i*3+1]*s-0.5*GRAV*s*s),sz=0.2*(1-s/LIFE)+0.04,f=1-s/LIFE;
@@ -143,7 +147,7 @@ function render(t:number){const S=E1.S;if(!S)return;
 // render the 3D crawl and composite it into the era's low-res canvas with the 2D overlays (title line, death burst, HUD)
 function draw(x:CanvasRenderingContext2D,t:number){render(t);x.drawImage(renderer.domElement,0,0,LW,LH);const S=E1.S;
  x.save();x.globalCompositeOperation='lighter';const vg=x.createRadialGradient(VPX,VPY,0,VPX,VPY,60+S.pulse*20);vg.addColorStop(0,`rgba(255,232,31,${0.14+S.pulse*0.16})`);vg.addColorStop(1,'rgba(255,232,31,0)');x.fillStyle=vg;x.fillRect(VPX-100,VPY-100,200,200);x.restore();
- E1.pops(x,true);E1.title(x,t);E1.hud(x)}
+ E1.pops(x,true);E1.title(x,t);E1.hud(x,t)}
 
 export const E1GL={init,get ok(){return ok},draw,stats:()=>({voxels:vox?vox.count:0,debris:deb?deb.count:0,shards:shards?shards.count:0,calls:renderer?renderer.info.render.calls:0,tris:renderer?renderer.info.render.triangles:0})};
 (window as any).E1GL=E1GL; // debug/test hook: instance counts and draw calls (tools, harness)

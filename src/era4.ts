@@ -7,7 +7,7 @@ const s4=ERAS[3].start,s5=ERAS[4].start;
 const PW=262,PH=516,PX0=W/2-PW/2,PY0=12;           // phone body
 const SX=W/2-115,SY=58,GW=230,GH=424,SB=20;         // screen and status bar
 const GY0=SY+SB,GAH=GH-SB,GROUND=GAH-46;            // game area and ground line
-const V=130,SPACING=V*BEAT*2,GAP=118,PWD=52,BX=GW*0.3,PIPE0=GW+60;
+const V=130,SPACING=V*BEAT*3,GAP=130,PWD=52,BX=GW*0.3,PIPE0=GW+60;
 const G=1500,FLAP=-400;
 const F=px=>px+"px 'Press Start 2P',monospace";
 const GREEN='#5bff5b';                              // co-pilot green (the ghosts, the agents, the AI notifications)

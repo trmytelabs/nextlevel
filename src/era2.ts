@@ -117,8 +117,11 @@ function gen(to){while(S.genX<to){const r=S.rng;
  if(w>=5*B&&r()<0.38&&idx>2){let x0=x+4,x1=x+w-20;if(pipeX>-1e8){if(pipeX-18-x0>x1-(pipeX+34))x1=pipeX-18;else x0=pipeX+34}
   if(x1-x0>=16)S.foes.push({t:'walk',x:clamp(x+B,x0,x1),y:top,x0,x1,dir:1,alive:true,sq:0})}
  if(r()<0.16&&idx>3)S.foes.push({t:'fly',x:x+w/2,y:top-100-r()*20,base:top-100-r()*20,ph:r()*6,alive:true,sq:0});
+ // coins (SMW style): an arc over a pit, or a short row over open ground without a brick row
+ if(idx>1){const h=hash(idx*7.31+0.5);if(gap>0&&h<0.75){const n=Math.max(3,Math.round(gap/16)+2),base=Math.min(S.lastTop,top)-30;for(let i=0;i<n;i++){const u=i/(n-1);S.lv.push({x:x-gap-8+(gap+16)*u,y:base-Math.sin(u*Math.PI)*30,got:0})}}
+  else if(gap===0&&h<0.5&&kind==='ground'&&w>=6*B&&!S.plats.some(q=>q.kind==='brick'&&q.x>=x&&q.x<x+w)&&pipeX<-1e8){const n=3+Math.floor(hash(idx*3.3)*3),cx=x+w*0.5;for(let i=0;i<n;i++)S.lv.push({x:cx+(i-(n-1)/2)*14,y:top-34,got:0})}}
  S.genX=x+w;S.lastTop=top}
- S.foes=S.foes.filter(f=>f.alive&&f.x>S.camX-300)}
+ S.foes=S.foes.filter(f=>f.alive&&f.x>S.camX-300);S.lv=S.lv.filter(c=>c.x>S.camX-120&&(!c.got||S.ft-c.got<0.6))}
 
 // ---------------- physics: one fixed tick, shared by the game and the autopilot's simulator ----------------
 const EV:any={bump:null,land:false,jump:false};
@@ -192,7 +195,7 @@ function pilot(p,ft){pickTarget(p);let pl=S.plan;if(!pl||pl.i>=pl.len)pl=S.plan=
  if(c.k<0){AI.d=c.d;AI.j=c.ja}else if(i<c.k){AI.d=c.d;AI.j=false}else{AI.d=c.ad;AI.j=i<c.k+c.h}return AI}
 
 // ---------------- game state ----------------
-function init(t){S={rng:rngf(21),secretMade:false,ug:null,plats:[],coins:[],foes:[],line:[],genX:0,lastTop:LH-48,score:0,coinsGot:0,coinsAll:0,stomps:0,deaths:0,hits:0,camX:0,pops:[],shake:0,nGround:0,
+function init(t){S={rng:rngf(21),secretMade:false,ug:null,lv:[],coinN:0,plats:[],coins:[],foes:[],line:[],genX:0,lastTop:LH-48,score:0,coinsGot:0,coinsAll:0,stomps:0,deaths:0,hits:0,camX:0,pops:[],shake:0,nGround:0,
   ft:t,acc:0,plan:null,tg:null,tgT:0,tap:0,dir:0,dist:0,safe:{x:PX,y:LH-48}};
  let px=PX+Math.max(0,t-T0)*SPEED;gen(px+LW+240);
  const q=S.plats.filter(q=>q.kind==='ground'||q.kind==='grass').sort((a,b)=>Math.max(0,a.x-px,px-a.x-a.w)-Math.max(0,b.x-px,px-b.x-b.w))[0];px=clamp(px,q.x+10,q.x+q.w-10);
@@ -261,12 +264,16 @@ function drawRoom(x,t){const sp=sprites(),u=S.ug,R=u.R;x.fillStyle='#05061a';x.f
  for(const q of [ROOM[1],ROOM[2]])for(let tx=0;tx<q.w;tx+=16)x.drawImage(T.ubrick,q.x+tx,q.y);
  x.save();x.translate(0,26);x.scale(1,-1);drawPipe(x,80,0,26);x.restore();
  x.save();x.translate(LW-40,LH-32);x.rotate(-Math.PI/2);drawPipe(x,0,0,40);x.restore();
- for(let i=0;i<u.coins.length;i++){const c=u.coins[i];if(c.got)continue;const w=Math.max(1,Math.round(5*Math.abs(Math.cos(t*5+i*0.7))));x.fillStyle='#8a5008';x.fillRect(c.x-w-1,c.y-6,w*2+2,12);x.fillStyle='#ffd23f';x.fillRect(c.x-w,c.y-5,w*2,10);x.fillStyle='#fff6c0';x.fillRect(c.x-w,c.y-5,1,6)}
+ for(let i=0;i<u.coins.length;i++){const c=u.coins[i];if(!c.got)drawCoin(x,c.x,c.y,t,i)}
  x.textAlign='center';x.font="10px 'Press Start 2P',monospace";x.lineWidth=3;x.strokeStyle='#05061a';x.strokeText('SECRET AREA!',LW/2,40);x.fillStyle='#ffd23f';x.fillText('SECRET AREA!',LW/2,40);
  x.font="6px 'Press Start 2P',monospace";x.fillStyle='#ffffff';x.fillText('YOU FOUND THE HIDDEN LEVEL',LW/2,53);
  if(Math.floor(t*2)%2===0){x.fillStyle='#7ee05a';x.fillText('WALK RIGHT TO HEAD BACK UP >',LW/2,LH-40)}x.textAlign='left';
  const f=!R.g?(R.vy<0?sp.jump:sp.fall):Math.abs(R.vx)>4?sp.walk[Math.floor(S.dist/7)%4]:sp.idle;x.drawImage(f[R.face<0?1:0],Math.round(R.x)-8-OX,Math.round(R.y)-24-OY);
  x.font="6px 'Press Start 2P',monospace";x.fillStyle='#fff';x.strokeStyle='#1c3a6a';x.lineWidth=2;x.strokeText('SCORE '+S.score,6,26);x.fillText('SCORE '+S.score,6,26);x.fillStyle='#ffd23f';x.strokeText('COINS '+u.got,LW-76,26);x.fillText('COINS '+u.got,LW-76,26)}
+function grabCoins(p,ft){for(const c of S.lv)if(!c.got&&Math.abs(c.x-p.x)<9&&Math.abs(c.y-(p.y-12))<16){c.got=ft;S.coinN++;S.score+=10;blip(1976,0.05,0.08);blip(2637,0.08,0.06)}}
+// a spinning coin: gold disc with a dark rim, an inner slit and a glint; i staggers the spin
+function drawCoin(x,cx,cy,t,i){const w=Math.max(1,Math.round(5*Math.abs(Math.cos(t*4+i*0.6))));cx=Math.round(cx);cy=Math.round(cy);x.fillStyle='#6a3a04';x.beginPath();x.ellipse(cx,cy,w+1,7,0,0,7);x.fill();
+ x.fillStyle='#ffd23f';x.beginPath();x.ellipse(cx,cy,w,6,0,0,7);x.fill();if(w>2){x.fillStyle='#e09a10';x.fillRect(cx,cy-3,1,6)}x.fillStyle='#fff6c0';x.fillRect(cx-w+1,cy-4,1,3)}
 // one fixed 60 Hz tick: decide (autopilot or the player), move, bump, foes, camera
 function tick(auto,hd,hj,hdn=false){const p=S.pl;S.ft+=DT;const ft=S.ft;if(S.ug){ugTick(auto,hd,hj);return}
  if(p.dead){p.dvy+=G*DT;p.dy+=p.dvy*DT;foes(ft,null,false);if(ft-p.deadT>1.1)respawn();return}
@@ -280,7 +287,7 @@ function tick(auto,hd,hj,hdn=false){const p=S.pl;S.ft+=DT;const ft=S.ft;if(S.ug)
  if(p.skid&&Math.floor(ft*60)%4===0)puff(p.x-p.face*4,p.y,1);
  if(p.g&&p.on&&p.on.kind!=='brick'&&p.on.kind!=='pipe'&&p.x>p.on.x+12&&p.x<p.on.x+p.on.w-12){let clear=true;for(let i=0;i<nL;i++){const q=LS[i];if(q.kind==='brick'&&Math.abs(q.x+8-p.x)<16&&q.y<p.y){clear=false;break}}if(clear){S.safe.x=p.x;S.safe.y=p.y}}
  if(p.y>DIE){die();return}
- foes(ft,p,jh);cam();S.dist+=Math.abs(p.vx)*DT}
+ foes(ft,p,jh);grabCoins(p,ft);cam();S.dist+=Math.abs(p.vx)*DT}
 function update(dt,t,inp,auto){if(t<T0||t>=end)return;
  const hd=(inp.right?1:0)-(inp.left?1:0),held=!!(inp.up||inp.fireHeld),hdn=!!inp.down;if(!auto&&inp.jump&&!held)S.tap=14; // a touch tap has no hold: give it a near-full jump
  S.acc=Math.min(0.25,S.acc+dt);while(S.acc>=DT-1e-9){S.acc-=DT;tick(auto,hd,held||S.tap>0,hdn);if(S.tap>0)S.tap--}
@@ -310,6 +317,7 @@ function draw(x,t){const sp=sprites();if(S.ug&&S.ug.ph==='room'){drawRoom(x,t);r
   else{const off=q.f>0?-Math.round(Math.sin((0.3-q.f)/0.3*Math.PI)*4):0,yy=q.y+off;
    if(q.word){x.drawImage(T.q[Math.floor(t/(BEAT/2))%4],sx,yy);const s=((t*0.9+q.x*0.003)%1.6)*40-6;x.fillStyle='rgba(255,255,255,.6)';for(let r=1;r<15;r++){const c=Math.round(s-r);if(c>=1&&c<=13)x.fillRect(sx+c,yy+r,c<13?2:1,1)}}
    else if(q.used)x.drawImage(T.used,sx,yy);else x.drawImage(T.brick,sx,yy)}}
+ for(let i=0;i<S.lv.length;i++){const c=S.lv[i],sx=c.x-cam;if(sx<-10||sx>LW+10)continue;if(!c.got)drawCoin(x,sx,c.y,t,i);else{const a=ft-c.got;if(a<0.5){x.globalAlpha=1-a*2;drawCoin(x,sx,c.y-a*60,t*3,i);x.globalAlpha=1}}}
  for(const f of S.foes){if(!f.alive)continue;const sx=Math.round(f.x-cam);if(sx<-20||sx>LW+20)continue;
   if(f.t==='walk'){if(f.sq)x.drawImage(sp.wsq,sx-1,Math.round(f.y)-7-1);else{const k=[0,1,2,1][Math.floor(ft*7+f.x0*0.1)%4];x.drawImage(sp.wk[k][f.dir<0?1:0],sx-1,Math.round(f.y)-15-1-(k===1?1:0))}}
   else if(f.sq)x.drawImage(sp.flyDead,sx-1,Math.round(f.y-8+f.sq*f.sq*500)-1);else x.drawImage(sp.fly[[0,1,2,1][Math.floor(ft*12+f.ph)%4]],sx-1,Math.round(f.y)-8-1)}
@@ -324,7 +332,7 @@ function draw(x,t){const sp=sprites();if(S.ug&&S.ug.ph==='room'){drawRoom(x,t);r
  if(S.ug){const q=S.ug.q;drawPipe(x,Math.round(q.x-cam),q.y,q.h)} // sinking into / rising out of the secret pipe: the pipe hides the body
  for(const q of S.pops){x.globalAlpha=Math.min(1,q.l*3);x.fillStyle=q.c||'#e0b0ff';const z=q.sz||2;x.fillRect(Math.round(q.x-cam),Math.round(q.y),z,z)}x.globalAlpha=1;
  x.restore();
- x.font="6px 'Press Start 2P',monospace";x.fillStyle='#fff';x.strokeStyle='#1c3a6a';x.lineWidth=2;x.strokeText('SCORE '+S.score,6,26);x.fillText('SCORE '+S.score,6,26);x.fillStyle='#ffd23f';x.strokeText('WORDS '+S.coinsGot,LW-76,26);x.fillText('WORDS '+S.coinsGot,LW-76,26);x.fillStyle='#e0b0ff';x.strokeText('STOMPS '+S.stomps,6,36);x.fillText('STOMPS '+S.stomps,6,36);
+ x.font="6px 'Press Start 2P',monospace";x.fillStyle='#fff';x.strokeStyle='#1c3a6a';x.lineWidth=2;x.strokeText('SCORE '+S.score,6,26);x.fillText('SCORE '+S.score,6,26);x.fillStyle='#ffd23f';x.strokeText('WORDS '+S.coinsGot,LW-76,26);x.fillText('WORDS '+S.coinsGot,LW-76,26);x.fillStyle='#e0b0ff';x.strokeText('STOMPS '+S.stomps,6,36);x.fillText('STOMPS '+S.stomps,6,36);x.fillStyle='#ffd23f';x.strokeText('COINS '+S.coinN,LW-76,36);x.fillText('COINS '+S.coinN,LW-76,36);
  }
 // debug: every sprite frame on one sheet (tools / screenshots)
 function sheet(x){const sp=sprites();let i=0;const put=(c)=>{x.drawImage(c,4+(i%12)*24,4+Math.floor(i/12)*30);i++};

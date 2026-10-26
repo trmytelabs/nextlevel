@@ -23,10 +23,10 @@ const at=(S,b)=>S.find(s=>s.bar>=b-1e-6);
 const lyricWords=()=>{try{const src=fs.readFileSync('src/core.ts','utf8');let n=0;for(const m of src.matchAll(/\[(\d+(?:\.\d+)?),"([^"]+)"\]/g)){const b=+m[1];if(b>=56&&b<75)n+=m[2].split(' ').length}return n}catch{return -1}};
 
 export default [
- {name:'E4.1 pipes every 2 beats, word signs in the gaps, phone frame + status bar',era:4,bar:56,fn:async(p,h,page)=>{const {samples:S,frame:F}=await replay(page,p);
+ {name:'E4.1 pipes every 3 beats, word signs in the gaps, phone frame + status bar',era:4,bar:56,fn:async(p,h,page)=>{const {samples:S,frame:F}=await replay(page,p);
   // pipes: with the bird alive and no death in between, score advances by exactly one pipe per 2 beats
   let seg=null;for(let b=57.95;b+3<=74&&!seg;b+=0.5){const a=at(S,b),c=at(S,b+3);if(a&&c&&S.slice(S.indexOf(a),S.indexOf(c)+1).every(s=>s.e4.bird.alive))seg=[a,c]}
-  if(!seg)return 'no 3-bar stretch without a death to measure pipe cadence';const d=seg[1].e4.score-seg[0].e4.score;if(d!==6)return `score advanced ${d} over 3 bars (bars ${seg[0].bar.toFixed(2)}-${seg[1].bar.toFixed(2)}), expected 6 pipes`;
+  if(!seg)return 'no 3-bar stretch without a death to measure pipe cadence';const d=seg[1].e4.score-seg[0].e4.score;if(d!==4)return `score advanced ${d} over 3 bars (bars ${seg[0].bar.toFixed(2)}-${seg[1].bar.toFixed(2)}), expected 4 pipes (one every 3 beats)`;
   // word signs exist in the gaps once a line has been dispatched
   const sg=S.filter(s=>s.bar>57.2&&s.bar<64).map(s=>s.e4.signs);if(Math.max(...sg)<2)return `no word signs queued on pipes (signs ${Math.max(...sg)}) - lyric lines not reaching E4.onLine`;
   // frame: phone bezel is dark grey, game sky is blue, desk outside the phone is dark, status bar has white text
