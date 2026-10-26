@@ -16,15 +16,9 @@ concurrency:
 
 jobs:
   build:
-    runs-on: [self-hosted, windows, maximalist]
-    defaults:
-      run:
-        shell: bash
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Put Git bash on the PATH (self-hosted Windows runner)
-        shell: cmd
-        run: echo C:\Program Files\Git\bin>>%GITHUB_PATH%
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -38,7 +32,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: [self-hosted, windows, maximalist]
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

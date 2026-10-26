@@ -1,0 +1,13 @@
+# Only what the build needs goes into the image build context
+.git
+.github
+.claude
+node_modules
+dist
+out
+docs
+tools
+site
+deploy/wp
+*.md
+*.log
