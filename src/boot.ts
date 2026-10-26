@@ -4,7 +4,7 @@
 // with the generated score. The default song is used unless the page is driven by automation (the test harness), which
 // keeps the canonical layout its cases are written against unless it asks for a song.
 import {applySongMap} from './core';
-export const DEFAULT_SONG='next-level';
+export const DEFAULT_SONG='press-start';
 const q=new URLSearchParams(location.search);
 const id=q.get('song')??((navigator as any).webdriver?'none':DEFAULT_SONG);
 (async()=>{
