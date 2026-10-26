@@ -78,7 +78,7 @@ if(flag('controls')){
   for(let e=1;e<=5;e++){await page.keyboard.press(String(e));const p=await probe();if(p.era===e-1)pass('key '+e+' -> era '+e);else fail('key '+e,'era '+p.era+' bar '+p.bar.toFixed(2))}
   await page.keyboard.press('1');
   // fire: accept fireHeld too, like the space-key case (a frame may consume the edge first; G5b checks the edge synchronously)
-  const got=(i,f)=>f==='fire'?(i.fire||i.fireHeld):i[f];
+  const got=(i,f)=>f==='fire'?(i.fire||i.fireHeld):f==='jump'?(i.jump||i.up):i[f];
   // touch zones (pointer events with pointerType touch)
   const zones=[['left edge',box.x+box.width*0.10,box.y+box.height*0.5,'left'],['right edge',box.x+box.width*0.90,box.y+box.height*0.5,'right'],['upper middle',box.x+box.width*0.5,box.y+box.height*0.25,'jump'],['lower middle',box.x+box.width*0.5,box.y+box.height*0.75,'fire']];
   // phones show the side pads instead: drive them with real touches (stick left/right/up, then the action button)
