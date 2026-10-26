@@ -119,8 +119,7 @@ function draw(ctx,t){ctx.fillStyle='#07040f';ctx.fillRect(0,0,W,H);const cx=W/2,
 // ---- HUD overlay (drawn over the GL frame) ----
 function overlay(ctx,t){if(t<s5-TRANS*0.3)return;ctx.save();
  if(S.flash>0){ctx.fillStyle=`rgba(255,255,255,${S.flash*0.35})`;ctx.fillRect(0,0,W,H)}
- // headset on: two lenses open and merge into one view
- if(t<cb(76.3)){const q=clamp((t-s5)/(cb(76.3)-s5),0,1);const e=q*q*(3-2*q);const r=lerp(H*0.22,H*1.4,e),dx=lerp(W*0.23,0,e);ctx.fillStyle='#000';ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(W/2-dx,H/2,r,0,Math.PI*2,true);ctx.fill();ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(W/2+dx,H/2,r,0,Math.PI*2,true);ctx.fill('evenodd')}
+ // (no separate headset-on reveal: the VR world already opens out of the phone in the mobile -> VR transition, main.ts)
  // score, small
  ctx.globalAlpha=1-clamp((t-OUT)/0.6,0,1);if(ctx.globalAlpha>0){ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='rgba(6,8,20,.55)';ctx.fillRect(16,64,196,46);ctx.fillStyle='#fff';ctx.fillText('SCORE '+String(S.score).padStart(6,'0'),26,84);ctx.fillStyle=YEL;ctx.fillText('COMBO x'+S.combo+'  '+S.mult+'x',26,102)}ctx.globalAlpha=1;
  // the finale card's type layer (the voxel title itself is 3D, in era5gl.ts)

@@ -88,7 +88,7 @@ function render(t,auto){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnab
  else if(e===3){E4.draw(ctx,t);if(tr){const p=smooth(tr.p),R=E4.screenRect(t),r={x:lerp(R.x,-8,p),y:lerp(R.y,-8,p),w:lerp(R.w,W+16,p),h:lerp(R.h,H+16,p)};
    ctx.save();ctx.beginPath();ctx.roundRect(r.x,r.y,r.w,r.h,18*(1-p));ctx.clip();drawE5(t);ctx.restore();ctx.save();ctx.strokeStyle=`rgba(91,255,91,${0.9*(1-p)})`;ctx.lineWidth=3;ctx.shadowColor='#5bff5b';ctx.shadowBlur=18;ctx.beginPath();ctx.roundRect(r.x,r.y,r.w,r.h,18*(1-p));ctx.stroke();ctx.restore()}
    E4.drawAgents(ctx,t)}
- else{drawE5(t);const q=clamp((t-ERAS[4].start)/(BAR*8),0,1);scan(0.1*q);if(t<cb(76))glitch(t)}}
+ else{drawE5(t);const q=clamp((t-ERAS[4].start)/(BAR*8),0,1);scan(0.1*q)}}
 // chunky-pixel effect over the whole frame (k = pixel size in canvas px)
 const PXC=document.createElement('canvas'),PXX=PXC.getContext('2d')!;
 function pixelate(k:number){if(k<=1)return;const tw=Math.max(1,Math.round(W/k)),th=Math.max(1,Math.round(H/k));if(PXC.width!==tw||PXC.height!==th){PXC.width=tw;PXC.height=th}PXX.imageSmoothingEnabled=true;PXX.drawImage(cv,0,0,cv.width,cv.height,0,0,tw,th);ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(PXC,0,0,tw,th,0,0,W,H);ctx.restore()}
