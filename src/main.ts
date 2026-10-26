@@ -49,6 +49,10 @@ const ATTRACT_IDLE=12;let attract=false;
 function startAttract(){attract=true;songMute(true);hideStart();seek(0);setPlaying(true);document.body.classList.add('attract')}
 function endAttract(play:boolean){attract=false;songMute(false);document.body.classList.remove('attract');if(play){ensureAC();if(!clickOn)toggleClick();seek(0);setPlaying(true)}else showStart()}
 for(const ev of ['keydown','pointerdown'])addEventListener(ev,(e:any)=>{if(!attract)return;if(ev==='keydown'&&ignoreKey(e.key))return;endAttract(true);e.stopImmediatePropagation()},true);
+// Phones grant audio permission on the finger's lift (pointerup / touchend), not on the touch that starts the game: if the
+// game is running but the song is not, start it (in sync) on the next lift or click.
+const kickSong=()=>{if(playing&&!ended&&!startUp&&SONG.el&&SONG.el.paused){if(SONG.has)songSeek(songT);songPlay()}};
+for(const ev of ['pointerup','touchend','click'])addEventListener(ev,kickSong,true);
 function startGame(){if(!startUp)return;ensureAC();if(!clickOn&&!soundChosen)toggleClick();sway0=START.swayAt(idleT);hideStart();if(songT>0.01)seek(0);setPlaying(true)}
 const ignoreKey=(k:string)=>/^(Shift|Control|Alt|Meta|Tab|CapsLock|F\d+|Unidentified|Dead|AudioVolume.*|Media.*)$/.test(k);
 addEventListener('keydown',e=>{if(!startUp||e.repeat||ignoreKey(e.key))return;startGame();if(!/^[1-5]$/.test(e.key)){e.stopImmediatePropagation();if(e.key===' '||e.key.startsWith('Arrow'))e.preventDefault()}},true);
@@ -134,7 +138,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-las
  if(attract&&ended)endAttract(false);
  if(startUp){if(!etmUsed){idleT+=dt;if(idleT>ATTRACT_IDLE&&!document.hidden){startAttract();return}}cards(songT);hud(songT,auto);clearEdges();return}
  ensureGL(songT);
- if(playing){const prev=songT;songT=SONG.has?(SONG.el.ended?TOTAL:songTime()):Math.min(TOTAL,songT+dt);if(SONG.has&&songT<prev)songT=prev;const pb=Math.floor(prev/BEAT),cb=Math.floor(songT/BEAT);if(cb!==pb){beatIdx=cb;lastBeatT=songT;onBeat(cb,songT,auto)}
+ if(playing){const prev=songT;songT=SONG.has&&(SONG.el.ended||!SONG.el.paused)?(SONG.el.ended?TOTAL:songTime()):Math.min(TOTAL,songT+dt);if(SONG.has&&songT<prev)songT=prev;const pb=Math.floor(prev/BEAT),cb=Math.floor(songT/BEAT);if(cb!==pb){beatIdx=cb;lastBeatT=songT;onBeat(cb,songT,auto)}
   const p8=Math.floor(prev/(BEAT/2)),c8=Math.floor(songT/(BEAT/2));if(c8!==p8)on8th(c8,songT,auto);
   if(songT>=TOTAL){playing=false;ended=true;$('#play').textContent='REPLAY'}
   E1.update(dt,songT,inp,auto);E2.update(dt,songT,inp,auto);E3.update(dt,songT,inp,auto);E4.update(dt,songT,inp,auto);E5.update(dt,songT,inp,auto)}

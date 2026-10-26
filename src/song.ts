@@ -18,7 +18,7 @@ export function songSeek(t){if(!SONG.has)return;try{SONG.el.currentTime=clamp(t+
 // Phones only let audio start inside a tap: when the song has not loaded yet, start it now anyway (this call comes from the
 // Start / Play tap), which also unlocks it; once it plays it becomes the clock (main.ts re-syncs it to the game time).
 // If the browser still refuses, the game carries on with its own clock rather than pausing.
-export function songPlay(){if(!SONG.el)return Promise.resolve(true);if(!SONG.has)return SONG.el.play().then(()=>{if(!SONG.has){SONG.has=true;SONG.duration=SONG.el.duration||0}return true}).catch(()=>true);return SONG.el.play().then(()=>true).catch(()=>false)}
+export function songPlay(){if(!SONG.el)return Promise.resolve(true);if(!SONG.has)return SONG.el.play().then(()=>{if(!SONG.has){SONG.has=true;SONG.duration=SONG.el.duration||0}return true}).catch(()=>true);return SONG.el.play().then(()=>true).catch(()=>true)}
 export function songPause(){if(SONG.el)SONG.el.pause()}
 export function songMute(m:boolean){if(SONG.el)SONG.el.muted=m}
 export function nudge(d){SONG.offset=Math.round((SONG.offset+d)*1000)/1000;try{localStorage.setItem(key(),String(SONG.offset))}catch{}}
