@@ -107,21 +107,19 @@ function type(x:CanvasRenderingContext2D,a:number,it:number,nameA:number){if(a<=
  text(x,"FOR THE DEPUTY'S MAXIMALISTS",W/2,MOBILE?214:204,Math.round(12*k),'#5bff5b');
  text(x,'I leveled up the way gaming did.',W/2,238,Math.round(11*k),'#ffffff');
  text(x,'Just a lot faster.',W/2,261,Math.round(11*k),'#ffe14d');
- // five chapters: a compact row of cartridges
- const top=294,cw=172,gap=8,x0=W/2-(cw*5+gap*4)/2,chH=MOBILE?52:46;
- text(x,'FIVE GENERATIONS OF GAMES  ·  FIVE STAGES WITH AI',W/2,top,Math.round(8*k),'#9a93c4',W-40,false);
- for(let i=0;i<5;i++){const bx=x0+i*(cw+gap),by=top+12,[yr,tt,col]=CH[i];x.fillStyle='rgba(10,6,28,.85)';x.fillRect(bx,by,cw,chH);x.fillStyle=col;x.fillRect(bx,by,cw,2);x.globalAlpha=a*0.35;x.fillRect(bx,by+chH-1,cw,1);x.globalAlpha=a;
-  text(x,yr,bx+cw/2,by+16,Math.round(11*k),col,cw-12);text(x,tt,bx+cw/2,by+(MOBILE?38:34),Math.round(8*k),'#eef0ff',cw-12)}
- // how to play
- const hy=top+12+chH+26;text(x,'WATCH, OR TAKE OVER ANY TIME',W/2,hy,Math.round(10*k),'#4df0ff');
- const cols=TOUCH?[['PHONE','TURN SIDEWAYS · TOUCH TO PLAY'],['KEYS','WASD / ARROWS · SPACE'],['FINALE','YOUR FINGER MOVES THE SABER']]:[['KEYS','WASD / ARROWS · SPACE'],['PHONE','TURN SIDEWAYS · TOUCH'],['FINALE','MOUSE OR FINGER MOVES THE SABER']];
- for(let i=0;i<3;i++){const cx=W/2+(i-1)*300;text(x,cols[i][0],cx,hy+22,Math.round(8*k),'#ffe14d',280,false);text(x,cols[i][1],cx,hy+38,Math.round(8*k),'#cfd3e6',290,false)}
+ // five chapters: one row of cartridges, the analogy at a glance (kept deliberately sparse: title, name, tagline, stages, start)
+ const top=MOBILE?298:296,cw=176,gap=8,x0=W/2-(cw*5+gap*4)/2,chH=MOBILE?72:62;
+ for(let i=0;i<5;i++){const bx=x0+i*(cw+gap),by=top,[yr,tt,col]=CH[i];x.fillStyle='rgba(10,6,28,.85)';x.fillRect(bx,by,cw,chH);x.fillStyle=col;x.fillRect(bx,by,cw,3);x.globalAlpha=a*0.35;x.fillRect(bx,by+chH-1,cw,1);x.globalAlpha=a;
+  text(x,yr,bx+cw/2,by+(MOBILE?22:20),Math.round(13*k),col,cw-12);{// phones: every subtitle on two balanced lines at a readable size; desktop: one line
+  if(MOBILE){const ws=tt.split(' ');let best=1,bw=1e9;for(let h=1;h<ws.length;h++){const m=Math.max(ws.slice(0,h).join(' ').length,ws.slice(h).join(' ').length);if(m<bw){bw=m;best=h}}const sz=Math.round(10*k);text(x,ws.slice(0,best).join(' '),bx+cw/2,by+44,sz,'#eef0ff',cw-10);text(x,ws.slice(best).join(' '),bx+cw/2,by+59,sz,'#eef0ff',cw-10)}else text(x,tt,bx+cw/2,by+44,Math.round(9*k),'#eef0ff',cw-12)}}
+ // desktop only: one quiet line of keys (phones learn the side pads once the song starts)
+ if(!TOUCH)text(x,'TAKE OVER ANY TIME  ·  WASD / ARROWS  ·  SPACE  ·  MOUSE AIMS THE SABER',W/2,top+chH+34,8,'#8a86a8',W-60,false);
  // PRESS START, pulsing on the beat
  {const ph=(it/BEAT)%1,pulse=0.5+0.5*Math.cos(ph*Math.PI*2),label=TOUCH?'TAP TO START':'PRESS START',cy=H-42;x.font=PF(Math.round(14*k));const pw=x.measureText(label).width,bw=pw+86,bh=Math.round(30*k);
   x.fillStyle='rgba(6,4,16,.85)';x.fillRect(W/2-bw/2,cy-bh/2,bw,bh);x.fillStyle=`rgba(255,225,77,${0.35+0.65*pulse})`;x.fillRect(W/2-bw/2,cy-bh/2,bw,2);x.fillRect(W/2-bw/2,cy+bh/2-2,bw,2);
   x.save();x.shadowColor='#ffe14d';x.shadowBlur=6+10*pulse;x.textAlign='center';x.textBaseline='middle';x.fillStyle=`rgba(255,232,120,${0.75+0.25*pulse})`;x.fillText(label,W/2,cy+1);x.restore();
   const ax=bw/2-18,s=6+pulse*1.5;x.fillStyle=`rgba(255,232,120,${0.75+0.25*pulse})`;x.beginPath();x.moveTo(W/2-ax-s,cy-s);x.lineTo(W/2-ax+s*0.6,cy);x.lineTo(W/2-ax-s,cy+s);x.closePath();x.moveTo(W/2+ax+s,cy-s);x.lineTo(W/2+ax-s*0.6,cy);x.lineTo(W/2+ax+s,cy+s);x.closePath();x.fill();
-  text(x,'3:00  ·  SOUND ON',W/2+bw/2+86,cy,Math.round(7*k),'#8a86a8',160,false);text(x,TOUCH?'TAP ANYWHERE':'ANY KEY / CLICK',W/2-bw/2-86,cy,Math.round(7*k),'#8a86a8',160,false)}
+  }
  x.restore()}
 
 // voxel title layout at idle clock it (assembly over the first ~1.6 s, then sway and shimmer); fl = flourish time (s) or -1

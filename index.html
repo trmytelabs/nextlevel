@@ -46,7 +46,6 @@ button.on{border-color:var(--accent);color:var(--accent)}
 /* title screen (startgl.ts): the canvas carries everything; the HUD tags hide until the game starts */
 #endbtns{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:13%;z-index:3;gap:1.2em;pointer-events:auto}
 body.endcard #endbtns{display:flex}
-body.start #endbtns{display:flex;left:2%;top:3.5%;bottom:auto;transform:none}
 .eb{font:inherit;font-size:clamp(7px,1vw,12px);color:var(--accent);text-decoration:none;letter-spacing:.5px;padding:.9em 1.1em;border:1px solid rgba(91,255,91,.55);background:rgba(7,7,11,.72);cursor:pointer;text-shadow:0 0 6px #000;white-space:nowrap}
 .eb:hover,.eb:focus-visible{border-color:var(--accent);background:rgba(91,255,91,.14);outline:none}
 #notes{position:absolute;left:0;right:0;top:0;bottom:9.1%;z-index:5;background:rgba(5,4,12,.9);display:flex;align-items:center;justify-content:center;pointer-events:auto}
@@ -84,6 +83,7 @@ body.start #endbtns{display:flex;left:2%;top:3.5%;bottom:auto;transform:none}
 @media (pointer:coarse) and (orientation:landscape){
  :root{--pad:clamp(112px,15.5vw,172px)}
  #stage{padding-left:calc(var(--pad) + env(safe-area-inset-left,0px));padding-right:calc(var(--pad) + env(safe-area-inset-right,0px))}
+ body.start #stage{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 }
 @media (pointer:coarse) and (orientation:portrait){
  :root{--pad:50%}
