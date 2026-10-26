@@ -1,5 +1,5 @@
 // ---------- SECRETS: one easter egg per stage, found by the player (never by the autopilot) ----------
-// 0 ARCADE: shoot the golden word "coin" away completely     1 16-BIT: press down on the flashing pipe (underground room)
+// 0 ARCADE: shoot the golden word "coin" away completely     1 32-BIT: press down on the flashing pipe (underground room)
 // 2 3D: drive over the rainbow pad                            3 MOBILE: fly through the gold star
 // 4 VR: cut the golden block
 // Found flags last for one play-through: they reset when the song restarts from the top. Finding all five changes the end card.

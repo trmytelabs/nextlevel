@@ -11,7 +11,7 @@ export const NOTES:{title:string,sub:string,secs:Sec[]}={
   {h:'THE GAME',items:[
    'Five generations of games, five kinds of gameplay, one song. Each stage stands for a step in how I learned to work with AI.',
    'ARCADE: a retro-3D vector crawl. The lyrics fly in as voxel words you shoot apart.',
-   '16-BIT: a platformer you steer yourself, with coins, caterpillars and ? blocks that release each line.',
+   '32-BIT: a platformer you steer yourself, with coins, caterpillars and ? blocks that release each line.',
    '3D CONSOLE: a racer on a Blender-built speedway. Each line is a gate to drive through.',
    'MOBILE: a one-thumb flyer on a phone, with notifications arriving as you play.',
    'VR: a synthwave saber lane. One saber follows your mouse or finger, and an AI co-pilot builds the arena from what you cut.',

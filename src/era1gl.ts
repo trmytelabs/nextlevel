@@ -10,7 +10,7 @@ const LOW=QUALITY==='low';
 // F2/z), so every voxel sits on the texture pixels the simulation hit-tests: the renderer only reflects era1.ts state.
 const {LW,LH,GROUND,BW,VPX,VPY,F,F2,ROWD,ZFAR,ZNEAR,TRAVEL,shatterT}=E1.K;
 const FPX=270,CAMH=F/FPX,SU=F2/FPX,SPD=(ZFAR-ZNEAR)/TRAVEL; // focal length (px), eye height over the plane, world width of a texture column, crawl speed
-const CELL=LOW?4:2,C0=LOW?3:1; // voxel = one 'Press Start 2P' pixel (2x2 texels from x=y=3); low tier: 2x2 font pixels
+const CELL=LOW?6:3,C0=LOW?3:0; // voxel = one 'Press Start 2P' pixel (2x2 texels from x=y=3); low tier: 2x2 font pixels
 const EXT=0.22,MAXV=LOW?2600:9000,MAXD=LOW?360:1200,MAXS=LOW?1200:3200,NSTAR=LOW?90:170;
 const RAIL=6.4,BARZ=9,TX=6,TZ=11; // grid pitch (world units) and the floor tiles that fall away at the shatter (2TX x TZ)
 let ok=false,renderer:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.PerspectiveCamera;

@@ -3,7 +3,7 @@ import {eggFind} from './eggs';
 
 // ---------- ERA 1: arcade. Lyrics crawl toward you on a tilted plane; you chip the letters away ----------
 export const E1=(()=>{
-const LW=480,LH=270,GROUND=LH-26,FS=18,ROWW=300,BW=ROWW+24,TRAVEL=BAR*2.6,YEL='#ffe81f',VPX=LW/2,VPY=30;
+const LW=480,LH=270,GROUND=LH-26,FS=24,ROWW=300,BW=ROWW+24,TRAVEL=BAR*2.6,YEL='#ffe81f',VPX=LW/2,VPY=30;
 // perspective: a point at depth z on the plane lands at screen y = VPY + F/z, with horizontal scale F2/z
 const F=4000,F2=27,ROWD=0.56,ZFAR=112,ZNEAR=18;
 const SHIP=['....X....','...XXX...','.XXXXXXX.','XXXXXXXXX'];
@@ -40,7 +40,7 @@ function fire(){if(S.ship.dead)return;if(S.bul.length<3&&S.cool<=0){S.bul.push({
 // shots already in flight count as gone, so two shots never go for the same pixels.
 // it only fires at words in the nearer two-thirds of the crawl (z <= ZFIRE), so each word is readable before it is
 // chipped (firing at any range cleared 40/45 words; this clears 27-33/45, the count shifts with tiny timing changes); a shot that would land farther is worth nothing
-const ZFIRE=ZNEAR+(ZFAR-ZNEAR)*0.8;
+const ZFIRE=ZNEAR+(ZFAR-ZNEAR)*0.5;
 const resv=()=>S.bul.filter(b=>!b.hit&&b.pred).map(b=>b.pred);
 function lit(w,c,r,rs){if(w.img.data[(r*w.w+c)*4+3]===0)return false;for(const p of rs)if((c-p.cu)*(c-p.cu)+(r-p.cy)*(r-p.cy)<=p.R*p.R)return false;return true}
 function shotAt(x,t,rs){let y=S.ship.y-2;const dt=1/60;
@@ -50,7 +50,7 @@ function shotAt(x,t,rs){let y=S.ship.y-2;const dt=1/60;
     for(const w of ln.words){if(w.dead||w.gold||u<w.bx||u>=w.bx+w.w||row<w.by||row>=w.by+w.h)continue; // the gold word is see-through to the autopilot
      const ws=rs.filter(p=>p.w===w);if(ws.length&&w.left-ws.reduce((a,p)=>a+p.n,0)<w.total*0.16)continue; // shots in flight will finish it
      const cu=Math.floor(u-w.bx);let hr=-1;for(let rr=Math.floor(row-w.by);rr>=0;rr--)if(lit(w,cu,rr,ws)){hr=rr;break}
-     if(hr<0)continue;const R=clamp(Math.round(10/sc),6,14),cy=Math.max(0,hr-(R>>1)),cap=Math.ceil(w.total*0.45);let n=0;
+     if(hr<0)continue;const R=clamp(Math.round(10/sc*FS/16),Math.round(6*FS/16),Math.round(14*FS/16)),cy=Math.max(0,hr-(R>>1)),cap=Math.ceil(w.total*0.45);let n=0;
      for(let yy=-R;yy<=R&&n<cap;yy++)for(let xx=-R;xx<=R&&n<cap;xx++){if(xx*xx+yy*yy>R*R)continue;const px=cu+xx,py=cy+yy;if(px<0||py<0||px>=w.w||py>=w.h)continue;if(lit(w,px,py,ws))n++}
      return{w,ln,n:z>ZFIRE?0:n,cu,cy,R,k}}}}}return null}
 // worth of a predicted hit: pixels taken (/150), +1 if it finishes the word (after the shots already in flight at it),
@@ -103,7 +103,7 @@ function update(dt,t,inp,auto){if(t>=ERAS[1].start)return;S.autoNow=auto;
    for(const w of ln.words){if(w.dead||(w.gold&&b.auto)||u<w.bx||u>=w.bx+w.w||row<w.by||row>=w.by+w.h)continue; // autopilot shots pass through the gold word
     // the shot lands on the first solid pixel up its column (it used to chip the word's bottom padding: ~16 px a hit and
     // no word ever died); an open column (a tunnel already chipped through) lets it fly on to the next word
-    const R=clamp(Math.round(10/sc),6,14),cu=Math.floor(u-w.bx),d=w.img.data;let hr=-1;for(let rr=Math.floor(row-w.by);rr>=0;rr--)if(d[(rr*w.w+cu)*4+3]>0){hr=rr;break}
+    const R=clamp(Math.round(10/sc*FS/16),Math.round(6*FS/16),Math.round(14*FS/16)),cu=Math.floor(u-w.bx),d=w.img.data;let hr=-1;for(let rr=Math.floor(row-w.by);rr>=0;rr--)if(d[(rr*w.w+cu)*4+3]>0){hr=rr;break}
     if(hr<0)continue;const n=chip(w,cu,Math.max(0,hr-(R>>1)),R);if(!n)continue;
     b.hit=true;S.chips++;S.score+=Math.min(50,n);blip(1200+S.rng()*400,0.04,0.08);for(let i=0;i<8;i++)S.pops.push({x:b.x,y:by,vx:(S.rng()-.5)*120,vy:-S.rng()*90,l:.5});
     if(w.left<w.total*0.16){w.dead=true;S.kills++;if(w.gold)eggFind(0,S.autoNow);if(w.left+n===w.total)S.oneShot++;S.score+=100;noise(0.08,0.3,2000);const d=w.img.data;for(let py=0;py<w.h;py+=2)for(let px=0;px<w.w;px+=2){if(d[(py*w.w+px)*4+3]===0)continue;const sp=toScreen(ln,w.bx+px,w.by+py,t);S.pops.push({x:sp.x,y:sp.y,vx:(S.rng()-.5)*160,vy:(S.rng()-.9)*140,l:.7})}}

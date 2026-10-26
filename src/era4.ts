@@ -73,7 +73,7 @@ function update(dt,t,inp,auto){if(t<s4-TRANS||t>=s5)return;const b=S.bird;
   S.agentsOut=0;for(const a of S.agents)if(agentPos(a,t)[0]>W)S.agentsOut++;
   if(t>=cb(73))S.ghosts=[]}
  S.flash=Math.max(0,S.flash-dt);S.ripples=S.ripples.filter(r=>t-r.t<0.5);S.parts=S.parts.filter(p=>t-p.t<0.7)}
-const AGENT_T=0.9;   // seconds from leaving the phone to crossing the right edge (all out by ~bar 73.85)
+const AGENT_T=1.45;  // seconds from leaving the phone to crossing the right edge (all out by ~bar 74.1, during the transition)
 function agentPos(a,t){const u=clamp((t-a.born)/AGENT_T,0,1),e=u*u;return[lerp(a.sx,W+40,e),lerp(a.sy,a.ty,smooth(u))-Math.sin(u*Math.PI)*50,u]}
 function onBeat(_b,_t,_auto){}
 function on8th(_n,_t,_auto){}
@@ -111,12 +111,15 @@ function draw(ctx,t){const appear=smooth((t-(s4-TRANS))/TRANS),pulse=1-((t/BEAT)
   ctx.save();ctx.globalAlpha=fout*appear*fin;ctx.fillStyle='rgba(28,28,38,.94)';rrect(ctx,x,y,NW,50,12);ctx.fill();ctx.strokeStyle=col===GREEN?'rgba(91,255,91,.35)':'rgba(255,255,255,.12)';ctx.lineWidth=1;ctx.stroke();
   ctx.fillStyle=col;rrect(ctx,x+10,y+10,30,30,7);ctx.fill();ctx.fillStyle='#0c1a10';ctx.font=F(12);ctx.textAlign='center';ctx.fillText(title[0],x+25,y+31);ctx.textAlign='left';
   ctx.fillStyle='#fff';ctx.font=F(9);ctx.fillText(title,x+50,y+22);ctx.fillStyle='#b4bacc';ctx.font=F(8);ctx.fillText(body,x+50,y+38);ctx.restore()});
- // agents leaving the phone: green sparks with a short trail
- for(const a of S.agents){if(t<a.born)continue;const [x,y,u]=agentPos(a,t);if(u>=1)continue;const [px,py]=agentPos(a,t-0.08);
-  ctx.strokeStyle=hexa(GREEN,0.45);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(x,y);ctx.stroke();
-  const g=ctx.createRadialGradient(x,y,2,x,y,24);g.addColorStop(0,hexa(GREEN,0.55));g.addColorStop(1,hexa(GREEN,0));ctx.fillStyle=g;ctx.fillRect(x-24,y-24,48,48);
-  ctx.save();ctx.translate(x,y);ctx.scale(1.3,1.3);drawBird(ctx,0,0,-0.15,t,GREEN,1,a.born*7);ctx.restore()}
  if(S.flash>0){ctx.fillStyle=`rgba(255,255,255,${S.flash*0.6})`;ctx.fillRect(SX,SY,GW,GH)}}
+// agents leaving the phone: green sparks with a short trail, growing as they fly out at the viewer. Drawn by main.ts as
+// the top layer, so during the phone->VR transition they fly over the VR world opening out of the phone.
+function drawAgents(ctx,t){for(const a of S.agents){if(t<a.born)continue;const [x,y,u]=agentPos(a,t);if(u>=1)continue;const [px,py]=agentPos(a,t-0.08),sc=1.3+1.8*u*u;
+  ctx.strokeStyle=hexa(GREEN,0.45);ctx.lineWidth=3+3*u;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(x,y);ctx.stroke();
+  const r=24*sc/1.3,g=ctx.createRadialGradient(x,y,2,x,y,r);g.addColorStop(0,hexa(GREEN,0.55));g.addColorStop(1,hexa(GREEN,0));ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);
+  ctx.save();ctx.translate(x,y);ctx.scale(sc,sc);drawBird(ctx,0,0,-0.15,t,GREEN,1,a.born*7);ctx.restore()}}
+// the phone's screen on the canvas at time t (the phone slides up from below during the transition into this stage)
+const screenRect=(t:number)=>({x:SX,y:SY+(1-smooth((t-(s4-TRANS))/TRANS))*640,w:GW,h:GH});
 function hexa(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`}
 function drawGame(ctx,t,pulse){const b=S.bird,run=Math.max(0,t-s4);ctx.save();ctx.translate(SX,GY0);
  // sky
@@ -164,4 +167,4 @@ function drawBird(ctx,x,y,rot,t,tint,alpha,seed){ctx.save();ctx.globalAlpha=alph
  const wing=Math.sin(t*22+seed)*0.6;ctx.fillStyle=dark;ctx.beginPath();ctx.ellipse(-3,2,7,4,wing,0,7);ctx.fill();ctx.stroke();
  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(5,-3,4,0,7);ctx.fill();ctx.stroke();ctx.fillStyle='#222';ctx.beginPath();ctx.arc(6.5,-3,1.8,0,7);ctx.fill();
  ctx.fillStyle=tint?'#fff':'#f0652a';ctx.beginPath();ctx.moveTo(8,1);ctx.lineTo(16,3);ctx.lineTo(8,5);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}
-return{init,update,draw,onBeat,on8th,onLine,get S(){return S}}})();
+return{init,update,draw,drawAgents,screenRect,onBeat,on8th,onLine,get S(){return S}}})();

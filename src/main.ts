@@ -70,11 +70,24 @@ function glitch(t){if(t-lastBeatT<0.07&&hash(beatIdx)>0.5){for(let i=0;i<3;i++){
 function edge(x){const g=ctx.createLinearGradient(x-30,0,x+6,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(255,255,255,.9)');ctx.fillStyle=g;ctx.fillRect(x-30,0,36,H)}
 
 function render(t,auto){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=false;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);const e=eraAt(t),tr=transAt(t);
- if(e===0){if(E1GL.ok)E1GL.draw(lo1.x,t);else E1.draw(lo1.x,t);if(tr){E2.draw(lo2.x,t);blitCRT(lo2,t);const ex=W*smooth(tr.p);ctx.save();ctx.beginPath();ctx.rect(ex,0,W-ex,H);ctx.clip();blitCRT(lo1,t);ctx.restore();edge(ex)}else blitCRT(lo1,t)}
- else if(e===1){E2.draw(lo2.x,t);if(tr){drawE3(t);const p=smooth(tr.p);ctx.save();ctx.globalAlpha=1-p;const hy=H*0.5;ctx.translate(W/2,hy);ctx.scale(1+p*0.6,1-p*0.98);ctx.translate(-W/2,-hy);blitCRT(lo2,t);ctx.restore()}else blitCRT(lo2,t)}
- else if(e===2){if(tr){E4.draw(ctx,t);ctx.globalAlpha=Math.pow(1-tr.p,1.5);drawE3(t);ctx.globalAlpha=1;scan(0.07*(1-tr.p))}else{drawE3(t);scan(0.07)}}
- else if(e===3){E4.draw(ctx,t);if(tr){const p=smooth(tr.p);ctx.save();ctx.translate(W*(1-p),0);ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();drawE5(t);ctx.restore();edge(W*(1-p))}}
+ // transitions (the last TRANS before each stage), one per hand-off:
+ // arcade -> 32-bit: a resolution upgrade (the arcade breaks into chunky pixels, the 32-bit world sharpens out of them)
+ if(e===0){if(E1GL.ok)E1GL.draw(lo1.x,t);else E1.draw(lo1.x,t);if(tr){const p=tr.p;if(p<0.5)blitCRT(lo1,t);else{E2.draw(lo2.x,t);blitCRT(lo2,t)}
+   const steps=[1,2,3,4,6,8,12,16,24],q=p<0.5?smooth(p/0.5):1-smooth((p-0.5)/0.5);pixelate(steps[Math.round(q*(steps.length-1))]);if(Math.abs(p-0.5)<0.06){ctx.fillStyle=`rgba(255,255,255,${0.5*(1-Math.abs(p-0.5)/0.06)})`;ctx.fillRect(0,0,W,H)}}else blitCRT(lo1,t)}
+ // 32-bit -> 3D: the CRT powers off to a line, and the 3D race boots up out of the dark with a camera fly-in
+ else if(e===1){E2.draw(lo2.x,t);if(tr){const z=smooth(clamp((tr.p-0.3)/0.7,0,1));ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);if(z>0){ctx.save();ctx.globalAlpha=Math.min(1,z*2);ctx.translate(W/2,H/2);ctx.scale(0.25+0.75*z,0.25+0.75*z);ctx.rotate((1-z)*0.35);ctx.translate(-W/2,-H/2);drawE3(t);ctx.restore()}
+   const p=smooth(clamp(tr.p/0.55,0,1));if(p<1){ctx.save();const hy=H*0.5;ctx.translate(W/2,hy);ctx.scale(1+p*0.4,Math.max(0.004,1-p));ctx.translate(-W/2,-hy);blitCRT(lo2,t);ctx.restore();ctx.fillStyle=`rgba(255,255,255,${0.9*p})`;ctx.fillRect(0,hy-1,W*(1-p*0.7)+0,2)}}else blitCRT(lo2,t)}
+ // 3D -> mobile: the race shrinks into the phone's screen: it was a game on the phone all along
+ else if(e===2){if(tr){E4.draw(ctx,t);const p=smooth(tr.p),R=E4.screenRect(t),r={x:lerp(0,R.x,p),y:lerp(0,R.y,p),w:lerp(W,R.w,p),h:lerp(H,R.h,p)};
+   ctx.save();ctx.globalAlpha=tr.p<0.72?1:Math.max(0,1-(tr.p-0.72)/0.28);ctx.beginPath();ctx.roundRect(r.x,r.y,r.w,r.h,18*p);ctx.clip();const sc=Math.max(r.w/W,r.h/H);ctx.translate(r.x+r.w/2,r.y+r.h/2);ctx.scale(sc,sc);ctx.translate(-W/2,-H/2);drawE3(t);ctx.restore()}else{drawE3(t);scan(0.07)}}
+ // mobile -> VR: the VR world opens out of the phone's screen while the agents fly out over everything
+ else if(e===3){E4.draw(ctx,t);if(tr){const p=smooth(tr.p),R=E4.screenRect(t),r={x:lerp(R.x,-8,p),y:lerp(R.y,-8,p),w:lerp(R.w,W+16,p),h:lerp(R.h,H+16,p)};
+   ctx.save();ctx.beginPath();ctx.roundRect(r.x,r.y,r.w,r.h,18*(1-p));ctx.clip();drawE5(t);ctx.restore();ctx.save();ctx.strokeStyle=`rgba(91,255,91,${0.9*(1-p)})`;ctx.lineWidth=3;ctx.shadowColor='#5bff5b';ctx.shadowBlur=18;ctx.beginPath();ctx.roundRect(r.x,r.y,r.w,r.h,18*(1-p));ctx.stroke();ctx.restore()}
+   E4.drawAgents(ctx,t)}
  else{drawE5(t);const q=clamp((t-ERAS[4].start)/(BAR*8),0,1);scan(0.1*q);if(t<cb(76))glitch(t)}}
+// chunky-pixel effect over the whole frame (k = pixel size in canvas px)
+const PXC=document.createElement('canvas'),PXX=PXC.getContext('2d')!;
+function pixelate(k:number){if(k<=1)return;const tw=Math.max(1,Math.round(W/k)),th=Math.max(1,Math.round(H/k));if(PXC.width!==tw||PXC.height!==th){PXC.width=tw;PXC.height=th}PXX.imageSmoothingEnabled=true;PXX.drawImage(cv,0,0,cv.width,cv.height,0,0,tw,th);ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(PXC,0,0,tw,th,0,0,W,H);ctx.restore()}
 function blitCRT(lo,t){if(CRT.ok){CRT.render(lo,t,1);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(CRT.canvas(),0,0,W,H);ctx.restore()}else{blit(lo);scan(lo===lo1?0.55:0.3)}}
 function drawE3(t){if(E3GL.ok){E3GL.render(t);ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(E3GL.canvas(),0,0,W,H);ctx.restore();E3.overlay(ctx,t)}else{ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font="10px 'Press Start 2P',monospace";ctx.fillText('WEBGL REQUIRED FOR THE RACER',W/2-150,H/2)}}
 function drawE5(t){if(E5GL.ok){E5GL.render(t);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(E5GL.canvas(),0,0,W,H);ctx.restore();E5.overlay(ctx,t)}else E5.draw(ctx,t)}

@@ -12,15 +12,15 @@
 | Stage | Chapter | How you play the lyrics |
 |---|---|---|
 | ARCADE | FIRST PROMPTS | A retro-3D vector crawl. Each lyric line flies in as voxel words; shoot pixels off them. |
-| 16-BIT | LEARNING TO ASK | A platformer you steer yourself. "?" blocks release each line when hit from below; bricks break, coins wait in arcs over pits, caterpillars patrol. |
+| 32-BIT | LEARNING TO ASK | A platformer you steer yourself. "?" blocks release each line when hit from below; bricks break, coins wait in arcs over pits, caterpillars patrol. |
 | 3D CONSOLE | DIRECTING AGENTS | A racer on a Blender-built speedway. One overhead gate per line; drive under it in the lit lane. |
 | MOBILE | WORKING FROM ANYWHERE | A one-thumb flyer on a phone. Words hang on signs in the pipe gaps while notifications arrive. |
 | VR | FULL DEVELOPMENT | A synthwave saber lane. Word blocks fly in on the beat; one saber follows your mouse or finger, and an AI co-pilot builds the arena from what you cut. |
 
 | | |
 |---|---|
-| ![Arcade: voxel lyric words in the vector crawl](docs/era1-arcade.jpg) | ![16-bit: the platformer with a "?" block ahead](docs/era2-platformer.jpg) |
-| **Arcade · first prompts.** The words are the targets. | **16-bit · learning to ask.** Lines hide in "?" blocks. |
+| ![Arcade: voxel lyric words in the vector crawl](docs/era1-arcade.jpg) | ![32-bit: the platformer with a "?" block ahead](docs/era2-platformer.jpg) |
+| **Arcade · first prompts.** The words are the targets. | **32-bit · learning to ask.** Lines hide in "?" blocks. |
 | ![3D console: the speedway with a lyric gate](docs/era3-racer.jpg) | ![Mobile: the phone game with a notification](docs/era4-phone.jpg) |
 | **3D console · directing agents.** One gate per line. | **Mobile · working from anywhere.** Words in the pipe gaps. |
 | ![VR: the saber lane](docs/era5-saber.jpg) | ![End card](docs/end-card.jpg) |

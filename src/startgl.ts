@@ -93,7 +93,7 @@ export function drawPlate(x:CanvasRenderingContext2D,p:any,cx:number,cy:number,o
 const PF=(s:number)=>`${s}px 'Press Start 2P',monospace`;
 function fit(x:CanvasRenderingContext2D,txt:string,size:number,maxW:number){x.font=PF(size);const w=x.measureText(txt).width;if(w>maxW){size=Math.max(6,Math.floor(size*maxW/w));x.font=PF(size)}return size}
 function text(x:CanvasRenderingContext2D,txt:string,cx:number,cy:number,size:number,col:string,maxW=W-40,shadow=true){fit(x,txt,size,maxW);x.textAlign='center';x.textBaseline='middle';if(shadow){x.fillStyle='rgba(0,0,0,.85)';x.fillText(txt,cx+1,cy+1)}x.fillStyle=col;x.fillText(txt,cx,cy)}
-const CH=[['ARCADE','FIRST PROMPTS','#5bff5b'],['16-BIT','LEARNING TO ASK','#ff6b5b'],['3D CONSOLE','DIRECTING AGENTS','#4df0ff'],['MOBILE','WORKING FROM ANYWHERE','#ffe14d'],['VR','FULL DEVELOPMENT','#ff5be0']];
+const CH=[['ARCADE','FIRST PROMPTS','#5bff5b'],['32-BIT','LEARNING TO ASK','#ff6b5b'],['3D CONSOLE','DIRECTING AGENTS','#4df0ff'],['MOBILE','WORKING FROM ANYWHERE','#ffe14d'],['VR','FULL DEVELOPMENT','#ff5be0']];
 const NAMEY=MOBILE?160:166; // IAN GINN plate centre row
 const TOUCH=MOBILE||matchMedia('(pointer: coarse)').matches;
 
