@@ -6,7 +6,7 @@ export const $=(s:string):any=>document.querySelector(s);
 export const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t, smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t)};
 export function rngf(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 export const hash=n=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)};
-export const BPM=128,BEAT=60/BPM,BAR=BEAT*4,TOTAL=96*BAR;
+export let BPM=128,BEAT=60/128,BAR=BEAT*4,TOTAL=96*BAR; // replaced by applySongMap() before the stages load
 export const bar=n=>n*BAR;
 export const W=960,H=540;
 // ---------- device + quality tier ----------
@@ -21,7 +21,7 @@ export const ERAS=[
  {name:'3 · 3D',start:bar(37)},
  {name:'4 · MOBILE',start:bar(56)},
  {name:'5 · VR',start:bar(75)}];
-export const TRANS=BAR*1.5;
+export let TRANS=BAR*1.5;
 export const eraAt=t=>{let e=0;for(let i=0;i<ERAS.length;i++)if(t>=ERAS[i].start)e=i;return e};
 export const transAt=t=>{for(let i=1;i<ERAS.length;i++){const s=ERAS[i].start;if(t>=s-TRANS&&t<s)return{from:i-1,to:i,p:(t-(s-TRANS))/TRANS}}return null};
 export const LYRICS:[number,string][]=[
@@ -65,6 +65,30 @@ export const LYRICS:[number,string][]=[
 [89,"Deputy, I'm ready, next level, here I come"],
 [94,"The only limit now is how creative we are."],
 [95,"Ready when you are. Press start."]];
+// ---------- song maps: the game follows whichever song is loaded ----------
+// Everything was laid out on a canonical 128 BPM, 96-bar timeline: the bar numbers in LYRICS and ERAS above, and the bar
+// positions the stages use for their set pieces. A song map (public/songs/<id>/map.json: bpm, duration, the second each
+// lyric line starts, optionally the five stage starts) moves every line and stage to where that song puts them, so stages
+// grow or shrink with the song. cb(b) turns a canonical bar position into seconds in the loaded song by interpolating
+// between anchors (stage starts and line starts); before the first and after the last anchor it runs at the song's own
+// tempo. cbInv is its inverse. Without a map cb(b)===bar(b), so the canonical layout (and every test written for it) holds.
+const CANON=LYRICS.map(l=>l[0]),CANON_ERAS=[0,19,37,56,75];
+let ANCH:number[][]|null=null;
+export const SONGMAP:any={id:null,title:'',audio:'song.mp3',beat0:0,lastLyricEnd:0};
+function interp(v:number,a:number,b:number){const A=ANCH!;if(v<=A[0][a])return A[0][b]+(v-A[0][a])*(b?BAR:1/BAR);const n=A.length;
+ if(v>=A[n-1][a])return A[n-1][b]+(v-A[n-1][a])*(b?BAR:1/BAR);let i=1;while(A[i][a]<v)i++;const p=A[i-1],q=A[i];return p[b]+(q[b]-p[b])*(v-p[a])/(q[a]-p[a])}
+export const cb=(b:number)=>ANCH?interp(b,0,1):b*BAR;
+export const cbInv=(t:number)=>ANCH?interp(t,1,0):t/BAR;
+export function applySongMap(m:any){const L=m.lines;if(typeof m.duration!=='number')throw new Error('song map needs a duration');
+ // no line times yet: play the song over the canonical layout so they can be tapped in (T per line, Y saves map.json)
+ if(!Array.isArray(L)||L.length!==LYRICS.length||typeof m.bpm!=='number'){TOTAL=Math.max(TOTAL,m.duration);Object.assign(SONGMAP,{id:m.id,title:m.title||'',audio:m.audio||'song.mp3',untimed:true,bpm:m.bpm,beat0:m.beat0||0,duration:m.duration});console.info('song map has no line times yet: press T at each lyric line, then Y');return}
+ BPM=m.bpm;BEAT=60/BPM;BAR=BEAT*4;TRANS=BAR*1.5;TOTAL=m.duration;
+ const E=Array.isArray(m.eras)&&m.eras.length===5?m.eras:[0,L[6],L[14]-BAR,L[22]-BAR,L[30]];
+ const a:number[][]=CANON_ERAS.map((c,i)=>[c,E[i]]);CANON.forEach((c,i)=>{if(!a.some(p=>p[0]===c))a.push([c,L[i]])});a.sort((p,q)=>p[0]-q[0]);
+ const A:number[][]=[];for(const p of a)if(!A.length||(p[0]>A[A.length-1][0]&&p[1]>A[A.length-1][1]))A.push(p);ANCH=A;
+ LYRICS.forEach((l,i)=>l[0]=L[i]/BAR);E.forEach((s:number,i:number)=>ERAS[i].start=s);
+ Object.assign(SONGMAP,{id:m.id,title:m.title||'',audio:m.audio||'song.mp3',beat0:m.beat0||0,lastLyricEnd:m.lastLyricEnd||L[L.length-1]+BAR*2})}
+
 
 // ---------- canvas ----------
 export const cv:HTMLCanvasElement=$('#c');export const dpr=QUALITY==='low'?1:Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;export const ctx=cv.getContext('2d');

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {ERAS,TRANS,W,H,rngf,hash,clamp,lerp,blip,noise,bar} from './core';
+import {ERAS,TRANS,W,H,rngf,hash,clamp,lerp,blip,noise,bar,cb} from './core';
 import {eggFind} from './eggs';
 
 // ---------- ERA 3: arcade racer. Tri-oval with banked turns, traffic to overtake, each lyric line an overhead gantry you drive under ----------
@@ -26,7 +26,7 @@ function frame(s:number,out=newFrame()){const u=wrapU(s);curve.getPointAt(u,out.
  out.lift=Math.abs(sn)*ROADW*1.14+0.02;out.p.y+=out.lift;out.bank=bank;out.curv=cr;return out}
 function init(t){const r=rngf(31);S={s:Math.max(0,t-(start-TRANS))*SPEED,x:0,vx:0,speedK:1,shake:0,flash:0,score:0,words:0,spawned:0,missed:0,line:[],passes:0,overtakes:0,bumps:0,cars:[],lap:0,lyr:[],planT:0,planLane:null,
   // secret 3: a rainbow pad in the left lane, reached at bar 46 (just after the "every lap" gate). A player who drives over it finds it.
-  padS:(bar(46)-(start-TRANS))*SPEED,padX:LANES[0],padGot:false,rainbow:0};
+  padS:(cb(46)-(start-TRANS))*SPEED,padX:LANES[0],padGot:false,rainbow:0};
  for(let i=0;i<NCARS;i++){const x=LANES[Math.floor(r()*4)];S.cars.push({i,s:S.s+30+i*26+r()*8,x,tx:x,sp:SPEED*(0.9+r()*0.05),col:CARCOL[i%CARCOL.length],word:null,ahead:true,passed:false,ph:r()*6,changeT:1+r()*3})}}
 function rel(c){let d=c.s-S.s;d=((d+L/2)%L+L)%L-L/2;return d}
 function gap(a,b){let d=b.s-a.s;d=((d+L/2)%L+L)%L-L/2;return d}

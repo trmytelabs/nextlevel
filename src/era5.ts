@@ -1,4 +1,4 @@
-import {ERAS,TRANS,BAR,BEAT,bar,W,H,LYRICS,hash,clamp,lerp,smooth,blip,noise,ptr,MOBILE,TOTAL} from './core';
+import {ERAS,TRANS,BAR,BEAT,bar,W,H,LYRICS,hash,clamp,lerp,smooth,blip,noise,ptr,MOBILE,TOTAL,cb,cbInv} from './core';
 import {eggFind} from './eggs';
 import {plate,drawPlate} from './startgl';
 
@@ -10,7 +10,7 @@ import {plate,drawPlate} from './startgl';
 // colour (looks only). The co-pilot turns every other cut word into a piece of arena ahead of you.
 // Deterministic: seek() replans from the table and rebuilds the arena pieces for everything already cut.
 export const E5=(()=>{
-const s5=ERAS[4].start,OUT=bar(94),TUNNEL=bar(89),SPD=13,LEAD=2.4,COLS=4,ROWS=3,WIN=0.18,HITWIN=0.22,RZ=0.48,RY=0.36; // RZ/RY: half-size (world units) of the cut zone around a block's centre, a little larger than the block face
+const s5=ERAS[4].start,OUT=cb(94),TUNNEL=cb(89),SPD=13,LEAD=2.4,COLS=4,ROWS=3,WIN=0.18,HITWIN=0.22,RZ=0.48,RY=0.36; // RZ/RY: half-size (world units) of the cut zone around a block's centre, a little larger than the block face
 const MAG='#ff5be0',CYAN='#4df0ff',GRN='#5bff5b',YEL='#ffe14d',VIO='#b07cff';
 const HUES=[MAG,CYAN,VIO]; // block colour per lyric line (looks only, not a hand)
 const KINDS=['arch','pillar','panel','ring'];
@@ -18,7 +18,7 @@ const KINDS=['arch','pillar','panel','ring'];
 // the player at eye height EYE looking slightly down; column c is at z=(c-1.5)*COLW, row r at y=ROW0+r*ROWH
 const HIT=2.4,BACK=0.6,EYE=1.65,COLW=1.0,ROW0=0.85,ROWH=0.68,PITCH=-0.3/9.6;
 // gameplay field of view at time t (the renderer's camera eases towards it): lens-open 60 -> 72, tunnel 84
-const fovAt=(t:number)=>{let f=t>=TUNNEL?84:72;const b=t/BAR;if(b<76.3)f=lerp(f,60,1-smooth((b-75)/1.3));return f};
+const fovAt=(t:number)=>{let f=t>=TUNNEL?84:72;const b=cbInv(t);if(b<76.3)f=lerp(f,60,1-smooth((b-75)/1.3));return f};
 // pointer -> saber tip: put the tip exactly under the pointer by intersecting the pointer ray with the hit plane
 function aim(t:number){const D=HIT+BACK,tv=Math.tan(fovAt(t)*Math.PI/360),nx=ptr.x*2-1,ny=1-ptr.y*2;const z=nx*D*tv*(W/H),y=EYE+D*PITCH+ny*D*tv;return{c:clamp(z/COLW+1.5,-0.45,COLS-0.55),r:clamp((y-ROW0)/ROWH,-0.45,ROWS-0.55)}}
 // inverse of aim (tests and tools): where on the canvas (0..1) a lane cell sits at time t
@@ -28,15 +28,15 @@ let S:any;
 // wander either way on slower notes; never off the lane and never the same cell twice in a row
 function stepCol(col:number,dir:number,fast:boolean,h:number){let d=fast?(h<0.4?dir:-dir):(h<0.5?-1:1);if(col+d<0||col+d>COLS-1)d=-d;return d}
 const stepRow=(row:number,fast:boolean,h:number)=>clamp(row+(fast?(h<0.6?0:h<0.8?-1:1):(h<0.34?-1:h<0.67?0:1)),0,ROWS-1);
-function plan(){const out:any[]=[];LYRICS.forEach((l,li)=>{const b=l[0];if(b<75||b>=94)return;const words=l[1].replace(/[.,!?]/g,'').split(' ').filter(Boolean);const n=words.length;const step=Math.max(0.5,Math.floor(12/n)/2)*BEAT;const t0=bar(b)+BEAT*0.5;const fast=step<BEAT;
+function plan(){const out:any[]=[];LYRICS.forEach((l,li)=>{const b=l[0];if(li<30||li>37)return;const words=l[1].replace(/[.,!?]/g,'').split(' ').filter(Boolean);const n=words.length;const t0=bar(b)+BEAT*0.5,nx=LYRICS[li+1]?bar(LYRICS[li+1][0]):t0+BAR*2;const step=Math.min(Math.max(0.5,Math.floor(12/n)/2)*BEAT,Math.max(BEAT*0.5,(nx-t0-BEAT*0.5)/Math.max(1,n-1)));const fast=step<BEAT;
   let col=Math.min(COLS-1,Math.floor(hash(li*31)*COLS)),row=Math.floor(hash(li*17)*ROWS),dir=hash(li*5)<0.5?-1:1;const hue=out.length?(out[out.length-1].hue+1)%HUES.length:0;
   words.forEach((w,k)=>{if(k>0){dir=stepCol(col,dir,fast,hash(li*31+k*7));col+=dir;row=stepRow(row,fast,hash(li*17+k*3))}out.push({id:li+'-'+k,li,k,word:w,hitT:t0+k*step,hue,col,row,hit:0,missed:0,active:false})})});
  // tunnel run: after the last line the chorus words come back faster (every 8th) so the build keeps going to the stop
  const last=out[out.length-1];const echo=['MAXIMALIST','READY','DEPUTY','TURN','IT','UP','EVERYTHING','THEN','MORE','SPEED','OF','LIGHT'];let k=0,col=last?last.col:1,row=last?last.row:1,dir=1;
- for(let tt=(last?last.hitT:bar(90))+BEAT*1.5;tt<bar(93.8);tt+=BEAT*0.5,k++){dir=stepCol(col,dir,true,hash(k*5.7));col+=dir;row=stepRow(row,true,hash(k*3.1));out.push({id:'e-'+k,li:99,k,word:echo[k%echo.length],hitT:tt,hue:Math.floor(k/4)%HUES.length,col,row,hit:0,missed:0,active:false,echo:true})}
+ for(let tt=(last?last.hitT:cb(90))+BEAT*1.5;tt<cb(93.8);tt+=BEAT*0.5,k++){dir=stepCol(col,dir,true,hash(k*5.7));col+=dir;row=stepRow(row,true,hash(k*3.1));out.push({id:'e-'+k,li:99,k,word:echo[k%echo.length],hitT:tt,hue:Math.floor(k/4)%HUES.length,col,row,hit:0,missed:0,active:false,echo:true})}
  // secret 5: one golden block in the gap after "turn it up to eleven" (bar 84.7), top-left, away from the path. A player who
  // cuts it finds it; the autopilot leaves it, and missing it costs nothing (no combo break, not counted as spawned or missed)
- out.push({id:'gold',li:-1,k:0,word:'?',hitT:bar(84.7),hue:3,col:0,row:2,hit:0,missed:0,active:false,gold:true});
+ out.push({id:'gold',li:-1,k:0,word:'?',hitT:cb(84.7),hue:3,col:0,row:2,hit:0,missed:0,active:false,gold:true});
  return out}
 // arena pieces rise on the side of the lane the word was cut on
 function piece(b:any,i:number){const kind=KINDS[Math.floor(hash(b.li*13+b.k*5)*KINDS.length)];return{word:b.word,kind,x:0,t:b.hit||b.hitT,i,side:b.col<1.5?'L':'R',hue:b.hue,li:b.li}}
@@ -78,11 +78,11 @@ const CARD={fly:94.0,lock:95.0,name:95.0,nameIn:0.125,prog:95.19,invite:95.3,cre
  nameY:0.48,progY:0.567,inviteY:0.64,creditY:0.69,promptY:0.80,nameFont:40,progFont:11,copilotX:0.875}; // layout: canvas fractions / px
 const CT={name:'IAN GINN',sep:'  ·  ',prog:"FOR THE DEPUTY'S MAXIMALISTS",invite:'Imagine what we could build together.',credit:'Built with AI agents, asking to build with people.',prompt:'READY WHEN YOU ARE  ·  PRESS START'};
 const ease3=(x:number)=>1-Math.pow(1-clamp(x,0,1),3);
-function card(ctx:CanvasRenderingContext2D,t:number){const b=t/BAR;if(b<CARD.fly)return;const dpr=ctx.getTransform().a||1;
+function card(ctx:CanvasRenderingContext2D,t:number){const b=cbInv(t);if(b<CARD.fly)return;const dpr=ctx.getTransform().a||1;
  // the hold after the song ends keeps the prompt alive on the wall clock (t stops at TOTAL)
  const tp=t>=TOTAL-1e-3?performance.now()/1000:t;
  // white-hot frame on the lock downbeat
- const sinceLock=t-bar(CARD.lock);if(sinceLock>=0&&sinceLock<0.5){ctx.fillStyle=`rgba(255,240,255,${0.32*Math.exp(-sinceLock*14)})`;ctx.fillRect(0,0,W,H)}
+ const sinceLock=t-cb(CARD.lock);if(sinceLock>=0&&sinceLock<0.5){ctx.fillStyle=`rgba(255,240,255,${0.32*Math.exp(-sinceLock*14)})`;ctx.fillRect(0,0,W,H)}
  if(b<CARD.name)return;
  // a soft dark bed under the type block (the floor reflects the title right where the lines sit)
  const bed=smooth(clamp((b-CARD.name)/0.25,0,1));if(bed>0){const y0=H*0.40,y1=H*0.86;const g=ctx.createLinearGradient(0,y0,0,y1);g.addColorStop(0,'rgba(4,2,12,0)');g.addColorStop(0.18,`rgba(4,2,12,${0.62*bed})`);g.addColorStop(0.8,`rgba(4,2,12,${0.62*bed})`);g.addColorStop(1,'rgba(4,2,12,0)');ctx.fillStyle=g;ctx.fillRect(0,y0,W,y1-y0)}
@@ -99,8 +99,8 @@ function card(ctx:CanvasRenderingContext2D,t:number){const b=t/BAR;if(b<CARD.fly
    const tw=ctx.measureText(CT.prog).width,u=ease3((b-CARD.prog)/0.2);ctx.fillStyle='rgba(91,255,91,.6)';ctx.fillRect(W/2-u*tw*0.5,H*CARD.progY+CARD.progFont*0.5+6,u*tw,1);ctx.globalAlpha=1}}
  // 2) invite: types on word by word on 16ths, with a block cursor
  if(b>=CARD.invite){ctx.font="11px 'Press Start 2P',monospace";ctx.textAlign='left';const words=CT.invite.split(' ');const full=ctx.measureText(CT.invite).width,x0=W/2-full/2,cy=H*CARD.inviteY;let x=x0,last=-1;
-  for(let k=0;k<words.length;k++){const tk=bar(CARD.invite+k*0.0625),pre=words.slice(0,k).join(' ')+(k?' ':'');const wx=x0+ctx.measureText(pre).width;if(t<tk)break;last=k;const a=clamp((t-tk)/0.07,0,1);ctx.globalAlpha=a;ctx.fillStyle='#000';ctx.fillText(words[k],wx+1,cy+1+(1-a)*5);ctx.fillStyle=k===words.length-1?'#ffe14d':'#ffffff';ctx.fillText(words[k],wx,cy+(1-a)*5);x=wx+ctx.measureText(words[k]).width}
-  ctx.globalAlpha=1;const done=last===words.length-1&&t-bar(CARD.invite+last*0.0625)>0.15;if(!done||Math.floor(tp*2.4)%2===0){ctx.fillStyle=done?'rgba(255,225,77,.8)':'#ffffff';ctx.fillRect(x+5,cy-6,8,12)}}
+  for(let k=0;k<words.length;k++){const tk=cb(CARD.invite+k*0.0625),pre=words.slice(0,k).join(' ')+(k?' ':'');const wx=x0+ctx.measureText(pre).width;if(t<tk)break;last=k;const a=clamp((t-tk)/0.07,0,1);ctx.globalAlpha=a;ctx.fillStyle='#000';ctx.fillText(words[k],wx+1,cy+1+(1-a)*5);ctx.fillStyle=k===words.length-1?'#ffe14d':'#ffffff';ctx.fillText(words[k],wx,cy+(1-a)*5);x=wx+ctx.measureText(words[k]).width}
+  ctx.globalAlpha=1;const done=last===words.length-1&&t-cb(CARD.invite+last*0.0625)>0.15;if(!done||Math.floor(tp*2.4)%2===0){ctx.fillStyle=done?'rgba(255,225,77,.8)':'#ffffff';ctx.fillRect(x+5,cy-6,8,12)}}
  // 3) the credit, small, as a quiet footnote under the invite
  if(b>=CARD.credit){const a=smooth(clamp((b-CARD.credit)/0.12,0,1));ctx.globalAlpha=a;ctx.textAlign='center';ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='#000';ctx.fillText(CT.credit,W/2+1,H*CARD.creditY+1);ctx.fillStyle='#a9aec4';ctx.fillText(CT.credit,W/2,H*CARD.creditY);ctx.globalAlpha=1}
  // 4) the prompt: pops in on the off-beat after the caption has gone, then pulses on the beat
@@ -115,17 +115,17 @@ const onBeat=(b,t,auto)=>{},on8th=onBeat,onLine=(words,t)=>{}; // no-ops: everyt
 // ---- 2D fallback (no WebGL): lane, blocks, saber ----
 function draw(ctx,t){ctx.fillStyle='#07040f';ctx.fillRect(0,0,W,H);const cx=W/2,hy=H*0.42;ctx.strokeStyle='rgba(255,91,224,.5)';ctx.lineWidth=1;for(let i=-3;i<=3;i++){ctx.beginPath();ctx.moveTo(cx+i*40,hy);ctx.lineTo(cx+i*260,H);ctx.stroke()}
  for(const b of S.blocks){if(!b.active||b.hit||b.missed)continue;const d=clamp((b.hitT-t)/LEAD,0,1);const sc=lerp(1,0.08,d);const x=cx+(b.col-1.5)*160*sc,y=hy+(1-d)*(H*0.45)-b.row*60*sc,s=46*sc;ctx.fillStyle=HUES[b.hue]||'#ffc21a';ctx.fillRect(x-s/2,y-s/2,s,s);ctx.fillStyle='#fff';ctx.font=Math.max(5,10*sc)+"px 'Press Start 2P',monospace";ctx.textAlign='center';ctx.fillText(b.word,x,y+3);ctx.textAlign='left'}
- if(t>=bar(75.6)&&t<OUT){const sx=cx+(S.saber.c-1.5)*160,sy=hy+H*0.45-S.saber.r*60;ctx.strokeStyle=HUES[S.saber.hue];ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(cx+60,H);ctx.lineTo(sx,sy);ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke()}}
+ if(t>=cb(75.6)&&t<OUT){const sx=cx+(S.saber.c-1.5)*160,sy=hy+H*0.45-S.saber.r*60;ctx.strokeStyle=HUES[S.saber.hue];ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(cx+60,H);ctx.lineTo(sx,sy);ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke()}}
 // ---- HUD overlay (drawn over the GL frame) ----
 function overlay(ctx,t){if(t<s5-TRANS*0.3)return;ctx.save();
  if(S.flash>0){ctx.fillStyle=`rgba(255,255,255,${S.flash*0.35})`;ctx.fillRect(0,0,W,H)}
  // headset on: two lenses open and merge into one view
- if(t<bar(76.3)){const q=clamp((t-s5)/(bar(76.3)-s5),0,1);const e=q*q*(3-2*q);const r=lerp(H*0.22,H*1.4,e),dx=lerp(W*0.23,0,e);ctx.fillStyle='#000';ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(W/2-dx,H/2,r,0,Math.PI*2,true);ctx.fill();ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(W/2+dx,H/2,r,0,Math.PI*2,true);ctx.fill('evenodd')}
+ if(t<cb(76.3)){const q=clamp((t-s5)/(cb(76.3)-s5),0,1);const e=q*q*(3-2*q);const r=lerp(H*0.22,H*1.4,e),dx=lerp(W*0.23,0,e);ctx.fillStyle='#000';ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(W/2-dx,H/2,r,0,Math.PI*2,true);ctx.fill();ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(W/2+dx,H/2,r,0,Math.PI*2,true);ctx.fill('evenodd')}
  // score, small
  ctx.globalAlpha=1-clamp((t-OUT)/0.6,0,1);if(ctx.globalAlpha>0){ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='rgba(6,8,20,.55)';ctx.fillRect(16,64,196,46);ctx.fillStyle='#fff';ctx.fillText('SCORE '+String(S.score).padStart(6,'0'),26,84);ctx.fillStyle=YEL;ctx.fillText('COMBO x'+S.combo+'  '+S.mult+'x',26,102)}ctx.globalAlpha=1;
  // the finale card's type layer (the voxel title itself is 3D, in era5gl.ts)
  card(ctx,t);
  // one hint line while the saber first appears, above the lane (not over the hit line or the captions)
- if(t>=bar(76.3)&&t<bar(78.3)){ctx.globalAlpha=Math.min(1,(bar(78.3)-t)/0.6,(t-bar(76.3))/0.3);ctx.textAlign='center';ctx.font="9px 'Press Start 2P',monospace";const l1=MOBILE?'DRAG THE SABER THROUGH THE WORDS':'MOVE THE SABER THROUGH THE WORDS',y=H*0.13;const tw=ctx.measureText(l1).width+28;ctx.fillStyle='rgba(6,8,20,.6)';ctx.fillRect(W/2-tw/2,y,tw,26);ctx.fillStyle='#fff';ctx.fillText(l1,W/2,y+17);ctx.textAlign='left';ctx.globalAlpha=1}
+ if(t>=cb(76.3)&&t<cb(78.3)){ctx.globalAlpha=Math.min(1,(cb(78.3)-t)/0.6,(t-cb(76.3))/0.3);ctx.textAlign='center';ctx.font="9px 'Press Start 2P',monospace";const l1=MOBILE?'DRAG THE SABER THROUGH THE WORDS':'MOVE THE SABER THROUGH THE WORDS',y=H*0.13;const tw=ctx.measureText(l1).width+28;ctx.fillStyle='rgba(6,8,20,.6)';ctx.fillRect(W/2-tw/2,y,tw,26);ctx.fillStyle='#fff';ctx.fillText(l1,W/2,y+17);ctx.textAlign='left';ctx.globalAlpha=1}
  ctx.restore()}
 return{init,update,draw,overlay,onBeat,on8th,onLine,get S(){return S},K:{SPD,LEAD,COLS,ROWS,TUNNEL,OUT,s5,WIN,HITWIN,RZ,RY,HIT,BACK,EYE,COLW,ROW0,ROWH,PITCH,HUES,fovAt,screenOf,CARD}}})();

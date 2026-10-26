@@ -1,4 +1,4 @@
-import {ERAS,TRANS,BAR,BEAT,bar,W,H,LYRICS,hash,clamp,lerp,smooth,blip,noise} from './core';
+import {ERAS,TRANS,BAR,BEAT,bar,W,H,LYRICS,hash,clamp,lerp,smooth,blip,noise,cb} from './core';
 import {eggFind} from './eggs';
 
 // ---------- ERA 4: mobile. A phone on a desk running a one-thumb flapping game ----------
@@ -30,7 +30,7 @@ const pipeX=(k,t)=>PIPE0+k*SPACING-Math.max(0,t-s4)*V;
 const gapY=k=>178+81*Math.sin(k*0.7)+25*(hash(k*3.7+0.5)-0.5);   // 84..272, step between neighbours <= ~80 px
 // secret 4: a gold star in the open air between two pipes, reached around bar 64.5, a little above the line between the two
 // gaps (one easy flap). A player who flies through it finds it; the autopilot flies its own line and never counts.
-const KSTAR=Math.round(((bar(64.5)-s4)*V+BX-PIPE0-PWD-(SPACING-PWD)/2)/SPACING);
+const KSTAR=Math.round(((cb(64.5)-s4)*V+BX-PIPE0-PWD-(SPACING-PWD)/2)/SPACING);
 const starX=t=>pipeX(KSTAR,t)+PWD+(SPACING-PWD)/2,starY=(gapY(KSTAR)+gapY(KSTAR+1))/2-26;
 function drawStar(ctx,x,y,r,rot){ctx.beginPath();for(let i=0;i<10;i++){const a=rot+i*Math.PI/5-Math.PI/2,rr=i%2?r*0.45:r;ctx.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr)}ctx.closePath()}
 function init(t){S={starGot:false,starT:-9,starY,starAt:s4+(PIPE0+KSTAR*SPACING+PWD+(SPACING-PWD)/2-BX)/V,bird:{y:GAH/2,vy:0,alive:true,deadT:-9,flapT:-9,inv:0,hover:false,bornT:-9},score:0,best:0,counted:new Set(),words:new Map(),line:[],got:0,ghosts:[],agents:[],ripples:[],flash:0,started:false,parts:[],total:0,signs:0,deaths:0,agentsOut:0,planned:new Set()};
@@ -57,21 +57,21 @@ function update(dt,t,inp,auto){if(t<s4-TRANS||t>=s5)return;const b=S.bird;
    if(b.y<8){b.y=8;b.vy=0}
    // collisions: pipes only while vulnerable; the ground kills only when vulnerable and before the hand-off, otherwise bounces
    if(!b.hover)b.inv=Math.max(0,b.inv-dt);let hit=false;
-   if(b.y>GROUND-12){if(b.inv>0||t>=bar(74.4)){b.y=GROUND-12;b.vy=FLAP*0.8}else hit=true}
+   if(b.y>GROUND-12){if(b.inv>0||t>=cb(74.4)){b.y=GROUND-12;b.vy=FLAP*0.8}else hit=true}
    if(!hit&&b.inv<=0)for(let i=k;i<k+2;i++){const px=pipeX(i,t);if(BX+10>px&&BX-10<px+PWD){const c=gapY(i);if(b.y-9<c-GAP/2||b.y+9>c+GAP/2)hit=true}}
-   if(hit&&t<bar(74.4)){b.alive=false;b.deadT=t;b.vy=-150;S.deaths++;S.flash=0.3;S.best=Math.max(S.best,S.score);noise(0.15,0.4,900);blip(110,0.25,0.15)}
+   if(hit&&t<cb(74.4)){b.alive=false;b.deadT=t;b.vy=-150;S.deaths++;S.flash=0.3;S.best=Math.max(S.best,S.score);noise(0.15,0.4,900);blip(110,0.25,0.15)}
    if(!S.starGot&&!auto&&!hit){const sx=starX(t);if(Math.abs(sx-BX)<16&&Math.abs(b.y-starY)<18){S.starGot=true;S.starT=t;S.score+=5;eggFind(3,false)}}
    for(let i=k-1;i<k+1;i++){if(i<0||S.counted.has(i))continue;if(pipeX(i,t)+PWD<BX-10){S.counted.add(i);S.score++;const w=S.words.get(i);if(w){S.line.push(w);S.got+=w.split(' ').length;S.words.delete(i);S.signs=S.words.size;S.parts.push({t,w,y:gapY(i)});blip(1568,0.08,0.1)}else blip(1046,0.06,0.08)}}}
   else{b.vy+=G*dt;b.y=Math.min(GROUND-12,b.y+b.vy*dt);const age=t-b.deadT;if(age>BEAT*2||(!auto&&tap&&age>0.45))respawn(t,k)}   // auto-retry after two beats, or tap to retry
   // ghosts: perfect players that fly in from the right during the bridge, one every two beats
-  const n=t>=bar(73)?0:t>=bar(66.5)?Math.min(14,Math.floor((t-bar(66.5))/(BEAT*2))+1):0;
+  const n=t>=cb(73)?0:t>=cb(66.5)?Math.min(14,Math.floor((t-cb(66.5))/(BEAT*2))+1):0;
   while(S.ghosts.length<n){const i=S.ghosts.length;S.ghosts.push({i,x:GW+20-BX,y:gapY(k),xo:GX(i),dy:GDY(i),col:GREEN,ph:i*1.7})}
   for(const g of S.ghosts){g.x=lerp(g.x,g.xo,1-Math.pow(0.05,dt));const kg=firstPipe(t+(-g.x)/V);const target=gapY(kg)+g.dy+Math.sin(t*5+g.ph)*4;g.y=lerp(g.y,target,1-Math.pow(0.002,dt));
    if(Math.floor((t+g.ph)/(BEAT*2))!==Math.floor((t+g.ph-dt)/(BEAT*2)))S.ripples.push({t,ghost:true,x:BX+g.x,y:g.y})}
   // at bar 73 the ghosts become agents and leave the phone to the right, into the finale
-  if(t>=bar(73)&&S.agents.length===0)for(let i=0;i<14;i++){const g=S.ghosts[i]||{x:GX(i),y:gapY(k)+GDY(i)};S.agents.push({sx:SX+BX+g.x,sy:GY0+g.y,ty:110+(i%7)*48,born:bar(73)+i*0.05})}
+  if(t>=cb(73)&&S.agents.length===0)for(let i=0;i<14;i++){const g=S.ghosts[i]||{x:GX(i),y:gapY(k)+GDY(i)};S.agents.push({sx:SX+BX+g.x,sy:GY0+g.y,ty:110+(i%7)*48,born:cb(73)+i*0.05})}
   S.agentsOut=0;for(const a of S.agents)if(agentPos(a,t)[0]>W)S.agentsOut++;
-  if(t>=bar(73))S.ghosts=[]}
+  if(t>=cb(73))S.ghosts=[]}
  S.flash=Math.max(0,S.flash-dt);S.ripples=S.ripples.filter(r=>t-r.t<0.5);S.parts=S.parts.filter(p=>t-p.t<0.7)}
 const AGENT_T=0.9;   // seconds from leaving the phone to crossing the right edge (all out by ~bar 73.85)
 function agentPos(a,t){const u=clamp((t-a.born)/AGENT_T,0,1),e=u*u;return[lerp(a.sx,W+40,e),lerp(a.sy,a.ty,smooth(u))-Math.sin(u*Math.PI)*50,u]}
@@ -107,7 +107,7 @@ function draw(ctx,t){const appear=smooth((t-(s4-TRANS))/TRANS),pulse=1-((t/BEAT)
  for(const r of S.ripples){if(r.ghost)continue;const q=(t-r.t)/0.5;ctx.strokeStyle=`rgba(255,255,255,${(1-q)*0.8})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(tx-12,ty-10,6+q*36,0,7);ctx.stroke()}
  ctx.restore();
  // notifications beside the phone
- NOTES.forEach(([nb,title,body,side,col],i)=>{const tb=bar(nb);if(t<tb||t>tb+BAR*2.5)return;const age=t-tb,fin=smooth(age/0.35),fout=age>BAR*2.1?1-(age-BAR*2.1)/(BAR*0.4):1;const NW=290,x=side?W-20-NW+(1-fin)*140:20-(1-fin)*140,y=70+(i%4)*62;
+ NOTES.forEach(([nb,title,body,side,col],i)=>{const tb=cb(nb);if(t<tb||t>tb+BAR*2.5)return;const age=t-tb,fin=smooth(age/0.35),fout=age>BAR*2.1?1-(age-BAR*2.1)/(BAR*0.4):1;const NW=290,x=side?W-20-NW+(1-fin)*140:20-(1-fin)*140,y=70+(i%4)*62;
   ctx.save();ctx.globalAlpha=fout*appear*fin;ctx.fillStyle='rgba(28,28,38,.94)';rrect(ctx,x,y,NW,50,12);ctx.fill();ctx.strokeStyle=col===GREEN?'rgba(91,255,91,.35)':'rgba(255,255,255,.12)';ctx.lineWidth=1;ctx.stroke();
   ctx.fillStyle=col;rrect(ctx,x+10,y+10,30,30,7);ctx.fill();ctx.fillStyle='#0c1a10';ctx.font=F(12);ctx.textAlign='center';ctx.fillText(title[0],x+25,y+31);ctx.textAlign='left';
   ctx.fillStyle='#fff';ctx.font=F(9);ctx.fillText(title,x+50,y+22);ctx.fillStyle='#b4bacc';ctx.font=F(8);ctx.fillText(body,x+50,y+38);ctx.restore()});

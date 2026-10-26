@@ -1,4 +1,4 @@
-import {$,clamp,lerp,smooth,rngf,hash,BPM,BEAT,BAR,TOTAL,bar,W,H,ERAS,eraAt,transAt,LYRICS,cv,dpr,ctx,lo1,lo2,lo3,scan,blit,readInput,clickOn,setClickOn,ensureAC,hat,drums,lastInputReal,clearEdges,HK,MOBILE,QUALITY,setQuality,lastTouch,ptr,padsShown} from './core';
+import {$,clamp,lerp,smooth,rngf,hash,BPM,BEAT,BAR,TOTAL,bar,W,H,ERAS,eraAt,transAt,LYRICS,cv,dpr,ctx,lo1,lo2,lo3,scan,blit,readInput,clickOn,setClickOn,ensureAC,hat,drums,lastInputReal,clearEdges,HK,MOBILE,QUALITY,setQuality,lastTouch,ptr,padsShown,cb} from './core';
 import {E1} from './era1';
 import {E2} from './era2';
 import {E3} from './era3';
@@ -12,7 +12,7 @@ import {NOTES} from './patchnotes';
 import {EGG,eggReset,eggToast,eggEndLine,eggCount} from './eggs';
 import {START} from './startgl';
 import {MUSIC} from './music';
-import {SONG,loadSong,songTime,songSeek,songPlay,songPause,nudge,tap,clearTaps,saveTiming} from './song';
+import {SONG,loadSong,songTime,songSeek,songPlay,songPause,songMute,nudge,tap,clearTaps,saveTiming} from './song';
 
 // ---------- transport, compositing, HUD ----------
 let songT=0,playing=true,startUp=false,idleT=0,sway0=0,soundChosen=false,lastNow=performance.now(),ended=false,lastBeatT=-1,beatIdx=0,songArmed=false,seeks=0,etmUsed=false;
@@ -43,6 +43,12 @@ for(const b of document.querySelectorAll('#bar button'))b.addEventListener('clic
 // just dismisses it, paused, without starting audio.
 function showStart(){startUp=true;idleT=0;soundChosen=false;playing=false;songPause();$('#play').textContent='PLAY';document.body.classList.add('start')}
 function hideStart(){if(!startUp)return;startUp=false;document.body.classList.remove('start')}
+// demo: nobody pressed start for ATTRACT_IDLE s, so the video plays itself on autopilot, muted (browsers allow muted playback
+// only). The first key or tap restarts it from the top with sound, under the player's control; the demo loops via the title.
+const ATTRACT_IDLE=12;let attract=false;
+function startAttract(){attract=true;songMute(true);hideStart();seek(0);setPlaying(true);document.body.classList.add('attract')}
+function endAttract(play:boolean){attract=false;songMute(false);document.body.classList.remove('attract');if(play){ensureAC();if(!clickOn)toggleClick();seek(0);setPlaying(true)}else showStart()}
+for(const ev of ['keydown','pointerdown'])addEventListener(ev,(e:any)=>{if(!attract)return;if(ev==='keydown'&&ignoreKey(e.key))return;endAttract(true);e.stopImmediatePropagation()},true);
 function startGame(){if(!startUp)return;ensureAC();if(!clickOn&&!soundChosen)toggleClick();sway0=START.swayAt(idleT);hideStart();if(songT>0.01)seek(0);setPlaying(true)}
 const ignoreKey=(k:string)=>/^(Shift|Control|Alt|Meta|Tab|CapsLock|F\d+|Unidentified|Dead|AudioVolume.*|Media.*)$/.test(k);
 addEventListener('keydown',e=>{if(!startUp||e.repeat||ignoreKey(e.key))return;startGame();if(!/^[1-5]$/.test(e.key)){e.stopImmediatePropagation();if(e.key===' '||e.key.startsWith('Arrow'))e.preventDefault()}},true);
@@ -52,13 +58,13 @@ const scrub=$('#scrub');let drag=false;const sc=e=>{const r=scrub.getBoundingCli
 scrub.addEventListener('pointerdown',e=>{drag=true;try{scrub.setPointerCapture(e.pointerId)}catch{}sc(e)});addEventListener('pointermove',e=>{if(drag)sc(e)});const endDrag=()=>{drag=false};addEventListener('pointerup',endDrag);addEventListener('pointercancel',endDrag);
 for(const e of ERAS){const m=document.createElement('div');m.className='mark';m.style.left=(e.start/TOTAL*100)+'%';m.innerHTML='<span>'+e.name.split(' · ')[1]+'</span>';scrub.appendChild(m)}
 
-function onBeat(b,t,auto){const e=eraAt(t);if(!SONG.has&&!(e===4&&t>=bar(94.5)))drums(e,b);MUSIC.beat(b,t,e,!SONG.has);E1.onBeat(b,t);E5.onBeat(b,t,auto)} // E4.onBeat/on8th are empty stubs (era4.ts:71-72)
-function on8th(n,t,auto){const e=eraAt(t);if(!SONG.has&&clickOn&&e>=1&&!(e===4&&t>=bar(94.5)))hat(e===2&&n%2===1);MUSIC.eighth(n,t,e,!SONG.has);E1.on8th(n,t,auto);E5.on8th(n,t,auto)}
+function onBeat(b,t,auto){const e=eraAt(t);if(!SONG.has&&!(e===4&&t>=cb(94.5)))drums(e,b);MUSIC.beat(b,t,e,!SONG.has);E1.onBeat(b,t);E5.onBeat(b,t,auto)} // E4.onBeat/on8th are empty stubs (era4.ts:71-72)
+function on8th(n,t,auto){const e=eraAt(t);if(!SONG.has&&clickOn&&e>=1&&!(e===4&&t>=cb(94.5)))hat(e===2&&n%2===1);MUSIC.eighth(n,t,e,!SONG.has);E1.on8th(n,t,auto);E5.on8th(n,t,auto)}
 // E5GL (PMREM bake, Reflector, 300+ meshes, a third WebGL context) is not needed until the bar-73.5 transition: build it in
 // idle time during the bridge, and synchronously at bar 73 at the latest (or straight away when seeking past it).
 let e5State=0;
-function ensureGL(t){if(e5State===2)return;const go=()=>{if(e5State!==2){e5State=2;E5GL.init()}};if(t>=bar(73)){go();return}
- if(e5State===0&&t>=bar(66)){e5State=1;const ric=(window as any).requestIdleCallback;if(ric)ric(go,{timeout:BAR*3000});else setTimeout(go,300)}}
+function ensureGL(t){if(e5State===2)return;const go=()=>{if(e5State!==2){e5State=2;E5GL.init()}};if(t>=cb(73)){go();return}
+ if(e5State===0&&t>=cb(66)){e5State=1;const ric=(window as any).requestIdleCallback;if(ric)ric(go,{timeout:BAR*3000});else setTimeout(go,300)}}
 
 function glitch(t){if(t-lastBeatT<0.07&&hash(beatIdx)>0.5){for(let i=0;i<3;i++){const y=Math.floor(hash(beatIdx*7+i)*H),h=10+hash(beatIdx*13+i)*40,dx=(hash(beatIdx*17+i)-0.5)*40;ctx.drawImage(cv,0,y*dpr,W*dpr,h*dpr,dx,y,W,h)}}}
 function edge(x){const g=ctx.createLinearGradient(x-30,0,x+6,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(255,255,255,.9)');ctx.fillStyle=g;ctx.fillRect(x-30,0,36,H)}
@@ -68,7 +74,7 @@ function render(t,auto){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnab
  else if(e===1){E2.draw(lo2.x,t);if(tr){drawE3(t);const p=smooth(tr.p);ctx.save();ctx.globalAlpha=1-p;const hy=H*0.5;ctx.translate(W/2,hy);ctx.scale(1+p*0.6,1-p*0.98);ctx.translate(-W/2,-hy);blitCRT(lo2,t);ctx.restore()}else blitCRT(lo2,t)}
  else if(e===2){if(tr){E4.draw(ctx,t);ctx.globalAlpha=Math.pow(1-tr.p,1.5);drawE3(t);ctx.globalAlpha=1;scan(0.07*(1-tr.p))}else{drawE3(t);scan(0.07)}}
  else if(e===3){E4.draw(ctx,t);if(tr){const p=smooth(tr.p);ctx.save();ctx.translate(W*(1-p),0);ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();drawE5(t);ctx.restore();edge(W*(1-p))}}
- else{drawE5(t);const q=clamp((t-ERAS[4].start)/(BAR*8),0,1);scan(0.1*q);if(t<bar(76))glitch(t)}}
+ else{drawE5(t);const q=clamp((t-ERAS[4].start)/(BAR*8),0,1);scan(0.1*q);if(t<cb(76))glitch(t)}}
 function blitCRT(lo,t){if(CRT.ok){CRT.render(lo,t,1);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(CRT.canvas(),0,0,W,H);ctx.restore()}else{blit(lo);scan(lo===lo1?0.55:0.3)}}
 function drawE3(t){if(E3GL.ok){E3GL.render(t);ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(E3GL.canvas(),0,0,W,H);ctx.restore();E3.overlay(ctx,t)}else{ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font="10px 'Press Start 2P',monospace";ctx.fillText('WEBGL REQUIRED FOR THE RACER',W/2-150,H/2)}}
 function drawE5(t){if(E5GL.ok){E5GL.render(t);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(E5GL.canvas(),0,0,W,H);ctx.restore();E5.overlay(ctx,t)}else E5.draw(ctx,t)}
@@ -79,10 +85,10 @@ function cards(t){ctx.setTransform(dpr,0,0,dpr,0,0);
  if(t<START.FL_END){START.drawFlourish(ctx,t,sway0);return}
  // (the old flat 2D title card is gone: startgl.ts draws the title screen and the flourish, with its own 2D fallback)
  // end card: the era-5 renderer builds the 3D finale card (era5gl.ts voxel title + era5.ts type layer); this flat card is the no-WebGL fallback
- if(t>=bar(94.9)&&!E5GL.ok){const a=Math.min(1,(t-bar(94.9))/0.8);ctx.save();ctx.globalAlpha=a;ctx.textAlign='center';ctx.fillStyle='#ffe81f';ctx.font="12px 'Press Start 2P',monospace";ctx.fillText(CARD.title,W/2,H*0.30);ctx.fillStyle='#fff';ctx.font="9px 'Press Start 2P',monospace";ctx.fillText(CARD.credit,W/2,H*0.40);ctx.fillStyle='#cfd3dc';ctx.fillText(CARD.name+"  ·  "+CARD.program,W/2,H*0.47);ctx.fillStyle='#fff';ctx.font="9px 'Press Start 2P',monospace";ctx.fillText(CARD.invite,W/2,H*0.60);ctx.textAlign='left';ctx.restore()}}
+ if(t>=cb(94.9)&&!E5GL.ok){const a=Math.min(1,(t-cb(94.9))/0.8);ctx.save();ctx.globalAlpha=a;ctx.textAlign='center';ctx.fillStyle='#ffe81f';ctx.font="12px 'Press Start 2P',monospace";ctx.fillText(CARD.title,W/2,H*0.30);ctx.fillStyle='#fff';ctx.font="9px 'Press Start 2P',monospace";ctx.fillText(CARD.credit,W/2,H*0.40);ctx.fillStyle='#cfd3dc';ctx.fillText(CARD.name+"  ·  "+CARD.program,W/2,H*0.47);ctx.fillStyle='#fff';ctx.font="9px 'Press Start 2P',monospace";ctx.fillText(CARD.invite,W/2,H*0.60);ctx.textAlign='left';ctx.restore()}}
 const CHAPTERS=['1 · FIRST PROMPTS','2 · LEARNING TO ASK','3 · DIRECTING AGENTS','4 · WORKING FROM ANYWHERE','5 · FULL DEVELOPMENT'];
-function chapters(t){if(MOBILE&&innerWidth<700)return;for(let i=0;i<ERAS.length;i++){const s=i===0?bar(2):ERAS[i].start;const q=(t-s)/2.6;if(q<0||q>1)continue;const a=q<0.15?q/0.15:q>0.8?(1-q)/0.2:1;ctx.save();ctx.globalAlpha=a;ctx.textAlign='center';ctx.font="8px 'Press Start 2P',monospace";const txt=CHAPTERS[i];const tw=ctx.measureText(txt).width+22;ctx.fillStyle='rgba(6,8,20,.72)';ctx.fillRect(W/2-tw/2,8,tw,18);ctx.fillStyle='#5bff5b';ctx.fillRect(W/2-tw/2,8,tw,1);ctx.fillStyle='#e8e8f0';ctx.fillText(txt,W/2,21);ctx.restore()}}
-function touchHints(t){if(!MOBILE||startUp||padsShown())return;const fresh=performance.now()-lastTouch<1500;if(!(t<bar(2)||fresh))return;const a=t<bar(2)?0.55:0.35*Math.max(0,1-(performance.now()-lastTouch)/1500);ctx.save();ctx.globalAlpha=a;ctx.strokeStyle='#5bff5b';ctx.setLineDash([6,6]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*0.28,0);ctx.lineTo(W*0.28,H);ctx.moveTo(W*0.72,0);ctx.lineTo(W*0.72,H);ctx.moveTo(W*0.28,H*0.5);ctx.lineTo(W*0.72,H*0.5);ctx.stroke();ctx.setLineDash([]);
+function chapters(t){if(MOBILE&&innerWidth<700)return;for(let i=0;i<ERAS.length;i++){const s=i===0?cb(2):ERAS[i].start;const q=(t-s)/2.6;if(q<0||q>1)continue;const a=q<0.15?q/0.15:q>0.8?(1-q)/0.2:1;ctx.save();ctx.globalAlpha=a;ctx.textAlign='center';ctx.font="8px 'Press Start 2P',monospace";const txt=CHAPTERS[i];const tw=ctx.measureText(txt).width+22;ctx.fillStyle='rgba(6,8,20,.72)';ctx.fillRect(W/2-tw/2,8,tw,18);ctx.fillStyle='#5bff5b';ctx.fillRect(W/2-tw/2,8,tw,1);ctx.fillStyle='#e8e8f0';ctx.fillText(txt,W/2,21);ctx.restore()}}
+function touchHints(t){if(!MOBILE||startUp||padsShown())return;const fresh=performance.now()-lastTouch<1500;if(!(t<cb(2)||fresh))return;const a=t<cb(2)?0.55:0.35*Math.max(0,1-(performance.now()-lastTouch)/1500);ctx.save();ctx.globalAlpha=a;ctx.strokeStyle='#5bff5b';ctx.setLineDash([6,6]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*0.28,0);ctx.lineTo(W*0.28,H);ctx.moveTo(W*0.72,0);ctx.lineTo(W*0.72,H);ctx.moveTo(W*0.28,H*0.5);ctx.lineTo(W*0.72,H*0.5);ctx.stroke();ctx.setLineDash([]);
  ctx.fillStyle='#5bff5b';ctx.textAlign='center';ctx.font="9px 'Press Start 2P',monospace";ctx.fillText('< HOLD',W*0.14,H*0.5);ctx.fillText('LEFT',W*0.14,H*0.5+16);ctx.fillText('HOLD >',W*0.86,H*0.5);ctx.fillText('RIGHT',W*0.86,H*0.5+16);ctx.font="8px 'Press Start 2P',monospace";ctx.fillText('TAP · JUMP',W*0.5,H*0.12);ctx.fillText('TAP · FIRE',W*0.5,H*0.94);ctx.textAlign='left';ctx.restore()}
 let lyricShown='',lineIdx=-1,captions=true,stepping=false;
 function toggleCaptions(){captions=!captions;lyricShown=''}
@@ -96,23 +102,24 @@ function padLabels(e){if(e===padE||!MOBILE)return;padE=e;$('#padLl').textContent
 function hud(t,auto){const e=eraAt(t),tr=transAt(t);padLabels(e);
  // secrets: a short toast when one is found, and a line on the end card
  {const on=performance.now()-EGG.lastT<2600;if(on)setTxt('eggT',eggToast());(HEL.eggT||(HEL.eggT=$('#eggT'))).classList.toggle('on',on);setTxt('eggEnd',eggEndLine());document.body.classList.toggle('egg5',eggCount()===5)}
-document.body.classList.toggle('e1',e===0);document.body.classList.toggle('e4',e===3);document.body.classList.toggle('endcard',t>=bar(94.9));setTxt('era',tr?ERAS[tr.from].name+'  >  '+ERAS[tr.to].name:ERAS[e].name);
+document.body.classList.toggle('e1',e===0);document.body.classList.toggle('e4',e===3);document.body.classList.toggle('endcard',t>=cb(94.9));setTxt('era',tr?ERAS[tr.from].name+'  >  '+ERAS[tr.to].name:ERAS[e].name);
  setTxt('clock','BAR '+(Math.floor(t/BAR)+1)+' · '+(Math.floor((t%BAR)/BEAT)+1)+'  ·  '+BPM+' BPM'+(SONG.has?'  ·  SONG '+(SONG.offset>=0?'+':'')+SONG.offset.toFixed(2)+'s'+(SONG.taps.length?'  ·  TAP '+SONG.taps.length+'/'+LYRICS.length:''):''));
  let line='',idx=-1;for(let i=0;i<LYRICS.length;i++){const s=bar(LYRICS[i][0]);if(t<s)break;idx=i;const nx=LYRICS[i+1]?bar(LYRICS[i+1][0]):1e9;if(t-s<Math.min(nx-s,bar(1.9)))line=LYRICS[i][1];else line=''}
  // only consume the line index when the line is actually dispatched: a seek/scrub while paused used to mark the line as
  // seen, so pressing PLAY afterwards never handed it to the era (no words until the next line)
  if(idx!==lineIdx&&(playing||stepping)){lineIdx=idx;if(idx>=0)dispatchLine(idx,t)}
  // the 3D finale card ends on its own READY WHEN YOU ARE prompt: the sung caption hands over to it (never both on screen)
- if(E5GL.ok&&t>=bar(E5.K.CARD.capOff))line='';
+ if(E5GL.ok&&t>=cb(E5.K.CARD.capOff))line='';
  if(line!==lyricShown){lyricShown=line;const el=$('#lyric');el.style.opacity=line&&captions?1:0;if(line)el.textContent=line}
  setTxt('auto',SONG.has&&!playing&&!ended&&t<1?'PRESS PLAY TO START THE SONG':autoMode==='on'?'AUTOPILOT · watching':autoMode==='off'?'MANUAL · you are playing':auto?(MOBILE?'AUTOPILOT · touch a pad to play':'AUTOPILOT · press any key to play'):'MANUAL · autopilot resumes after 2s idle');
- setTxt('time',Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')+' / 3:00');const pw=(t/TOTAL*100).toFixed(2)+'%';if(HTX.prog!==pw){HTX.prog=pw;(HEL.prog||(HEL.prog=$('#prog'))).style.width=pw}}
+ setTxt('time',Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')+' / '+Math.floor(TOTAL/60)+':'+String(Math.floor(TOTAL%60)).padStart(2,'0'));const pw=(t/TOTAL*100).toFixed(2)+'%';if(HTX.prog!==pw){HTX.prog=pw;(HEL.prog||(HEL.prog=$('#prog'))).style.width=pw}}
 
 function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-lastNow)/1000);lastNow=now;const inp=readInput();const auto=isAuto(now);
  // the song can finish buffering after the clock has started; then move the audio to the game clock and start it,
  // otherwise songTime() reads 0 from a paused element and the "never go backwards" clamp freezes the game for good
  if(SONG.has&&!songArmed){songArmed=true;songSeek(songT);if(playing)setPlaying(true)}
- if(startUp){if(!etmUsed)idleT+=dt;cards(songT);hud(songT,auto);clearEdges();return}
+ if(attract&&ended)endAttract(false);
+ if(startUp){if(!etmUsed){idleT+=dt;if(idleT>ATTRACT_IDLE&&!document.hidden){startAttract();return}}cards(songT);hud(songT,auto);clearEdges();return}
  ensureGL(songT);
  if(playing){const prev=songT;songT=SONG.has?(SONG.el.ended?TOTAL:songTime()):Math.min(TOTAL,songT+dt);if(SONG.has&&songT<prev)songT=prev;const pb=Math.floor(prev/BEAT),cb=Math.floor(songT/BEAT);if(cb!==pb){beatIdx=cb;lastBeatT=songT;onBeat(cb,songT,auto)}
   const p8=Math.floor(prev/(BEAT/2)),c8=Math.floor(songT/(BEAT/2));if(c8!==p8)on8th(c8,songT,auto);

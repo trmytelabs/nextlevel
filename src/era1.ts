@@ -1,4 +1,4 @@
-import {ERAS,BAR,BEAT,LYRICS,bar,rngf,clamp,lerp,blip,noise,mk,pix} from './core';
+import {ERAS,BAR,BEAT,LYRICS,bar,rngf,clamp,lerp,blip,noise,mk,pix,cb} from './core';
 import {eggFind} from './eggs';
 
 // ---------- ERA 1: arcade. Lyrics crawl toward you on a tilted plane; you chip the letters away ----------
@@ -7,10 +7,10 @@ const LW=480,LH=270,GROUND=LH-26,FS=16,ROWW=300,BW=ROWW+24,TRAVEL=BAR*2.6,YEL='#
 // perspective: a point at depth z on the plane lands at screen y = VPY + F/z, with horizontal scale F2/z
 const F=4000,F2=27,ROWD=0.56,ZFAR=112,ZNEAR=18;
 const SHIP=['....X....','...XXX...','.XXXXXXX.','XXXXXXXXX'];
-const shatterT=bar(17);
+const shatterT=cb(17);
 const K={LW,LH,GROUND,FS,ROWW,BW,TRAVEL,VPX,VPY,F,F2,ROWD,ZFAR,ZNEAR,shatterT};
 let S:any;
-function init(t){S={ship:{x:LW/2-9,y:GROUND-10,dead:false,deadT:-9,inv:0},bul:[],lines:[],debris:null,pops:[],score:0,chips:0,cool:0,rng:rngf(7),stars:[],pulse:0,seq:0,words:0,kills:0,deaths:0,oneShot:0,shots:0,n16:-1,park:null,_focus:null,_plan:null,planK:-1,K};
+function init(t){S={ship:{x:LW/2-9,y:GROUND-10,dead:false,deadT:-9,inv:0},bul:[],lines:[],debris:null,pops:[],score:0,chips:0,cool:0,rng:rngf(7),stars:[],pulse:0,seq:0,words:0,kills:0,deaths:0,oneShot:0,shots:0,n16:-1,park:null,_focus:null,_plan:null,planK:-1,K,warmK:0};S.warmK=0;while(S.warmK<warmN()&&warmAt(S.warmK)<t)S.warmK++;
  const r=rngf(3);for(let i=0;i<150;i++)S.stars.push({a:r()*Math.PI*2,d:r()*LW*0.9,sp:0.4+r()*0.8,b:0.3+r()*0.7});
  // seek past bar 17: rebuild the lines that were still on the plane at the shatter (unchipped), shatter them and let the
  // debris fall for the time already elapsed, so a seek shows the same floor a play-through does (REVIEW-ERAS E1-4)
@@ -18,6 +18,9 @@ function init(t){S={ship:{x:LW/2-9,y:GROUND-10,dead:false,deadT:-9,inv:0},bul:[]
   S.seq=n;S.words=nw;shatter();const el=Math.min(t,ERAS[1].start)-shatterT;for(let k=0;k<Math.round(el*60);k++)fall(1/60);S.ship.x=lerp(S.ship.x,80/320*LW-9,1-Math.pow(0.02,el))}}
 function fall(dt){for(const d of S.debris){if(d.y<d.land){d.vy+=220*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;if(d.y>=d.land){d.y=d.land;d.vx=0}}}}
 // secret 1: the first line's "coin" is gold; a player who shoots it away completely finds it (the autopilot leaves it alone)
+// warm-up targets for a long song intro: arcade words (not lyrics) every two bars until two bars before the first line
+const WARM=['INSERT COIN','PLAYER ONE','READY','HELLO WORLD','PRESS START','LEVEL ONE'];
+const warmAt=(k:number)=>BAR*0.5+k*BAR*2,warmN=()=>{let n=0;while(warmAt(n)<=bar(LYRICS[0][0])-BAR*2)n++;return n};
 function makeWord(text,gold=false){const c=mk(4,4);c.x.font=`${FS}px 'Press Start 2P',monospace`;const w=Math.ceil(c.x.measureText(text).width)+6,h=FS+8;c.c.width=w;c.c.height=h;c.x.imageSmoothingEnabled=false;c.x.font=`${FS}px 'Press Start 2P',monospace`;c.x.textBaseline='top';c.x.fillStyle=gold?'#ffa31a':YEL;c.x.fillText(text,3,3);const img=c.x.getImageData(0,0,w,h);let n=0;for(let i=3;i<img.data.length;i+=4)if(img.data[i]>0)n++;return{text,c,img,w,h,total:Math.max(1,n),left:n,dead:false,bx:0,by:0,aim:-1,gold}}
 function layout(words){const gap=12,rows=[[]];let rw=0;for(const w of words){if(rw>0&&rw+gap+w.w>ROWW){rows.push([]);rw=0}const row=rows[rows.length-1];if(row.length)rw+=gap;w.bx=rw;row.push(w);rw+=w.w}
  const rh=FS+14;rows.forEach((row,ri)=>{const tw=row.reduce((a,w)=>a+w.w,0)+gap*(row.length-1);for(const w of row){w.bx=Math.round((BW-tw)/2+w.bx);w.by=6+ri*rh}});return rows.length*rh+10}
@@ -81,7 +84,8 @@ function dodge(th){const sh=S.ship;if(!th.length||!danger(th,sh.x))return null;
  for(let o=2;o<=120;o+=2){if(sh.x-o>=6&&!danger(th,sh.x-o))return sh.x-o;if(sh.x+o<=LW-24&&!danger(th,sh.x+o))return sh.x+o}return null}
 function onBeat(_b,t){if(t>=ERAS[1].start)return;S.pulse=1;if(t>=shatterT&&!S.debris)shatter()}
 function on8th(_n,_t,_auto){}
-function update(dt,t,inp,auto){if(t>=ERAS[1].start)return;S.autoNow=auto;S.cool-=dt;S.pulse=Math.max(0,S.pulse-dt*3);const sh=S.ship;
+function update(dt,t,inp,auto){if(t>=ERAS[1].start)return;S.autoNow=auto;
+ if(S.warmK<warmN()&&t>=warmAt(S.warmK)){const ws=WARM[S.warmK%WARM.length].split(' ').map(tx=>makeWord(tx));const bh=layout(ws);S.lines.push({words:ws,t0:warmAt(S.warmK),bh,tex:mk(BW,bh),xo:0,warm:true});S.warmK++}S.cool-=dt;S.pulse=Math.max(0,S.pulse-dt*3);const sh=S.ship;
  for(const st of S.stars){st.d+=st.sp*(10+st.d*0.25)*dt;if(st.d>LW*0.95){st.d=4+S.rng()*20;st.a=S.rng()*Math.PI*2}}
  sh.inv=Math.max(0,sh.inv-dt);if(sh.dead&&t-sh.deadT>0.7){sh.dead=false;sh.inv=2.6;sh.x=LW/2-9}
  if(S.park!==null){if(!sh.dead)sh.x=S.park}
@@ -131,7 +135,7 @@ function draw(x,t){x.fillStyle='#000';x.fillRect(0,0,LW,LH);x.imageSmoothingEnab
  hud(x)}
 // 2D pieces shared with the 3D renderer (era1gl.ts): the crawl intro line, the particle pops (gl: only the cannon's green
 // death burst, the voxel renderer bursts the chipped pixels itself) and the score / chips HUD
-function title(x,t){if(t>=bar(2)&&t<bar(3.8)){const a=t<bar(2)+0.5?(t-bar(2))/0.5:Math.min(1,(bar(3.8)-t)/0.8);x.globalAlpha=a;x.font="8px 'Press Start 2P',monospace";x.fillStyle='#4bd5ee';x.textAlign='center';x.fillText('A long time ago, at a desk far, far away....',LW/2,LH*0.42);x.textAlign='left';x.globalAlpha=1}}
+function title(x,t){if(t>=cb(2)&&t<cb(3.8)){const a=t<cb(2)+0.5?(t-cb(2))/0.5:Math.min(1,(cb(3.8)-t)/0.8);x.globalAlpha=a;x.font="8px 'Press Start 2P',monospace";x.fillStyle='#4bd5ee';x.textAlign='center';x.fillText('A long time ago, at a desk far, far away....',LW/2,LH*0.42);x.textAlign='left';x.globalAlpha=1}}
 function pops(x,gl){for(const p of S.pops){if(gl&&!p.g)continue;x.globalAlpha=Math.min(1,p.l*2);x.fillStyle=p.g?'#5bff5b':YEL;x.fillRect(p.x,p.y,2,2)}x.globalAlpha=1}
 function hud(x){x.font="8px 'Press Start 2P',monospace";x.fillStyle=YEL;x.fillText('SCORE '+String(S.score).padStart(6,'0'),8,34);x.textAlign='right';x.fillText('CHIPS '+S.chips,LW-8,34);x.textAlign='left'}
 return{init,onBeat,on8th,onLine,update,draw,title,pops,hud,zOf,alphaOf,SHIP,K,get S(){return S}}})();

@@ -96,6 +96,9 @@ body.endcard #endbtns{display:flex}
 #eggEnd{display:none;left:5%;right:5%;bottom:21%;text-align:center;color:#c9a8ff;font-size:clamp(6px,.9vw,11px);white-space:pre-line;line-height:1.9}
 body.endcard #eggEnd{display:block}
 body.egg5 #eggEnd{color:#ffd23f;font-size:clamp(7px,1.15vw,14px);text-shadow:0 0 10px rgba(255,210,63,.7)}
+#attractT{display:none;left:50%;top:9%;transform:translateX(-50%);color:#ffe066;font-size:clamp(7px,1.1vw,13px);padding:.7em 1em;background:rgba(10,6,24,.8);border:1px solid rgba(255,224,102,.6);animation:blink 1.1s steps(2) infinite}
+body.attract #attractT{display:block}
+@keyframes blink{50%{opacity:.35}}
 body.start #hud .tag{display:none}
 body.start canvas#c{cursor:pointer}
 body.e1 #lyric{bottom:26%}
@@ -124,6 +127,7 @@ body.e4 #lyric{left:3%;right:64%;bottom:30%;text-align:left}
   <div class="tag" id="clock">BAR 1 · 1</div>
   <div class="tag" id="lyric"></div>
   <div class="tag" id="eggT"></div>
+  <div class="tag" id="attractT">DEMO · PRESS ANY KEY OR TAP TO PLAY WITH SOUND</div>
   <div class="tag" id="eggEnd"></div>
   <div class="tag" id="auto">AUTOPILOT ON · press any key to play</div>
   <div class="tag" id="help">WASD / ARROWS MOVE · SPACE FIRE / JUMP · Q AUTOPILOT · M SOUND · L CAPTIONS · G FX · P PAUSE · 1-5 ERA</div>
@@ -138,6 +142,6 @@ body.e4 #lyric{left:3%;right:64%;bottom:30%;text-align:left}
   </div>
 </div>
 </div></div>
-<script type="module" src="/src/main.ts"></script>
+<script type="module" src="/src/boot.ts"></script>
 </body>
 </html>

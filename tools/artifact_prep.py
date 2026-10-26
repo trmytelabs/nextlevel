@@ -27,6 +27,12 @@ tdir=os.path.join(DIST,'textures')
 if os.path.isdir(tdir):
     for f in sorted(os.listdir(tdir)):
         if f.lower().endswith(('.jpg','.jpeg','.png','.webp')):files['textures/'+f]='textures/'+f
+# songs: each public/songs/<id>/ holds map.json and the audio file
+sdir=os.path.join(DIST,'songs')
+if os.path.isdir(sdir):
+    for sid in sorted(os.listdir(sdir)):
+        for f in sorted(os.listdir(os.path.join(sdir,sid))):
+            if f.lower().endswith(('.json','.mp3','.m4a','.ogg')):files['songs/'+sid+'/'+f]='songs/'+sid+'/'+f
 for f in ['manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','og.png','favicon-32.png']:
     if os.path.exists(os.path.join(DIST,f)):files[f]=f
 print('artifact.html written;',len(files),'files. Publish with root=dist, file_path=dist/artifact.html and files=')
