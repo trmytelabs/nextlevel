@@ -77,3 +77,27 @@ export function car(scene:THREE.Scene){const g=new THREE.Group();
  return{update(cam:number,t:number,z:number){g.position.set(cam+9+Math.sin(t*0.37)*5+Math.sin(t*0.13)*2,0,z+Math.sin(t*0.9)*0.25);g.rotation.y=Math.cos(t*0.9)*0.04;
   for(const w of wheels)w.rotation.z=-t*14;const L=4+2.5*(0.5+0.5*Math.sin(t*0.37+1.4));streak.scale.x=s2.scale.x=L;(glow.material as any).opacity=0.35+0.15*Math.sin(t*6)},
   set visible(v:boolean){g.visible=v}}}
+
+// ---- fireworks: synthwave bursts in the sky for the all-secrets ending. Stateless: burst k starts at t0+k*GAP and every
+// particle of it is a pure function of the time since (seek-safe). Additive neon points; the bloom pass does the glow. ----
+export function fireworks(scene:THREE.Scene,maxBursts=6,per=110){
+ const N=maxBursts*per,pos=new Float32Array(N*3),col=new Float32Array(N*3),geo=new THREE.BufferGeometry();
+ geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+ const dot=document.createElement('canvas');dot.width=dot.height=32;{const x=dot.getContext('2d')!;const g=x.createRadialGradient(16,16,0,16,16,16);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(0.35,'rgba(255,255,255,.7)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,32,32)}
+ const pts=new THREE.Points(geo,new THREE.PointsMaterial({size:4.2,map:new THREE.CanvasTexture(dot),vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,sizeAttenuation:true}));
+ pts.frustumCulled=false;pts.visible=false;scene.add(pts);
+ const PAL=[[1,0.36,0.88],[0.3,0.94,1],[1,0.88,0.3],[0.69,0.49,1],[1,0.6,0.24]],GAP=0.3,LIFE=2.4,G=-9;
+ const fwd=new THREE.Vector3(),right=new THREE.Vector3(),up=new THREE.Vector3(0,1,0),o=new THREE.Vector3(),c=new THREE.Color();
+ return{update(t:number,cam:THREE.Camera,t0:number,on:boolean){pts.visible=on&&t>=t0;if(!pts.visible)return;
+  cam.getWorldDirection(fwd);right.crossVectors(fwd,up).normalize();
+  const kNow=Math.floor((t-t0)/GAP);let n=0;
+  for(let b=0;b<maxBursts;b++){const k=kNow-b;if(k<0)continue;const s=t-(t0+k*GAP);if(s<0||s>LIFE)continue;
+   const h1=hash(k*1.13),h2=hash(k*2.71),h3=hash(k*3.97),pc=PAL[k%PAL.length],pc2=PAL[(k+2)%PAL.length],ring=h3>0.6;
+   o.copy(cam.position).addScaledVector(fwd,80+h1*30).addScaledVector(right,(h2-0.5)*130);o.y=cam.position.y+22+h3*28;
+   const sp=24+h1*12,fade=Math.pow(1-s/LIFE,1.6),flick=0.75+0.25*Math.sin(s*40+k);
+   for(let i=0;i<per;i++,n++){const a=hash(k*7.1+i*0.37)*Math.PI*2,z=ring?0:(hash(k*5.3+i*0.91)*2-1),r=Math.sqrt(1-z*z),v=sp*(ring?1:0.55+0.45*hash(k*9.7+i*1.3));
+    const dx=Math.cos(a)*r,dy=ring?Math.sin(a):z,dz=Math.sin(a)*r*(ring?0:1),drag=(1-Math.exp(-s*1.8))/1.8;
+    pos[n*3]=o.x+(dx*right.x+dz*fwd.x)*v*drag;pos[n*3+1]=o.y+dy*v*drag+0.5*G*s*s*0.35;pos[n*3+2]=o.z+(dx*right.z+dz*fwd.z)*v*drag;
+    const mix=i%3===0?pc2:pc,br=fade*flick*(s<0.08?2.5:1);c.setRGB(mix[0]*br,mix[1]*br,mix[2]*br);col[n*3]=c.r;col[n*3+1]=c.g;col[n*3+2]=c.b}}
+  for(;n<N;n++){col[n*3]=col[n*3+1]=col[n*3+2]=0}
+  geo.attributes.position.needsUpdate=true;geo.attributes.color.needsUpdate=true}}}

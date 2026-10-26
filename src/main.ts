@@ -102,7 +102,7 @@ function padLabels(e){if(e===padE||!MOBILE)return;padE=e;$('#padLl').textContent
 function hud(t,auto){const e=eraAt(t),tr=transAt(t);padLabels(e);
  // secrets: a short toast when one is found, and a line on the end card
  {const on=performance.now()-EGG.lastT<2600;if(on)setTxt('eggT',eggToast());(HEL.eggT||(HEL.eggT=$('#eggT'))).classList.toggle('on',on);setTxt('eggEnd',eggEndLine());document.body.classList.toggle('egg5',eggCount()===5)}
-document.body.classList.toggle('e1',e===0);document.body.classList.toggle('e4',e===3);document.body.classList.toggle('endcard',t>=cb(94.9));setTxt('era',tr?ERAS[tr.from].name+'  >  '+ERAS[tr.to].name:ERAS[e].name);
+document.body.classList.toggle('e1',e===0);document.body.classList.toggle('e4',e===3);document.body.classList.toggle('endcard',t>=cb(94.9));document.body.classList.toggle('capoff',t>=cb(E5.K.CARD.capOff));setTxt('era',tr?ERAS[tr.from].name+'  >  '+ERAS[tr.to].name:ERAS[e].name);
  setTxt('clock','BAR '+(Math.floor(t/BAR)+1)+' · '+(Math.floor((t%BAR)/BEAT)+1)+'  ·  '+BPM+' BPM'+(SONG.has?'  ·  SONG '+(SONG.offset>=0?'+':'')+SONG.offset.toFixed(2)+'s'+(SONG.taps.length?'  ·  TAP '+SONG.taps.length+'/'+LYRICS.length:''):''));
  let line='',idx=-1;for(let i=0;i<LYRICS.length;i++){const s=bar(LYRICS[i][0]);if(t<s)break;idx=i;const nx=LYRICS[i+1]?bar(LYRICS[i+1][0]):1e9;if(t-s<Math.min(nx-s,bar(1.9)))line=LYRICS[i][1];else line=''}
  // only consume the line index when the line is actually dispatched: a seek/scrub while paused used to mark the line as

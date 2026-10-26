@@ -11,7 +11,8 @@ import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeomet
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {W,H,dpr,BEAT,BAR,bar,hash,clamp,lerp,smooth,QUALITY,cb,cbInv} from './core';
 import {E5} from './era5';
-import {towers,palms,car} from './synthkit';
+import {towers,palms,car,fireworks} from './synthkit';
+import {eggCount} from './eggs';
 const LOW=QUALITY==='low';
 
 // ---------- ERA 5 in WebGL: a VR saber lane. Word blocks fly at you on the beat, you cut them, and an AI co-pilot builds the arena out of them ----------
@@ -21,7 +22,7 @@ const HUEX=[MAG,CYAN,VIO,0xffc21a]; // [3] = the golden secret block // matches 
 const COLZ=(c:number)=>(c-1.5)*COLW,ROWY=(r:number)=>ROW0+r*ROWH; // hit plane is HIT units ahead of the player (HIT+BACK from the camera)
 const LANEZ=COLS/2*COLW+0.15,PIECEZ=3.6; // rails, and where side pieces stand
 let ok=false,renderer:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.PerspectiveCamera,composer:EffectComposer,bloom:UnrealBloomPass;
-let palmK:any=null,carK:any=null,skyM:THREE.Mesh,starsM:THREE.Points,sunL:THREE.DirectionalLight,hemiL:THREE.HemisphereLight,skyA:THREE.Group,skyB:THREE.Group,floorG:THREE.Group,cutLine:THREE.Mesh;
+let palmK:any=null,carK:any=null,fwK:any=null,skyM:THREE.Mesh,starsM:THREE.Points,sunL:THREE.DirectionalLight,hemiL:THREE.HemisphereLight,skyA:THREE.Group,skyB:THREE.Group,floorG:THREE.Group,cutLine:THREE.Mesh;
 let blocks:any[]=[],halves:any[]=[],pieces:any[]=[],rings:THREE.Mesh[]=[],saber:any,copilot:any,sparks:any,texCache=new Map<string,THREE.Texture>(),arrivals:THREE.Mesh[]=[],flights:any[]=[],flightN=0,pillars:THREE.Mesh[]=[],halfMat:any;
 // renderer-side flags, kept out of the simulation's objects (a fresh plan() on seek drops them with the blocks)
 let split=new WeakSet<object>(),flashAt=new WeakMap<object,number>();
@@ -111,7 +112,7 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:!LOW,alpha:false
   for(const z of[-1.5,1.5]){const rail=new THREE.Mesh(geo.box,new THREE.MeshBasicMaterial({color:z<0?MAG:CYAN,toneMapped:false}));rail.scale.set(1400,0.04,0.06);rail.position.set(0,0.03,z*LANEZ/1.5);floorG.add(rail)}
   for(let c=1;c<COLS;c++){const ln=new THREE.Mesh(geo.box,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:c===COLS/2?0.22:0.1,toneMapped:false,depthWrite:false}));ln.scale.set(1400,0.01,0.02);ln.position.set(0,0.02,COLZ(c-0.5));floorG.add(ln)}
   cutLine=new THREE.Mesh(geo.box,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.55,toneMapped:false}));cutLine.scale.set(0.05,0.02,LANEZ*2);scene.add(cutLine);
-  skyA=makeSky();skyB=makeSky();scene.add(skyA,skyB);palmK=palms(scene,LOW?16:26,9,LANEZ+8,LANEZ+18);carK=car(scene);
+  skyA=makeSky();skyB=makeSky();scene.add(skyA,skyB);palmK=palms(scene,LOW?16:26,9,LANEZ+8,LANEZ+18);carK=car(scene);fwK=fireworks(scene,LOW?6:9,LOW?80:130);
   halfMat=HUEX.map(h=>emissive(h,0.8));for(let i=0;i<56;i++)blocks.push(makeBlock());for(let i=0;i<24;i++)halves.push(makeHalf());for(let i=0;i<100;i++)pieces.push(makePiece());
   for(let i=0;i<26;i++){const r=new THREE.Mesh(geo.tunnel,emissive(ORG,1.6));r.rotation.y=Math.PI/2;r.visible=false;scene.add(r);rings.push(r)}
   for(let i=0;i<28;i++){const p=new THREE.Mesh(geo.box,new THREE.MeshBasicMaterial({color:i%2?MAG:CYAN,toneMapped:false,transparent:true,opacity:0.55}));p.scale.set(0.06,2.6,0.06);scene.add(p);pillars.push(p)}
@@ -253,7 +254,7 @@ export const E5GL={init,get ok(){return ok},canvas:()=>renderer.domElement,
  render(t:number){if(!ok)return;const S=E5.S;if(!S)return;if(t<lastT-0.5||S!==lastS){split=new WeakSet();flashAt=new WeakMap();for(const f of flights){f.done=true;f.sp.visible=false}for(const h of halves)h.life=0;copilot.snap=true;lastS=S}const dt=clamp(t-lastT,0,0.05);lastT=t;const cam=S.dist,pulse=1-((t/BEAT)%1);
   const cin=cinema(t,S);camera.position.copy(cin.p);camera.lookAt(cin.l);camera.fov=t>=OUT?cin.f:lerp(camera.fov,cin.f,1-Math.pow(0.002,dt)); // the card's lens is a pure function of t (already smooth), so a seek lands on the same frame
   camera.updateProjectionMatrix();
-  const cell=1400/220;floorG.position.x=Math.floor(cam/cell)*cell;const k=Math.floor((cam-60)/SKYW);skyA.position.set(k*SKYW-60,0,0);skyB.position.set((k+1)*SKYW-60,0,0);if(palmK)palmK.update(cam);if(carK)carK.update(cam,t,-(LANEZ+3.6));
+  const cell=1400/220;floorG.position.x=Math.floor(cam/cell)*cell;const k=Math.floor((cam-60)/SKYW);skyA.position.set(k*SKYW-60,0,0);skyB.position.set((k+1)*SKYW-60,0,0);if(palmK)palmK.update(cam);if(carK)carK.update(cam,t,-(LANEZ+3.6));if(fwK)fwK.update(t,camera,cb(CARD.lock),eggCount()===5); // all five secrets: a firework show over the card
   cutLine.position.set(cam+HIT,0.03,0);cutLine.visible=t<OUT;(cutLine.material as any).opacity=0.35+0.4*pulse;
   skyM.position.copy(camera.position);starsM.position.copy(camera.position);const sun=(skyM as any).userData.sun;sun.position.set(camera.position.x+330,camera.position.y+30,-120);sunL.position.set(cam+16,42,24);sunL.target.position.set(cam+8,0,0);
   updateBlocks(S,t,cam,dt);updateSaber(S,t,cam,dt);updatePieces(S,t,cam);updatePillars(t,cam);updateCopilot(S,t,cam,dt);updateArrivals(S,t,cam);updateFlights(S,t);updateRings(S,t,cam);updateCard(S,t,cam,dt);
