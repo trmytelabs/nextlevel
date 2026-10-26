@@ -97,8 +97,10 @@ function tiles(){T={};const px=(x,c,a,b,w=1,h=1)=>{x.fillStyle=c;x.fillRect(a,b,
   for(let r=0;r<8;r++)for(let k=0;k<6;k++)if(Q[r][k]==='X')px(x,gc,5+k,4+r);return c});
  // pipe: one body row (stretched) and the rim
  const PC=['#103c18','#2a9a36','#2a9a36','#7ee05a','#7ee05a','#7ee05a','#d0ffc0','#7ee05a','#7ee05a','#3cb444','#3cb444','#3cb444','#3cb444','#3cb444','#3cb444','#3cb444','#3cb444','#2a9a36','#2a9a36','#2a9a36','#2a9a36','#2a9a36','#1c7a2a','#1c7a2a','#1c7a2a','#1c7a2a','#145a20','#103c18'];
- {const c=mkc(28,1),x=c.getContext('2d')!;PC.forEach((col,i)=>px(x,col,i,0));T.pipe=c}
- {const c=mkc(32,9),x=c.getContext('2d')!;for(let i=0;i<32;i++)px(x,PC[Math.min(27,Math.max(0,Math.round(i*27/31)))],i,0,1,9);px(x,'#103c18',0,0,32,1);px(x,'#103c18',0,8,32,1);px(x,'#103c18',0,0,1,9);px(x,'#103c18',31,0,1,9);px(x,'#e0ffd0',4,1,6,1);px(x,'#1c7a2a',1,7,30,1);T.rim=c}
+ // the same pipe in purple for the secret one: each green shade -> (0.75g+0.25r, 0.6r, g)
+ const purp=(h:string)=>{const n=parseInt(h.slice(1),16),r=n>>16,g=(n>>8)&255;return '#'+[Math.round(0.75*g+0.25*r),Math.round(0.6*r),g].map(v=>v.toString(16).padStart(2,'0')).join('')};
+ for(const [k,pal] of [['pipe',PC],['ppipe',PC.map(purp)]] as any){const c=mkc(28,1),x=c.getContext('2d')!;pal.forEach((col,i)=>px(x,col,i,0));T[k]=c}
+ for(const [k,f] of [['rim',(h:string)=>h],['prim',purp]] as any){const c=mkc(32,9),x=c.getContext('2d')!;for(let i=0;i<32;i++)px(x,f(PC[Math.min(27,Math.max(0,Math.round(i*27/31)))]),i,0,1,9);px(x,f('#103c18'),0,0,32,1);px(x,f('#103c18'),0,8,32,1);px(x,f('#103c18'),0,0,1,9);px(x,f('#103c18'),31,0,1,9);px(x,f('#e0ffd0'),4,1,6,1);px(x,f('#1c7a2a'),1,7,30,1);T[k]=c}
 }
 
 // ---------------- level ----------------
@@ -110,7 +112,7 @@ function gen(to){while(S.genX<to){const r=S.rng;
  const x=S.genX+gap,kind=top>=LH-48?'ground':'grass';if(kind==='grass')S.plats=S.plats.filter(q=>q.kind!=='brick'||q.word||q.used||q.x+B<x-48);const after=S.lastTop<top?x+48:gap>0?x+40:-1e9;
  S.plats.push({x,y:top,w,h:LH+40-top,f:0,kind});S.nGround++;let pipeX=-1e9;
  // pipes; the first one from the 8th ground piece on is the secret pipe (forced if the dice say no; always two tiles tall)
- if(kind==='ground'&&w>=8*B){const sec=!S.secretMade&&idx>=7;if(r()<0.25||sec){const px=x+B*2+Math.floor(r()*((w-4*B)/B))*B;let ph=(1+Math.floor(r()*2))*B;if(sec){ph=2*B;S.secretMade=true}
+ if(kind==='ground'&&w>=8*B){const sec=!S.secretMade&&idx>=7;if(r()<0.25||sec){const rv=r(),px=sec?x+Math.round((w/2-B)/B)*B:x+B*2+Math.floor(rv*((w-4*B)/B))*B;let ph=(1+Math.floor(r()*2))*B;if(sec){ph=2*B;S.secretMade=true}
   S.plats.push({x:px,y:top-ph,w:2*B,h:ph,f:0,kind:'pipe',secret:sec});pipeX=px}}
  // brick row: 3-6 single tiles, floating 56 px over the ground; words are put into them as the lines arrive
  if(kind==='ground'&&w>=5*B&&idx>1&&r()<0.8){const n=3+Math.floor(r()*4);const bx=x+B*(1+Math.floor(r()*Math.max(1,w/B-n-1)));for(let i=0;i<n;i++){const k=bx+i*B;if(k+B>pipeX-40&&k<pipeX+2*B+40||k<after||k+B>x+w-40)continue;S.plats.push({x:k,y:top-56,w:B,h:B,f:0,kind:'brick',word:null,used:false})}}
@@ -306,14 +308,14 @@ function drawGround(x,q,cam){const sx=Math.round(q.x-cam),w=q.w,y=q.y,tile=q.kin
  for(const [ex,nx] of [[sx,q.x],[sx+w-1,q.x+w]]){let ny=LH;for(const o of S.plats)if((o.kind==='ground'||o.kind==='grass')&&o!==q&&(Math.abs(o.x+o.w-nx)<0.5||Math.abs(o.x-nx)<0.5)&&(nx===q.x?Math.abs(o.x+o.w-nx)<0.5:Math.abs(o.x-nx)<0.5))ny=Math.min(ny,o.y);
   if(ny<=y)continue;x.fillStyle='#1a4a1a';x.fillRect(ex,y,1,Math.min(8,ny-y));if(ny>y+6){x.fillStyle='#4a2a12';x.fillRect(ex,y+6,1,ny-y-6)}}
  for(let i=6;i<w-6;i+=13){const hh=hash(q.x+i*1.7);if(hh<0.35){x.fillStyle='#1a4a1a';x.fillRect(sx+i,y-2,1,2);x.fillRect(sx+i+2,y-3,1,3);x.fillRect(sx+i+4,y-2,1,2);x.fillStyle='#8ae060';x.fillRect(sx+i+2,y-2,1,2)}else if(hh>0.9){x.fillStyle='#1a4a1a';x.fillRect(sx+i,y-3,3,3);x.fillStyle=hh>0.95?'#fff6c0':'#ff6a8a';x.fillRect(sx+i+1,y-2,1,1)}}}
-function drawPipe(x,sx,y,h){x.drawImage(T.pipe,0,0,28,1,sx+2,y+8,28,h-8);x.drawImage(T.rim,sx,y)}
+function drawPipe(x,sx,y,h,purple=false){x.drawImage(purple?T.ppipe:T.pipe,0,0,28,1,sx+2,y+8,28,h-8);x.drawImage(purple?T.prim:T.rim,sx,y)}
 function draw(x,t){const sp=sprites();if(S.ug&&S.ug.ph==='room'){drawRoom(x,t);return}const cam=Math.round(S.camX),ft=S.ft;x.save();if(S.shake>0)x.translate(Math.round((hash(t*60)-.5)*4),Math.round((hash(t*61)-.5)*4));
  const sg=x.createLinearGradient(0,0,0,LH);sg.addColorStop(0,'#2a66e8');sg.addColorStop(0.55,'#5fb0ff');sg.addColorStop(1,'#bfe8ff');x.fillStyle=sg;x.fillRect(-4,-4,LW+8,LH+8);
  for(let i=-1;i<6;i++){const cx=i*96-((cam*0.12)%96)+hash(i+Math.floor(cam*0.12/96))*30;cloud(x,cx,24+hash(i*5)*30,1+hash(i*3)*0.5)}
  for(let i=-1;i<5;i++){const cx=i*140-((cam*0.25)%140);hill(x,cx,LH+2,74,46,'#3fa84a','#6ad24a','#1c6a2c')}
  for(let i=-1;i<7;i++){const cx=i*70-((cam*0.4)%70)+20;hill(x,cx,LH+2,30,30,'#2f9a3c','#5ac448','#1c5a2c')}
  for(const q of S.plats){const sx=Math.round(q.x-cam);if(sx>LW||sx+q.w<0)continue;
-  if(q.kind==='ground'||q.kind==='grass')drawGround(x,q,cam);else if(q.kind==='pipe'){drawPipe(x,sx,q.y,q.h);if(q.secret&&!S.ug&&!EGG.found[1])arrow(x,sx+16,q.y-14-(Math.floor(t*4)%2)*2)}
+  if(q.kind==='ground'||q.kind==='grass')drawGround(x,q,cam);else if(q.kind==='pipe'){drawPipe(x,sx,q.y,q.h,!!q.secret)}
   else{const off=q.f>0?-Math.round(Math.sin((0.3-q.f)/0.3*Math.PI)*4):0,yy=q.y+off;
    if(q.word){x.drawImage(T.q[Math.floor(t/(BEAT/2))%4],sx,yy);const s=((t*0.9+q.x*0.003)%1.6)*40-6;x.fillStyle='rgba(255,255,255,.6)';for(let r=1;r<15;r++){const c=Math.round(s-r);if(c>=1&&c<=13)x.fillRect(sx+c,yy+r,c<13?2:1,1)}}
    else if(q.used)x.drawImage(T.used,sx,yy);else x.drawImage(T.brick,sx,yy)}}
@@ -329,7 +331,7 @@ function draw(x,t){const sp=sprites();if(S.ug&&S.ug.ph==='room'){drawRoom(x,t);r
   else if(av>RUN-14)f=sp.run[Math.floor(S.dist/10)%3];else if(av>4)f=sp.walk[Math.floor(S.dist/7)%4];else f=(t%3.1)<0.12?sp.blink:sp.idle;
   if(p.g){x.fillStyle='rgba(0,0,0,.25)';x.fillRect(Math.round(p.x-cam)-6,Math.round(p.y)-1,12,2)}
   x.drawImage(f[p.face<0?1:0],Math.round(p.x-cam)-8-OX,Math.round(p.y)-24-OY)}
- if(S.ug){const q=S.ug.q;drawPipe(x,Math.round(q.x-cam),q.y,q.h)} // sinking into / rising out of the secret pipe: the pipe hides the body
+ if(S.ug){const q=S.ug.q;drawPipe(x,Math.round(q.x-cam),q.y,q.h,true)} // sinking into / rising out of the secret pipe: the pipe hides the body
  for(const q of S.pops){x.globalAlpha=Math.min(1,q.l*3);x.fillStyle=q.c||'#e0b0ff';const z=q.sz||2;x.fillRect(Math.round(q.x-cam),Math.round(q.y),z,z)}x.globalAlpha=1;
  x.restore();
  x.font="6px 'Press Start 2P',monospace";x.fillStyle='#fff';x.strokeStyle='#1c3a6a';x.lineWidth=2;x.strokeText('SCORE '+S.score,6,26);x.fillText('SCORE '+S.score,6,26);x.fillStyle='#ffd23f';x.strokeText('WORDS '+S.coinsGot,LW-76,26);x.fillText('WORDS '+S.coinsGot,LW-76,26);x.fillStyle='#e0b0ff';x.strokeText('STOMPS '+S.stomps,6,36);x.fillText('STOMPS '+S.stomps,6,36);x.fillStyle='#ffd23f';x.strokeText('COINS '+S.coinN,LW-76,36);x.fillText('COINS '+S.coinN,LW-76,36);

@@ -191,7 +191,9 @@ function init(){try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false
  kind='base';
  // start gantry with big screen
  {const f=E3.frame(4);const g=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.8,ROADW*2+8),flat(0xd82a3a));g.position.copy(f.p).add(new THREE.Vector3(0,7.5,0));g.quaternion.setFromUnitVectors(X,f.T);scene.add(g);for(const k of[-1,1]){const leg=new THREE.Mesh(new THREE.BoxGeometry(1,7.5,1),wallMat);leg.position.copy(f.p).add(f.right.clone().multiplyScalar(k*(ROADW+3.5))).add(new THREE.Vector3(0,3.75,0));scene.add(leg)}
-  const chk=new THREE.Mesh(new THREE.PlaneGeometry(ROADW*2,2.4),new THREE.MeshBasicMaterial({map:canvasTex(128,32,x=>{for(let i=0;i<16;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)%2?'#111':'#eee';x.fillRect(i*8,j*8,8,8)}})}));chk.rotation.x=-Math.PI/2;chk.position.copy(f.p).add(new THREE.Vector3(0,0.06,0));chk.quaternion.multiply(new THREE.Quaternion().setFromUnitVectors(X,f.T));scene.add(chk);
+  // start/finish line: flat on the road, across its width (geometry lies in XZ; x along the track, z across it)
+  const chk=new THREE.Mesh(new THREE.PlaneGeometry(2.4,ROADW*2).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:canvasTex(32,128,x=>{for(let i=0;i<4;i++)for(let j=0;j<16;j++){x.fillStyle=(i+j)%2?'#111':'#eee';x.fillRect(i*8,j*8,8,8)}}),polygonOffset:true,polygonOffsetFactor:-2}));
+  chk.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(f.T.clone(),f.up.clone(),new THREE.Vector3().crossVectors(f.T,f.up)));chk.position.copy(f.p).addScaledVector(f.up,0.04);scene.add(chk);
   const f2=E3.frame(30);const scr=new THREE.Mesh(new THREE.PlaneGeometry(22,10),new THREE.MeshBasicMaterial({map:canvasTex(512,232,x=>{x.fillStyle='#101828';x.fillRect(0,0,512,232);x.fillStyle='#ffe066';x.font="60px 'Press Start 2P',monospace";x.textAlign='center';x.fillText('ROLLING',256,100);x.fillText('START!',256,180)}),side:THREE.DoubleSide}));scr.position.copy(G(f2,-(ROADW+22),12));scr.quaternion.setFromUnitVectors(Z,f2.right0);scene.add(scr);box(1,8,1,poleMat,scr.position.clone().add(new THREE.Vector3(0,-9,0)))}
  // rock overhang with slot reels over the back straight
  {const f=E3.frame(L*0.62);for(const k of[-1,1]){const r=new THREE.Mesh(new THREE.BoxGeometry(16,22,18),rock);r.position.copy(f.p).add(f.right.clone().multiplyScalar(k*(ROADW+9))).add(new THREE.Vector3(0,9,0));r.rotation.y=k*0.2;scene.add(r);const r2=new THREE.Mesh(new THREE.BoxGeometry(10,12,12),rock2);r2.position.copy(r.position).add(new THREE.Vector3(0,12,0));scene.add(r2)}
@@ -238,5 +240,5 @@ export const E3GL={init,get ok(){return ok},canvas:()=>renderer.domElement,
   // chase camera: 10.5 behind, rolls with 60% of the banking so the horizon tilts without swinging
   const f=E3.frame(S.s-10.5,_fb),fp=E3.frame(S.s,_fc);camera.position.copy(f.p).addScaledVector(f.right,S.x*ROADW*0.5).addScaledVector(f.up,3.8);
   if(S.shake>0){const a=0.3*S.shake;camera.position.addScaledVector(f.right,(hash(t*61)-0.5)*a);camera.position.y+=(hash(t*67+3)-0.5)*a}
-  _v.copy(fp.p).addScaledVector(fp.T,16).addScaledVector(fp.up,1.0);camera.up.set(0,1,0).lerp(f.up,0.6).normalize();camera.lookAt(_v);
+  _v.copy(fp.p).addScaledVector(fp.T,16).addScaledVector(fp.up,1.0);camera.up.set(0,1,0).lerp(f.up,0.6).normalize();camera.lookAt(_v);camera.fov=60+18*Math.min(1,S.rainbow/0.8);camera.updateProjectionMatrix();
   renderer.render(scene,camera)}};

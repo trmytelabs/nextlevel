@@ -113,7 +113,7 @@ function render(t:number){const S=E1.S;if(!S)return;
  // voxel words
  syncWords(S,t);let n=0;const pulse=1+S.pulse*0.18;
  for(const r of track){if(r.dead)continue;const a=E1.alphaOf(r.ln,t)*pulse;if(a<=0)continue;
-  for(let k=0;k<r.on.length&&n<MAXV;k++){if(!r.on[k])continue;cellPos(r,k,t,v3);if(-v3.z<ZDECK)continue;const gold=r.w.gold;setM(vox,n,v3.x,v3.y,v3.z,CELL*SU,gold?EXT*2.2+0.08*Math.sin(t*6):EXT,CELL*ROWD);if(gold){const s=0.85+0.4*(0.5+0.5*Math.sin(t*7+k*0.6));setC(vox,n,a*1.3*s,a*0.5*s,a*0.06)}else setC(vox,n,a,a,a);n++}}
+  for(let k=0;k<r.on.length&&n<MAXV;k++){if(!r.on[k])continue;cellPos(r,k,t,v3);if(-v3.z<ZDECK)continue;const gold=r.w.gold;setM(vox,n,v3.x,v3.y,v3.z,CELL*SU,EXT,CELL*ROWD);if(gold){const s=0.9+0.2*Math.sin(t*5+k*0.6);setC(vox,n,a*1.15*s,a*0.22*s,a*7.5*s)}else setC(vox,n,a,a,a);n++}}
  // a dark slab under each line hides the grid between the letters, so the words read as solid shapes
  {let np=0;for(const ln of S.lines){const a=E1.alphaOf(ln,t);if(a<=0||np>=16)continue;let u0=1e9,u1=-1e9;for(const w of ln.words){if(w.dead)continue;u0=Math.min(u0,w.bx);u1=Math.max(u1,w.bx+w.w)}if(u0>u1)continue;
   const zc=E1.zOf(ln,t)+ln.bh*ROWD*0.5;if(zc-ln.bh*ROWD*0.5>ZFAR+40||zc+ln.bh*ROWD*0.5<ZDECK)continue;setM(pan,np,((u0+u1)/2-BW/2+ln.xo)*SU,-CAMH+0.004,-zc,(u1-u0+10)*SU,1,ln.bh*ROWD);setC(pan,np,a,a,a);np++}commit(pan,np)}
