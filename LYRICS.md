@@ -14,7 +14,7 @@ Plain section tags only. Style cues go in the style field (section 3), not in br
 [Intro]
 
 [Verse 1]
-One prompt, one box, one line to hold
+One coin, one prompt, and the game was on
 Green text on glass, half right, half wrong
 Ask, read, retry, take another turn
 It made things up, and that's how I learned
@@ -22,7 +22,7 @@ But I wanted it faster
 And it kept getting new
 
 [Chorus]
-Turn it all the way up, then a little bit more
+Turn it up to eleven, then a little bit more
 That's the only setting I've been looking for
 Turn it all the way up, let the whole thing run
 I don't do a little, I do everything, then some
@@ -30,17 +30,17 @@ I don't do a little, I do everything, then some
 [Verse 2]
 Then the box talked back, and I talked back too
 Taught myself the questions till the answers came true
-Ask on the beat, every answer's a drum
+Emails and briefings, every answer's a drum
 I was learning in weeks what took years to come
 
 [Verse 3]
 Back at my desk, and I built me a crew
 One sums up the meetings, one gets the inbox through
-I call out the turns and they race down the line
+Project plans, status notes, they race down the line
 Every lap they come back, and I check what they find
 
 [Chorus]
-Turn it all the way up, then a little bit more
+Turn it up to eleven, then a little bit more
 That's the only setting I've been looking for
 Turn it all the way up, let the whole thing run
 I don't do a little, I do everything, then some
@@ -48,7 +48,7 @@ I don't do a little, I do everything, then some
 [Verse 4]
 Now the whole toolbox fits in my hand
 Coaching on the bus, a deck before I land
-Every week I'm evolving, every week it grows
+AI Champion for the team, and the whole team grows
 The office is anywhere my signal goes
 
 [Bridge]
@@ -59,18 +59,18 @@ And it came back running
 
 [Final Verse]
 From the plan to the push, every call is mine
-Maximalist at heart, I don't wait in line
-Brief the team, plan the sprint, code the fix on the fly
+Ran with the AI Maximalists, I don't wait in line
+Brief the room, plan the sprint, code the fix on the fly
 Write the tests, ship the build, and I still ask why
 
 [Final Chorus]
-Turn it all the way up, then a little bit more
+Turn it up to eleven, then a little bit more
 Every tool I ever learned, now I know what it's for
 Turn it all the way up, let the whole thing run
 Deputy, I'm ready, next level, here I come
 
 [Outro]
-Imagine what we could build.
+The only limit now is how creative we are.
 Ready when you are. Press start.
 ```
 
@@ -81,72 +81,78 @@ Time = bar x 1.875 s. Era switches are the rows with no lyric.
 | Bar | Time | Section | Era | Line |
 |---|---|---|---|---|
 | 0 | 0:00.0 | Intro | 1 · Arcade, first prompts | (title card, instrumental) |
-| 2 | 0:03.8 | Verse 1 | 1 · Arcade, first prompts | One prompt, one box, one line to hold |
+| 2 | 0:03.8 | Verse 1 | 1 · Arcade, first prompts | One coin, one prompt, and the game was on |
 | 4 | 0:07.5 | Verse 1 | 1 · Arcade, first prompts | Green text on glass, half right, half wrong |
 | 6 | 0:11.3 | Verse 1 | 1 · Arcade, first prompts | Ask, read, retry, take another turn |
 | 8 | 0:15.0 | Verse 1 | 1 · Arcade, first prompts | It made things up, and that's how I learned |
 | 12 | 0:22.5 | Verse 1 (lift) | 1 · Arcade, first prompts | But I wanted it faster |
 | 14 | 0:26.3 | Verse 1 (lift) | 1 · Arcade, first prompts | And it kept getting new |
 | 17 | 0:31.9 | Verse 1 (lift) | 1 · Arcade, first prompts | (screen shatters, build into the drop) |
-| 19 | 0:35.6 | Chorus | 2 · 16-bit, learning to ask | Turn it all the way up, then a little bit more |
+| 19 | 0:35.6 | Chorus | 2 · 16-bit, learning to ask | Turn it up to eleven, then a little bit more |
 | 21 | 0:39.4 | Chorus | 2 · 16-bit, learning to ask | That's the only setting I've been looking for |
 | 23 | 0:43.1 | Chorus | 2 · 16-bit, learning to ask | Turn it all the way up, let the whole thing run |
 | 25 | 0:46.9 | Chorus | 2 · 16-bit, learning to ask | I don't do a little, I do everything, then some |
 | 27.5 | 0:51.6 | Verse 2 | 2 · 16-bit, learning to ask | Then the box talked back, and I talked back too |
 | 29.5 | 0:55.3 | Verse 2 | 2 · 16-bit, learning to ask | Taught myself the questions till the answers came true |
-| 31.5 | 0:59.1 | Verse 2 | 2 · 16-bit, learning to ask | Ask on the beat, every answer's a drum |
+| 31.5 | 0:59.1 | Verse 2 | 2 · 16-bit, learning to ask | Emails and briefings, every answer's a drum |
 | 33.5 | 1:02.8 | Verse 2 | 2 · 16-bit, learning to ask | I was learning in weeks what took years to come |
 | 37 | 1:09.4 | Verse 3 | 3 · 3D console, directing agents | (racer begins) |
 | 38 | 1:11.3 | Verse 3 | 3 · 3D console, directing agents | Back at my desk, and I built me a crew |
 | 40 | 1:15.0 | Verse 3 | 3 · 3D console, directing agents | One sums up the meetings, one gets the inbox through |
-| 42 | 1:18.8 | Verse 3 | 3 · 3D console, directing agents | I call out the turns and they race down the line |
+| 42 | 1:18.8 | Verse 3 | 3 · 3D console, directing agents | Project plans, status notes, they race down the line |
 | 44 | 1:22.5 | Verse 3 | 3 · 3D console, directing agents | Every lap they come back, and I check what they find |
-| 47 | 1:28.1 | Chorus | 3 · 3D console, directing agents | Turn it all the way up, then a little bit more |
+| 47 | 1:28.1 | Chorus | 3 · 3D console, directing agents | Turn it up to eleven, then a little bit more |
 | 49 | 1:31.9 | Chorus | 3 · 3D console, directing agents | That's the only setting I've been looking for |
 | 51 | 1:35.6 | Chorus | 3 · 3D console, directing agents | Turn it all the way up, let the whole thing run |
 | 53 | 1:39.4 | Chorus | 3 · 3D console, directing agents | I don't do a little, I do everything, then some |
 | 56 | 1:45.0 | Verse 4 | 4 · Mobile, working from anywhere | (phone begins) |
 | 57 | 1:46.9 | Verse 4 | 4 · Mobile, working from anywhere | Now the whole toolbox fits in my hand |
 | 59 | 1:50.6 | Verse 4 | 4 · Mobile, working from anywhere | Coaching on the bus, a deck before I land |
-| 61 | 1:54.4 | Verse 4 | 4 · Mobile, working from anywhere | Every week I'm evolving, every week it grows |
+| 61 | 1:54.4 | Verse 4 | 4 · Mobile, working from anywhere | AI Champion for the team, and the whole team grows |
 | 63 | 1:58.1 | Verse 4 | 4 · Mobile, working from anywhere | The office is anywhere my signal goes |
 | 66.5 | 2:04.7 | Bridge | 4 · Mobile, working from anywhere | Wait, what if I built it? |
 | 68 | 2:07.5 | Bridge | 4 · Mobile, working from anywhere | Not a draft, the real thing |
 | 69.5 | 2:10.3 | Bridge | 4 · Mobile, working from anywhere | I said what I wanted out loud |
 | 71 | 2:13.1 | Bridge | 4 · Mobile, working from anywhere | And it came back running |
 | 75 | 2:20.6 | Final Verse | 5 · VR, full development | From the plan to the push, every call is mine |
-| 77 | 2:24.4 | Final Verse | 5 · VR, full development | Maximalist at heart, I don't wait in line |
-| 79 | 2:28.1 | Final Verse | 5 · VR, full development | Brief the team, plan the sprint, code the fix on the fly |
+| 77 | 2:24.4 | Final Verse | 5 · VR, full development | Ran with the AI Maximalists, I don't wait in line |
+| 79 | 2:28.1 | Final Verse | 5 · VR, full development | Brief the room, plan the sprint, code the fix on the fly |
 | 81 | 2:31.9 | Final Verse | 5 · VR, full development | Write the tests, ship the build, and I still ask why |
-| 83 | 2:35.6 | Final Chorus | 5 · VR, full development | Turn it all the way up, then a little bit more |
+| 83 | 2:35.6 | Final Chorus | 5 · VR, full development | Turn it up to eleven, then a little bit more |
 | 85 | 2:39.4 | Final Chorus | 5 · VR, full development | Every tool I ever learned, now I know what it's for |
 | 87 | 2:43.1 | Final Chorus | 5 · VR, full development | Turn it all the way up, let the whole thing run |
 | 89 | 2:46.9 | Final Chorus (peak) | 5 · VR, full development | Deputy, I'm ready, next level, here I come |
-| 94 | 2:56.3 | Outro | 5 · VR, full development | Imagine what we could build. |
+| 94 | 2:56.3 | Outro | 5 · VR, full development | The only limit now is how creative we are. |
 | 95 | 2:58.1 | Outro | 5 · VR, full development | Ready when you are. Press start. |
 | 96 | 3:00.0 | End | | |
 
 ## 3. Suno style prompts
 
-Short (170 characters):
+One genre for the whole song (decided 2026-10-25: no genre-hopping). Synthwave pop matches the game's look, sits naturally at 128 BPM and keeps a steady four-on-the-floor grid the game can lock to. Make two generations (four songs) in Custom mode, title "Next Level", lyrics from section 1.
+
+Style A (bright):
 
 ```
-128 BPM genre-evolving pop: dry 8-bit chiptune, 16-bit FM synthpop, 90s breakbeat rave, bright 2013 EDM pop, hyperpop synthwave finale; euphoric, glitchy, always building
+synthwave pop, 128 BPM, 4/4, driving analog synth bass, gated reverb drums, bright retro arpeggios, anthemic chorus, confident male vocal, euphoric, steady tempo
 ```
 
-Long:
+Style B (darker, more drive):
 
 ```
-A three-minute song at a constant 128 BPM that ages forward through video game generations. Opens as dry, mono 8-bit chiptune: square-wave lead, triangle bass, noise-channel hats, no real drums, a four-note descending march. The first chorus bursts into 16-bit FM synthpop with bright PCM drums, brass stabs and offbeat chimes. The third verse turns into 90s breakbeat rave with chopped breaks, hoover and supersaw stabs, filtered pads and wide reverb. The fourth verse is bright 2013 EDM pop with clean plucks, sidechained chords and hi-hat rolls, thinning to a heartbeat kick and one voice in the bridge. The final verse and chorus are hyperpop synthwave stacking every earlier sound at once, with vocoded doubles and glitch edits, peaking on the last chorus line. Ends on one lonely square-wave note. Clear, confident lead vocal. Euphoric, nostalgic, relentless forward motion.
+outrun synthwave, 128 BPM, 4/4, pulsing sequenced bass, punchy 80s drums, soaring lead synth, big chorus, clear male vocal, nostalgic and driving, steady tempo
 ```
 
-Safe (no artist names, no brand names, no edgy genre labels; use if Suno rejects or drifts):
+Exclude styles:
 
 ```
-128 BPM upbeat electronic pop that evolves from retro video game square-wave melodies to warm vintage console synths, then energetic 90s dance breakbeats, then bright modern festival pop with plucks, then a huge neon synth finale; clear confident lead vocal, joyful, always building
+chiptune, dubstep, trap, half-time, tempo change, ballad, orchestral
 ```
+
+Timing: Suno cannot be forced onto an exact bar map, so pick the take whose tempo holds steady and whose length is closest to 3:00, then retime the game to the take (section 5), not the other way round.
 
 ## 4. Production notes per section
+
+> Superseded 2026-10-25: the song is now one genre (section 3). This table describes the earlier genre-per-era plan and is kept only for history.
 
 Same tempo, same key centre, every section. Each sound switch lands on the bar where the game switches era, so the change is heard and seen together.
 

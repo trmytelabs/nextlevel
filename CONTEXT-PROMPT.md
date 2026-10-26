@@ -27,45 +27,45 @@ You are helping Ian Ginn finish **"Next Level"** (working title was "Everything,
 ## Lyrics (locked, 40 lines; numbers are the bar each line starts)
 
 ```
-2    One prompt, one box, one line to hold
+2    One coin, one prompt, and the game was on
 4    Green text on glass, half right, half wrong
 6    Ask, read, retry, take another turn
 8    It made things up, and that's how I learned
 12   But I wanted it faster
 14   And it kept getting new
-19   Turn it all the way up, then a little bit more          (CHORUS)
+19   Turn it up to eleven, then a little bit more          (CHORUS)
 21   That's the only setting I've been looking for
 23   Turn it all the way up, let the whole thing run
 25   I don't do a little, I do everything, then some
 27.5 Then the box talked back, and I talked back too
 29.5 Taught myself the questions till the answers came true
-31.5 Ask on the beat, every answer's a drum
+31.5 Emails and briefings, every answer's a drum
 33.5 I was learning in weeks what took years to come
 38   Back at my desk, and I built me a crew
 40   One sums up the meetings, one gets the inbox through
-42   I call out the turns and they race down the line
+42   Project plans, status notes, they race down the line
 44   Every lap they come back, and I check what they find
-47   Turn it all the way up, then a little bit more          (CHORUS)
+47   Turn it up to eleven, then a little bit more          (CHORUS)
 49   That's the only setting I've been looking for
 51   Turn it all the way up, let the whole thing run
 53   I don't do a little, I do everything, then some
 57   Now the whole toolbox fits in my hand
 59   Coaching on the bus, a deck before I land
-61   Every week I'm evolving, every week it grows
+61   AI Champion for the team, and the whole team grows
 63   The office is anywhere my signal goes
 66.5 Wait, what if I built it?                               (BRIDGE)
 68   Not a draft, the real thing
 69.5 I said what I wanted out loud
 71   And it came back running
 75   From the plan to the push, every call is mine   (FINAL VERSE)
-77   Maximalist at heart, I don't wait in line
-79   Brief the team, plan the sprint, code the fix on the fly
+77   Ran with the AI Maximalists, I don't wait in line
+79   Brief the room, plan the sprint, code the fix on the fly
 81   Write the tests, ship the build, and I still ask why
-83   Turn it all the way up, then a little bit more          (FINAL CHORUS)
+83   Turn it up to eleven, then a little bit more          (FINAL CHORUS)
 85   Every tool I ever learned, now I know what it's for
 87   Turn it all the way up, let the whole thing run
 89   Deputy, I'm ready, next level, here I come
-94   Imagine what we could build.                                       (OUTRO)
+94   The only limit now is how creative we are.                       (OUTRO)
 95   Ready when you are. Press start.
 ```
 
