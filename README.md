@@ -1,38 +1,46 @@
 # Next Level
 
-![The finale: the tunnel run under the line "Deputy, I'm ready, next level, here I come"](docs/era5-tunnel.jpg)
+![The finale: a synthwave saber lane with neon towers, palms and a pacing sports car](docs/era5-saber.jpg)
 
-**Next Level** is a three-minute music video you can play. It is Ian Ginn's application to join the Deputy's Maximalists (Government of Alberta). Five generations of games stand for two curves rising together: what AI can do, and how well Ian uses it. The piece starts as a 1978 arcade crawl where you shoot the lyrics and ends in a VR saber lane where an AI co-pilot builds the arena out of every word you cut. The ask is the last chorus line, *"Deputy, I'm ready, next level, here I come"*, and the end card says *"Imagine what we could build together."*
+**Next Level** is a three-minute music video you can play, made by Ian Ginn for the Deputy's Maximalists (Government of Alberta). Five generations of games stand for how he leveled up with AI, the same way gaming did, just a lot faster: from first prompts in a retro arcade to full development in a synthwave VR finale. The song, the stages and the end card all tell that story.
 
-- Play it now: https://trmytelabs.github.io/nextlevel/
-- Coming soon: https://nextlevel.patchnotes.ca
+- Play it: https://trmytelabs.github.io/nextlevel/ (and on the project's own server, https://nextlevel.patchnotes.ca, once its first deploy lands)
+- It plays itself. Press any key or touch a pad to take over; the autopilot picks back up after two idle seconds. Leave the title screen alone and a muted demo runs.
 
-It plays itself. Press a movement key or touch the screen to take over; autopilot picks back up after two idle seconds.
+## The five stages
 
-![Title card](docs/title.jpg)
-
-## The five eras
-
-One continuous take, 96 bars at 128 BPM (one bar = 1.875 s, 3:00 total). Everything is timed in bars, and the lyrics are part of the gameplay in every era.
-
-| Bars | Chapter | Era | How you play the lyrics |
-|---|---|---|---|
-| 0 to 19 | 1 · FIRST PROMPTS | 1978 arcade crawl on a phosphor CRT | The lyric lines come down the screen in a perspective crawl. Shoot to chip pixels off the words. |
-| 19 to 37 | 2 · LEARNING TO ASK | 1991 Mario-style platformer | The runner autoruns on the ground. "?" blocks pop phrases of the lyric when hit from below; plain bricks break. |
-| 37 to 56 | 3 · DIRECTING AGENTS | 1995 Daytona-style racer (Three.js) | One overhead gantry per lyric line. Drive under it in the lit lane to take the line. |
-| 56 to 75 | 4 · WORKING FROM ANYWHERE | 2013 phone on a desk running a Flappy-style game | Words sit on signs in the pipe gaps. In the bridge, green ghost birds arrive and become the AI. |
-| 75 to 96 | 5 · FULL DEVELOPMENT | Now: VR saber lane (Three.js), tunnel run for the last chorus | Word blocks fly in on the beat. Cut them with sabers that follow your mouse or finger while an AI co-pilot builds the arena out of the words. |
+| Stage | Chapter | How you play the lyrics |
+|---|---|---|
+| ARCADE | FIRST PROMPTS | A retro-3D vector crawl. Each lyric line flies in as voxel words; shoot pixels off them. |
+| 16-BIT | LEARNING TO ASK | A platformer you steer yourself. "?" blocks release each line when hit from below; bricks break, coins wait in arcs over pits, caterpillars patrol. |
+| 3D CONSOLE | DIRECTING AGENTS | A racer on a Blender-built speedway. One overhead gate per line; drive under it in the lit lane. |
+| MOBILE | WORKING FROM ANYWHERE | A one-thumb flyer on a phone. Words hang on signs in the pipe gaps while notifications arrive. |
+| VR | FULL DEVELOPMENT | A synthwave saber lane. Word blocks fly in on the beat; one saber follows your mouse or finger, and an AI co-pilot builds the arena from what you cut. |
 
 | | |
 |---|---|
-| ![Era 1: chipped lyric words in the arcade crawl](docs/era1-arcade.jpg) | ![Era 2: the platformer with a "?" block ahead](docs/era2-platformer.jpg) |
-| **1 · First prompts.** The words are the enemies. | **2 · Learning to ask.** Phrases hide in "?" blocks. |
-| ![Era 3: the speedway with a lyric gantry ahead](docs/era3-racer.jpg) | ![Era 4: the phone game with ghost birds in the bridge](docs/era4-phone.jpg) |
-| **3 · At my desk.** One gantry per line. | **4 · In my pocket.** Ghost birds arrive in the bridge. |
-| ![Era 5: cutting word blocks with two sabers](docs/era5-saber.jpg) | ![End card](docs/end-card.jpg) |
-| **5 · Directing agents.** Cut words become the arena. | **End card.** The camera cranes up over what you built. |
+| ![Arcade: voxel lyric words in the vector crawl](docs/era1-arcade.jpg) | ![16-bit: the platformer with a "?" block ahead](docs/era2-platformer.jpg) |
+| **Arcade · first prompts.** The words are the targets. | **16-bit · learning to ask.** Lines hide in "?" blocks. |
+| ![3D console: the speedway with a lyric gate](docs/era3-racer.jpg) | ![Mobile: the phone game with a notification](docs/era4-phone.jpg) |
+| **3D console · directing agents.** One gate per line. | **Mobile · working from anywhere.** Words in the pipe gaps. |
+| ![VR: the saber lane](docs/era5-saber.jpg) | ![End card](docs/end-card.jpg) |
+| **VR · full development.** Cut words become the arena. | **End card.** Source code and patch notes, one click away. |
 
-The "AI" in the finale is scripted, not live. Every playthrough is identical and every build lands on the beat.
+There are five secrets, one per stage, for players who go exploring. Find all five for a different ending. The autopilot never finds them.
+
+The "AI" in the finale is scripted, not live: every playthrough is deterministic and every build lands on the beat.
+
+## The song
+
+The soundtrack is **Press Start**, written to the story and produced with Suno. The game does not assume a tempo or length: it follows whichever song is loaded.
+
+- `public/songs/<id>/` holds the audio and a `map.json`: tempo, duration, and the second each of the 40 lyric lines starts. `?song=<id>` picks a song (`?song=none` runs the original 128 BPM layout with a generated score).
+- Every stage start, lyric event and set piece is anchored to those line times, so stages stretch or shrink with the song and the end card holds through its outro.
+- `tools/song/analyze.py <id>` measures duration, tempo and the first beat from the audio (ffmpeg plus a pure-Python onset autocorrelation).
+- `tools/song/align.py <id>` times the lyrics with [faster-whisper](https://github.com/SYSTRAN/faster-whisper): word timestamps from speech-to-text, aligned to the lyric sheet with a Needleman-Wunsch alignment. Press Start matched 339 of 352 words.
+- No Whisper? Play the song with `?song=<id>`, press T at the start of each lyric line, then Y to save `map.json`.
+
+Lyrics and the Suno brief live in `LYRICS.md`.
 
 ## Controls
 
@@ -40,16 +48,17 @@ The "AI" in the finale is scripted, not live. Every playthrough is identical and
 |---|---|
 | A / D or Left / Right | Move, steer |
 | W or Up | Jump |
-| Space | Fire |
-| Mouse (finale) | Moves the sabers: left half of the screen is the magenta hand, right half the cyan hand |
+| S or Down | Down (you will know when) |
+| Space | Fire, jump |
+| Mouse (finale) | Moves the saber |
 | Q | Autopilot: when idle / on / off |
 | M | Sound on / off |
 | L | Lyric captions on / off |
-| G | Graphics tier high / low (reloads at the same bar; phones default to low) |
+| G | Graphics tier high / low (reloads at the same moment; phones default to low) |
 | P or Escape | Pause |
-| 1 to 5 | Jump to an era |
+| 1 to 5 | Jump to a stage |
 
-**Phone** (landscape): hold the left or right edge to move, tap the top half to jump, tap the bottom half to fire. In the finale your finger moves the sabers. Portrait shows a rotate card. The page installs to the home screen via `public/manifest.webmanifest`.
+**Phones:** in landscape a thumb stick sits left of the game and the action button right of it (labelled per stage); upright, both sit under the game like a handheld. In the finale either pad is a trackpad for the saber.
 
 ## Run it
 
@@ -63,57 +72,56 @@ Open http://localhost:5173/nextlevel/ (add `?q=high` or `?q=low` to force a grap
 ## Verify
 
 ```bash
-node tools/test/run.mjs
+node tools/test/run.mjs --url http://localhost:5173/nextlevel/
 ```
 
-The harness drives the deterministic simulation through `window.ETM` in headless Edge with software WebGL. It checks for page errors, NaN state, era boundaries and the run reaching 3:00, then runs the case files in `tools/test/cases/` (spec: `tools/test/CASES.md`). Screenshots go to `tools/test/shots/`, the report to `tools/test/report*.json`.
+The harness drives the deterministic simulation through `window.ETM` in headless Edge with software WebGL: page errors, NaN state, stage boundaries, the run reaching the end, and the case files in `tools/test/cases/` (gameplay, autopilot coverage, lyric timing, controls, the end card, the secrets). 65 checks on desktop; `--mobile --controls` adds an iPhone landscape and portrait pass, 97 checks. The harness runs the original 128 BPM layout, so its expectations do not move when the song changes.
 
 | Flag | Effect |
 |---|---|
-| `--era N` | One era only (1 to 5) |
+| `--era N` | One stage only (1 to 5) |
 | `--from A --to B` | A bar range (`--chunk S` sets the step in seconds) |
-| `--controls` | Keyboard and touch input mapping |
-| `--mobile` | iPhone landscape layout checks plus the portrait rotate card |
+| `--controls` | Keyboard, touch pads and settings keys |
+| `--mobile` | iPhone landscape and portrait layout checks |
 | `--q low` | Low graphics tier |
-| `--url URL` | Point at a dev server on another port |
 
-Screenshot regression lives in `tools/test/visual/`: `node tools/test/visual/snap.mjs` compares frames against `baseline/` and writes diffs to `diff/`; `--update` accepts the current frames, `--bars 1,20,76` picks a subset, and `tolerances.json` sets per-frame tolerances. `.github/workflows/test.yml` runs the harness on every push.
+Screenshot regression: `node tools/test/visual/snap.mjs` compares frames against `tools/test/visual/baseline/` (`--update` accepts them). `node tools/test/docshots.mjs` regenerates the screenshots in this README. In a browser console, `ETM.seek(seconds); ETM.step(seconds); ETM.render(); ETM.probe()` drives the same simulation by hand.
 
-In a browser console, `ETM.seek(bar*1.875); ETM.step(seconds); ETM.render(); ETM.probe()` drives the same simulation by hand.
+## CI/CD and hosting
 
-## Deploy
-
-- **Now:** every push to `main` runs `.github/workflows/pages.yml`, which builds and publishes `dist/` to GitHub Pages at https://trmytelabs.github.io/nextlevel/ (`vite.config.ts` sets `base` to `/nextlevel/`).
-- **Next:** a VPS behind Caddy at https://nextlevel.patchnotes.ca. After the headless verification passes on `main`, `.github/workflows/deploy.yml` builds with `--base /` and rsyncs `dist/` to the server as a restricted `deploy` user (enabled by the `DEPLOY_ENABLED` repository variable). Server setup is in `deploy/`: `server-setup.sh`, the `Caddyfile` (HTTPS, security headers, CSP, caching) and `landing-deploy.md`.
-
-## Soundtrack
-
-Today the score is generative Web Audio (`src/music.ts`): square-wave arcade, FM 16-bit, rave, EDM plucks, then everything stacked, plus drums and SFX through a soft limiter. The real track is a Suno song written from the brief in `LYRICS.md` (lyrics, section tags, bar map). Drop it at `public/song.mp3` and the game runs off the audio clock; `[` / `]` nudge the offset, and T / U / Y tap lyric starts, clear taps and save `timing.json` (see `LYRICS.md`).
+- **Tests:** `.github/workflows/test.yml` runs the harness on every push, on a self-hosted runner. Pull requests from forks are skipped, so outside code never runs on it.
+- **GitHub Pages:** every push to `main` runs `pages.yml`, which builds and publishes https://trmytelabs.github.io/nextlevel/.
+- **Own server:** after the tests pass on `main`, `deploy.yml` builds with `--base /` and rsyncs `dist/` to the VPS as a restricted `deploy` user whose key can only sync files into the site folder (rrsync, no shell). It is switched on by the `DEPLOY_ENABLED` repository variable; `deploy/set-github-secrets.cmd <server-ip>` stores the key and host as secrets.
+- **The server** (`deploy/server-setup.sh`): Caddy with automatic Let's Encrypt HTTPS and security headers (HSTS, a strict Content-Security-Policy, caching rules in `deploy/Caddyfile`), ufw locked to SSH and web, fail2ban, unattended security upgrades and key-only SSH. DNS for patchnotes.ca is on Cloudflare; deploys use the server's IP because SSH does not go through Cloudflare's proxy.
+- **WordPress on the same box:** `deploy/wp/` (Docker Compose, backup and restore scripts, `REBUILD.md`).
 
 ## Architecture
 
-`index.html` holds the markup, CSS and HUD and loads `src/main.ts`. Every era exposes the same `init / update / draw / onBeat / on8th / onLine` surface, and `seek(t)` rebuilds every era's state from scratch at any time.
+`index.html` holds the markup, CSS and HUD and loads `src/boot.ts`, which applies the song map before the stages load. Every stage exposes the same `init / update / draw / onBeat / on8th / onLine` surface, and `seek(t)` rebuilds every stage's state from scratch at any moment.
 
 | File | Role |
 |---|---|
-| `src/main.ts` | Transport, compositing, transitions, title and end cards, HUD, the `window.ETM` test hook |
-| `src/core.ts` | Constants, `ERAS`, `LYRICS`, seeded RNG, canvases, keyboard and touch input, quality tier |
-| `src/music.ts` | Generative score |
-| `src/song.ts` | Song clock for `public/song.mp3`, offset nudge, tap sync |
-| `src/crt.ts` | WebGL CRT pass (curvature, scanlines, shadow mask) for eras 1 and 2 |
-| `src/era1.ts` | Arcade crawl |
-| `src/era2.ts` | Platformer |
-| `src/era3.ts`, `src/era3gl.ts` | Racer simulation and its Three.js renderer (stadium, gantries, GLB stock cars) |
-| `src/era4.ts` | Phone and Flappy-style game |
-| `src/era5.ts`, `src/era5gl.ts` | Saber lane simulation (with 2D fallback) and its Three.js renderer |
-| `src/world.ts` | Legacy, unused |
+| `src/boot.ts` | Loads `public/songs/<id>/map.json` and applies it, then loads the game |
+| `src/core.ts` | Constants, `ERAS`, `LYRICS`, the song-map timeline (`applySongMap`, `cb`), seeded RNG, input (keys, touch pads), quality tier |
+| `src/main.ts` | Transport, demo mode, compositing, transitions, HUD, captions, patch notes panel, the `window.ETM` test hook |
+| `src/song.ts` | The song as master clock, offset nudge, tap-to-time |
+| `src/startgl.ts` | The voxel synthwave title screen |
+| `src/era1.ts`, `src/era1gl.ts` | Arcade crawl and its Three.js voxel renderer |
+| `src/era2.ts` | Platformer (fixed-tick physics, planning autopilot, secret room) |
+| `src/era3.ts`, `src/era3gl.ts` | Racer simulation and its Three.js speedway |
+| `src/era4.ts` | Phone flyer |
+| `src/era5.ts`, `src/era5gl.ts`, `src/synthkit.ts` | Saber lane, its renderer and end card, procedural towers / palms / car / fireworks |
+| `src/eggs.ts` | The five secrets |
+| `src/patchnotes.ts` | The in-game patch notes |
+| `src/crt.ts` | CRT pass for the retro stages |
+| `src/music.ts` | Generated score, used only with `?song=none` |
 
-The simulation is deterministic: seeded hashes, never `Math.random`, in sim code. TypeScript runs with `strict` off. `tools/blender/car.py` builds the stock cars headlessly into `public/models/car_N.glb`.
+The simulation is deterministic: seeded hashes, never `Math.random`, in sim code. `tools/blender/*.py` build the cars, speedway scenery and finale kit headlessly into `public/models/`.
 
 ## Credits
 
+- Song: Press Start, made with [Suno](https://suno.com)
 - Textures: CC0 from [Poly Haven](https://polyhaven.com) (see `public/textures/LICENSE.txt`)
 - Font: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38
-- Rendering: [Three.js](https://threejs.org)
-- Stock cars: modelled with [Blender](https://www.blender.org)
+- Rendering: [Three.js](https://threejs.org); models: [Blender](https://www.blender.org); lyric timing: [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
 - Built by Ian Ginn with [Claude Code](https://claude.com/claude-code)
