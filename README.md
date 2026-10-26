@@ -77,14 +77,20 @@ The harness drives the deterministic simulation through `window.ETM` in headless
 | `--q low` | Low graphics tier |
 | `--url URL` | Point at a dev server on another port |
 
-Screenshot regression lives in `tools/test/visual/`: `node tools/test/visual/snap.mjs` compares frames against `baseline/` and writes diffs to `diff/`; `--update` accepts the current frames, `--bars 1,20,76` picks a subset, and `tolerances.json` sets per-frame tolerances. `.github/workflows/test.yml` runs the harness on every push.
+Screenshot regression lives in `tools/test/visual/`: `node tools/test/visual/snap.mjs` compares frames against `baseline/` and writes diffs to `diff/`; `--update` accepts the current frames, `--bars 1,20,76` picks a subset, and `tolerances.json` sets per-frame tolerances. `.github/workflows/ci-cd.yml` runs the harness on every push and pull request.
 
 In a browser console, `ETM.seek(bar*1.875); ETM.step(seconds); ETM.render(); ETM.probe()` drives the same simulation by hand.
 
 ## Deploy
 
 - **Now:** every push to `main` runs `.github/workflows/pages.yml`, which builds and publishes `dist/` to GitHub Pages at https://trmytelabs.github.io/nextlevel/ (`vite.config.ts` sets `base` to `/nextlevel/`).
-- **Next:** a VPS behind Caddy at https://nextlevel.patchnotes.ca. After the headless verification passes on `main`, `.github/workflows/deploy.yml` builds with `--base /` and rsyncs `dist/` to the server as a restricted `deploy` user (enabled by the `DEPLOY_ENABLED` repository variable). Server setup is in `deploy/`: `server-setup.sh`, the `Caddyfile` (HTTPS, security headers, CSP, caching) and `landing-deploy.md`.
+- **Production:** https://nextlevel.patchnotes.ca, through `.github/workflows/ci-cd.yml` on GitHub-hosted runners:
+  1. **CI** on every push and pull request: type-check, build, the headless verification above, then a container build (`Dockerfile`) and a smoke test of the image.
+  2. **Publish** on `main`: the image goes to `ghcr.io/trmytelabs/nextlevel:<commit sha>`.
+  3. **Deploy** to the `production` environment: an SSH key that is forced to a single command asks the server to run `deploy-app nextlevel <sha>`, which pulls the image, starts it, waits for its `/health` check and rolls back automatically if it never gets healthy.
+  4. **Verify:** the pipeline waits until `https://nextlevel.patchnotes.ca/version.txt` (through Cloudflare) reports the new commit.
+
+  The image serves `dist/` with Caddy on port 8080 as an unprivileged user (`deploy/container.Caddyfile` holds the CSP, security headers and caching). The server's own Caddy terminates HTTPS with a Cloudflare origin certificate and only accepts connections from Cloudflare.
 
 ## Soundtrack
 

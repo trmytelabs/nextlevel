@@ -1,20 +1,14 @@
+# Web server inside the production image (see Dockerfile). Plain HTTP on :8080: HTTPS, HSTS, compression and the
+# Cloudflare-only rule live in the VPS's front Caddy. App-specific headers and caching stay here, versioned with the code.
 {
-	email admin@__DOMAIN__
+	admin off
+	auto_https off
 }
 
-__DOMAIN__ {
-	root * __SITE_DIR__
-	encode zstd gzip
-	file_server
-
-	# Single-page app under /nextlevel/ paths is not needed: the build uses base "/" on the server.
-	handle_errors {
-		rewrite * /index.html
-		file_server
-	}
+:8080 {
+	root * /srv
 
 	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "SAMEORIGIN"
 		Referrer-Policy "strict-origin-when-cross-origin"
@@ -30,17 +24,15 @@ __DOMAIN__ {
 	header @static Cache-Control "public, max-age=31536000, immutable"
 	@media path *.mp3 *.glb *.jpg *.png *.json
 	header @media Cache-Control "public, max-age=3600"
-	@html path / /index.html /manifest.webmanifest
+	@html path / /index.html /manifest.webmanifest /version.txt
 	header @html Cache-Control "no-cache"
 
-	log {
-		output file /var/log/caddy/nextlevel.log {
-			roll_size 20mb
-			roll_keep 5
-		}
+	# healthcheck for Docker and the deploy script's automatic rollback
+	handle /health {
+		respond "ok" 200
 	}
-}
-
-www.__DOMAIN__ {
-	redir https://__DOMAIN__{uri} permanent
+	handle {
+		try_files {path} {path}/ /index.html
+		file_server
+	}
 }
