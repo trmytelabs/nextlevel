@@ -1,4 +1,5 @@
-import {ERAS,TRANS,BEAT,rngf,hash,clamp,blip,hat,noise} from './core';
+import {ERAS,TRANS,BEAT,rngf,hash,clamp,blip,hat,noise,tone} from './core';
+import {EGG,eggFind} from './eggs';
 
 // ---------- ERA 2: 16-bit platformer. Free movement (SMW-style walk / run / skid / variable jump); "?" blocks pop the lyric ----------
 export const E2=(()=>{
@@ -80,10 +81,11 @@ function tiles(){T={};const px=(x,c,a,b,w=1,h=1)=>{x.fillStyle=c;x.fillRect(a,b,
   for(let i=0;i<16;i++){const d=[0,1,1,2,2,1,1,0][i&7];px(x,'#3a9a2a',i,6,1,d);px(x,'#1a4a1a',i,6+d,1,1)}
   for(const i of [3,11])px(x,'#e0ffc8',i,1,2,1);T.grass=c}
  // brick: two courses of offset bricks, each with a light top-left and a dark bottom-right
- {const c=mkc(16,16),x=c.getContext('2d')!;px(x,'#4a2010',0,0,16,16);
+ // (the same brick in underground blue for the secret room)
+ for(const [k,mo,bc,lc,dc] of [['brick','#4a2010','#c8642c','#f0a070','#8a3a14'],['ubrick','#060a24','#2a4ad0','#7a9aff','#142a8a']] as any){const c=mkc(16,16),x=c.getContext('2d')!;px(x,mo,0,0,16,16);
   for(let r=0;r<2;r++)for(const bx of r?[-4,4,12]:[0,8]){const by=r*8,x0=Math.max(0,bx),x1=Math.min(16,bx+8),w=x1-x0-(x1===bx+8?1:0);if(w<1)continue;
-   px(x,'#c8642c',x0,by+1,w,7);px(x,'#f0a070',x0,by+1,w,1);if(x0===bx)px(x,'#f0a070',x0,by+1,1,7);px(x,'#8a3a14',x0,by+7,w,1);if(x1===bx+8)px(x,'#8a3a14',x0+w-1,by+1,1,7)}
-  T.brick=c}
+   px(x,bc,x0,by+1,w,7);px(x,lc,x0,by+1,w,1);if(x0===bx)px(x,lc,x0,by+1,1,7);px(x,dc,x0,by+7,w,1);if(x1===bx+8)px(x,dc,x0+w-1,by+1,1,7)}
+  T[k]=c}
  // used block: flat brown with rivets
  {const c=mkc(16,16),x=c.getContext('2d')!;px(x,'#4a2a10',0,0,16,16);px(x,'#a86a30',1,1,14,14);px(x,'#c8884a',1,1,14,1);px(x,'#c8884a',1,1,1,14);px(x,'#7a4a20',1,14,14,1);px(x,'#7a4a20',14,1,1,14);
   for(const [a,b] of [[3,3],[12,3],[3,12],[12,12]])px(x,'#5a3410',a,b);T.used=c}
@@ -107,7 +109,9 @@ function gen(to){while(S.genX<to){const r=S.rng;
  else if(idx>2&&roll<0.22){top=LH-80;w=(3+Math.floor(r()*3))*B}        // a raised grass step (solid down to the bottom)
  const x=S.genX+gap,kind=top>=LH-48?'ground':'grass';if(kind==='grass')S.plats=S.plats.filter(q=>q.kind!=='brick'||q.word||q.used||q.x+B<x-48);const after=S.lastTop<top?x+48:gap>0?x+40:-1e9;
  S.plats.push({x,y:top,w,h:LH+40-top,f:0,kind});S.nGround++;let pipeX=-1e9;
- if(kind==='ground'&&w>=8*B&&r()<0.25){const px=x+B*2+Math.floor(r()*((w-4*B)/B))*B;const ph=(1+Math.floor(r()*2))*B;S.plats.push({x:px,y:top-ph,w:2*B,h:ph,f:0,kind:'pipe'});pipeX=px}
+ // pipes; the first one from the 8th ground piece on is the secret pipe (forced if the dice say no; always two tiles tall)
+ if(kind==='ground'&&w>=8*B){const sec=!S.secretMade&&idx>=7;if(r()<0.25||sec){const px=x+B*2+Math.floor(r()*((w-4*B)/B))*B;let ph=(1+Math.floor(r()*2))*B;if(sec){ph=2*B;S.secretMade=true}
+  S.plats.push({x:px,y:top-ph,w:2*B,h:ph,f:0,kind:'pipe',secret:sec});pipeX=px}}
  // brick row: 3-6 single tiles, floating 56 px over the ground; words are put into them as the lines arrive
  if(kind==='ground'&&w>=5*B&&idx>1&&r()<0.8){const n=3+Math.floor(r()*4);const bx=x+B*(1+Math.floor(r()*Math.max(1,w/B-n-1)));for(let i=0;i<n;i++){const k=bx+i*B;if(k+B>pipeX-40&&k<pipeX+2*B+40||k<after||k+B>x+w-40)continue;S.plats.push({x:k,y:top-56,w:B,h:B,f:0,kind:'brick',word:null,used:false})}}
  if(w>=5*B&&r()<0.38&&idx>2){let x0=x+4,x1=x+w-20;if(pipeX>-1e8){if(pipeX-18-x0>x1-(pipeX+34))x1=pipeX-18;else x0=pipeX+34}
@@ -188,7 +192,7 @@ function pilot(p,ft){pickTarget(p);let pl=S.plan;if(!pl||pl.i>=pl.len)pl=S.plan=
  if(c.k<0){AI.d=c.d;AI.j=c.ja}else if(i<c.k){AI.d=c.d;AI.j=false}else{AI.d=c.ad;AI.j=i<c.k+c.h}return AI}
 
 // ---------------- game state ----------------
-function init(t){S={rng:rngf(21),plats:[],coins:[],foes:[],line:[],genX:0,lastTop:LH-48,score:0,coinsGot:0,coinsAll:0,stomps:0,deaths:0,hits:0,camX:0,pops:[],shake:0,nGround:0,
+function init(t){S={rng:rngf(21),secretMade:false,ug:null,plats:[],coins:[],foes:[],line:[],genX:0,lastTop:LH-48,score:0,coinsGot:0,coinsAll:0,stomps:0,deaths:0,hits:0,camX:0,pops:[],shake:0,nGround:0,
   ft:t,acc:0,plan:null,tg:null,tgT:0,tap:0,dir:0,dist:0,safe:{x:PX,y:LH-48}};
  let px=PX+Math.max(0,t-T0)*SPEED;gen(px+LW+240);
  const q=S.plats.filter(q=>q.kind==='ground'||q.kind==='grass').sort((a,b)=>Math.max(0,a.x-px,px-a.x-a.w)-Math.max(0,b.x-px,px-b.x-b.w))[0];px=clamp(px,q.x+10,q.x+q.w-10);
@@ -234,11 +238,41 @@ function foes(ft,p,jh){for(const f of S.foes){if(!f.alive)continue;if(f.sq){f.sq
  if(!p)continue;const fh=f.t==='walk'?14:8,r=contact(p,f.x,f.y-fh,fh,jh);
  if(r===1){f.sq=DT;S.score+=200;S.stomps++;noise(0.06,0.3,1500);blip(330,0.08,0.12);for(let i=0;i<8;i++)S.pops.push({x:f.x+8,y:f.y-fh+6,vx:(hash(ft*13+i)-.5)*90,vy:-hash(ft*29+i)*80,l:.5,g:300,c:'#a8f07a'})}
  else if(r===-1){S.hits++;S.plan=null;S.score=Math.max(0,S.score-50);S.shake=0.3;blip(110,0.25,0.15)}}}
+
+// ---------------- secret: down the flashing pipe into an underground room (a player only; the autopilot never goes down) ----------------
+// 'in' sinks into the pipe (0.7 s), 'room' is a one-screen bonus level with its own physics world (coins, two ledges, a sideways
+// exit pipe on the right; walking into it, or 9 s, ends it), 'out' rises back out of the same pipe. The main level is frozen
+// meanwhile, so lyric blocks placed while underground are still waiting when the player comes back up.
+const ROOM=[{x:-20,y:LH-32,w:LW+40,h:60,kind:'ug'},{x:96,y:LH-80,w:48,h:16,kind:'ug'},{x:176,y:LH-104,w:48,h:16,kind:'ug'},{x:LW-40,y:LH-64,w:40,h:32,kind:'ugpipe'}];
+const roomCoins=()=>{const c:any[]=[];for(let i=0;i<5;i++)c.push({x:60+i*18,y:LH-44});for(let i=0;i<3;i++)c.push({x:104+i*16,y:LH-92});for(let i=0;i<3;i++)c.push({x:184+i*16,y:LH-116});return c.map(o=>({...o,got:false}))};
+function enterPipe(q){const p=S.pl;S.ug={ph:'in',t:0,q,coins:roomCoins(),R:null,got:0};p.vx=0;p.vy=0;S.plan=null;tone(440,0.4,'square',0.12,-320)}
+function ugTick(auto,hd,hj){const u=S.ug,p=S.pl;u.t+=DT;
+ if(u.ph==='in'){p.x+=(u.q.x+16-p.x)*0.25;p.y=u.q.y+Math.min(1,u.t/0.7)*30;
+  if(u.t>=0.7){u.ph='room';u.t=0;u.R={x:96,y:20,vx:0,vy:0,g:false,run:0,jmp:false,coy:0,buf:0,jhp:true,stun:0,face:1,skid:false,on:null};eggFind(1,false)}return}
+ if(u.ph==='room'){const R=u.R;let d=hd,j=hj;if(auto){d=1;j=false}nL=0;for(const q of ROOM)LS[nL++]=q;phys(R,d,j,LS,nL);if(EV.jump)blip(600+Math.abs(R.vx),0.08);
+  for(const c of u.coins)if(!c.got&&Math.abs(c.x-R.x)<10&&Math.abs(c.y-(R.y-12))<15){c.got=true;u.got++;S.score+=50;blip(1320,0.05);blip(1760,0.07,0.08)}
+  S.dist+=Math.abs(R.vx)*DT;if((R.x>=LW-46&&R.g)||u.t>9){u.ph='out';u.t=0;tone(220,0.35,'square',0.12,330)}return}
+ p.x=u.q.x+16;p.vx=0;p.vy=0;p.y=u.q.y+30-Math.min(1,u.t/0.6)*30;if(u.t>=0.6){p.y=u.q.y;p.g=true;p.on=u.q;S.ug=null;S.plan=null}}
+// the flashing arrow over the secret pipe
+function arrow(x,cx,y){const r=[9,7,5,3,1];x.fillStyle='#2a1a2e';for(let i=0;i<5;i++)x.fillRect(cx-(r[i]>>1)-1,y+i-1,r[i]+2,3);x.fillStyle='#ffd23f';for(let i=0;i<5;i++)x.fillRect(cx-(r[i]>>1),y+i,r[i],1);x.fillStyle='#fff6c0';x.fillRect(cx-3,y,2,1)}
+function drawRoom(x,t){const sp=sprites(),u=S.ug,R=u.R;x.fillStyle='#05061a';x.fillRect(0,0,LW,LH);
+ for(let ty=LH-32;ty<LH;ty+=16)for(let tx=0;tx<LW;tx+=16)x.drawImage(T.ubrick,tx,ty);
+ for(let tx=0;tx<LW;tx+=16)if(tx<80||tx>=112)x.drawImage(T.ubrick,tx,0);for(let ty=16;ty<LH-32;ty+=16)x.drawImage(T.ubrick,-8,ty);
+ for(const q of [ROOM[1],ROOM[2]])for(let tx=0;tx<q.w;tx+=16)x.drawImage(T.ubrick,q.x+tx,q.y);
+ x.save();x.translate(0,26);x.scale(1,-1);drawPipe(x,80,0,26);x.restore();
+ x.save();x.translate(LW-40,LH-32);x.rotate(-Math.PI/2);drawPipe(x,0,0,40);x.restore();
+ for(let i=0;i<u.coins.length;i++){const c=u.coins[i];if(c.got)continue;const w=Math.max(1,Math.round(5*Math.abs(Math.cos(t*5+i*0.7))));x.fillStyle='#8a5008';x.fillRect(c.x-w-1,c.y-6,w*2+2,12);x.fillStyle='#ffd23f';x.fillRect(c.x-w,c.y-5,w*2,10);x.fillStyle='#fff6c0';x.fillRect(c.x-w,c.y-5,1,6)}
+ x.textAlign='center';x.font="10px 'Press Start 2P',monospace";x.lineWidth=3;x.strokeStyle='#05061a';x.strokeText('SECRET AREA!',LW/2,40);x.fillStyle='#ffd23f';x.fillText('SECRET AREA!',LW/2,40);
+ x.font="6px 'Press Start 2P',monospace";x.fillStyle='#ffffff';x.fillText('YOU FOUND THE HIDDEN LEVEL',LW/2,53);
+ if(Math.floor(t*2)%2===0){x.fillStyle='#7ee05a';x.fillText('WALK RIGHT TO HEAD BACK UP >',LW/2,LH-40)}x.textAlign='left';
+ const f=!R.g?(R.vy<0?sp.jump:sp.fall):Math.abs(R.vx)>4?sp.walk[Math.floor(S.dist/7)%4]:sp.idle;x.drawImage(f[R.face<0?1:0],Math.round(R.x)-8-OX,Math.round(R.y)-24-OY);
+ x.font="6px 'Press Start 2P',monospace";x.fillStyle='#fff';x.strokeStyle='#1c3a6a';x.lineWidth=2;x.strokeText('SCORE '+S.score,6,26);x.fillText('SCORE '+S.score,6,26);x.fillStyle='#ffd23f';x.strokeText('COINS '+u.got,LW-76,26);x.fillText('COINS '+u.got,LW-76,26)}
 // one fixed 60 Hz tick: decide (autopilot or the player), move, bump, foes, camera
-function tick(auto,hd,hj){const p=S.pl;S.ft+=DT;const ft=S.ft;
+function tick(auto,hd,hj,hdn=false){const p=S.pl;S.ft+=DT;const ft=S.ft;if(S.ug){ugTick(auto,hd,hj);return}
  if(p.dead){p.dvy+=G*DT;p.dy+=p.dvy*DT;foes(ft,null,false);if(ft-p.deadT>1.1)respawn();return}
  if(p.drop){p.vy=Math.min(MAXF,p.vy+G*DT);p.y+=p.vy*DT;if(p.y>=p.dropY){p.y=p.dropY;p.vy=0;p.g=true;p.drop=false;p.landT=0.12;puff(p.x,p.y,5)}foes(ft,null,false);cam();return}
  let dir=hd,jh=hj;if(auto){const a=pilot(p,ft);dir=a.d;jh=a.j}else S.plan=null;S.dir=dir;
+ if(!auto&&hdn&&p.g&&p.on&&p.on.secret){enterPipe(p.on);return}
  p.stun=Math.max(0,p.stun-DT);gather(p.x-48,p.x+48);phys(p,dir,jh,LS,nL);
  if(EV.jump)blip(600+Math.abs(p.vx),0.08);
  if(EV.land){p.landT=0.09;hat(false);if(Math.abs(p.vx)<60)puff(p.x,p.y,3)}
@@ -248,8 +282,8 @@ function tick(auto,hd,hj){const p=S.pl;S.ft+=DT;const ft=S.ft;
  if(p.y>DIE){die();return}
  foes(ft,p,jh);cam();S.dist+=Math.abs(p.vx)*DT}
 function update(dt,t,inp,auto){if(t<T0||t>=end)return;
- const hd=(inp.right?1:0)-(inp.left?1:0),held=!!(inp.up||inp.fireHeld);if(!auto&&inp.jump&&!held)S.tap=14; // a touch tap has no hold: give it a near-full jump
- S.acc=Math.min(0.25,S.acc+dt);while(S.acc>=DT-1e-9){S.acc-=DT;tick(auto,hd,held||S.tap>0);if(S.tap>0)S.tap--}
+ const hd=(inp.right?1:0)-(inp.left?1:0),held=!!(inp.up||inp.fireHeld),hdn=!!inp.down;if(!auto&&inp.jump&&!held)S.tap=14; // a touch tap has no hold: give it a near-full jump
+ S.acc=Math.min(0.25,S.acc+dt);while(S.acc>=DT-1e-9){S.acc-=DT;tick(auto,hd,held||S.tap>0,hdn);if(S.tap>0)S.tap--}
  const p=S.pl;p.landT=Math.max(0,p.landT-dt);p.bumpT=Math.max(0,p.bumpT-dt);S.shake=Math.max(0,S.shake-dt);
  for(const c of S.coins)c.got+=dt;S.coins=S.coins.filter(c=>c.got<0.7);for(const q of S.plats)if(q.f>0)q.f=Math.max(0,q.f-dt);
  for(const q of S.pops){q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=q.g*dt;q.l-=dt}S.pops=S.pops.filter(q=>q.l>0)}
@@ -266,13 +300,13 @@ function drawGround(x,q,cam){const sx=Math.round(q.x-cam),w=q.w,y=q.y,tile=q.kin
   if(ny<=y)continue;x.fillStyle='#1a4a1a';x.fillRect(ex,y,1,Math.min(8,ny-y));if(ny>y+6){x.fillStyle='#4a2a12';x.fillRect(ex,y+6,1,ny-y-6)}}
  for(let i=6;i<w-6;i+=13){const hh=hash(q.x+i*1.7);if(hh<0.35){x.fillStyle='#1a4a1a';x.fillRect(sx+i,y-2,1,2);x.fillRect(sx+i+2,y-3,1,3);x.fillRect(sx+i+4,y-2,1,2);x.fillStyle='#8ae060';x.fillRect(sx+i+2,y-2,1,2)}else if(hh>0.9){x.fillStyle='#1a4a1a';x.fillRect(sx+i,y-3,3,3);x.fillStyle=hh>0.95?'#fff6c0':'#ff6a8a';x.fillRect(sx+i+1,y-2,1,1)}}}
 function drawPipe(x,sx,y,h){x.drawImage(T.pipe,0,0,28,1,sx+2,y+8,28,h-8);x.drawImage(T.rim,sx,y)}
-function draw(x,t){const sp=sprites();const cam=Math.round(S.camX),ft=S.ft;x.save();if(S.shake>0)x.translate(Math.round((hash(t*60)-.5)*4),Math.round((hash(t*61)-.5)*4));
+function draw(x,t){const sp=sprites();if(S.ug&&S.ug.ph==='room'){drawRoom(x,t);return}const cam=Math.round(S.camX),ft=S.ft;x.save();if(S.shake>0)x.translate(Math.round((hash(t*60)-.5)*4),Math.round((hash(t*61)-.5)*4));
  const sg=x.createLinearGradient(0,0,0,LH);sg.addColorStop(0,'#2a66e8');sg.addColorStop(0.55,'#5fb0ff');sg.addColorStop(1,'#bfe8ff');x.fillStyle=sg;x.fillRect(-4,-4,LW+8,LH+8);
  for(let i=-1;i<6;i++){const cx=i*96-((cam*0.12)%96)+hash(i+Math.floor(cam*0.12/96))*30;cloud(x,cx,24+hash(i*5)*30,1+hash(i*3)*0.5)}
  for(let i=-1;i<5;i++){const cx=i*140-((cam*0.25)%140);hill(x,cx,LH+2,74,46,'#3fa84a','#6ad24a','#1c6a2c')}
  for(let i=-1;i<7;i++){const cx=i*70-((cam*0.4)%70)+20;hill(x,cx,LH+2,30,30,'#2f9a3c','#5ac448','#1c5a2c')}
  for(const q of S.plats){const sx=Math.round(q.x-cam);if(sx>LW||sx+q.w<0)continue;
-  if(q.kind==='ground'||q.kind==='grass')drawGround(x,q,cam);else if(q.kind==='pipe')drawPipe(x,sx,q.y,q.h);
+  if(q.kind==='ground'||q.kind==='grass')drawGround(x,q,cam);else if(q.kind==='pipe'){drawPipe(x,sx,q.y,q.h);if(q.secret&&!S.ug&&!EGG.found[1])arrow(x,sx+16,q.y-14-(Math.floor(t*4)%2)*2)}
   else{const off=q.f>0?-Math.round(Math.sin((0.3-q.f)/0.3*Math.PI)*4):0,yy=q.y+off;
    if(q.word){x.drawImage(T.q[Math.floor(t/(BEAT/2))%4],sx,yy);const s=((t*0.9+q.x*0.003)%1.6)*40-6;x.fillStyle='rgba(255,255,255,.6)';for(let r=1;r<15;r++){const c=Math.round(s-r);if(c>=1&&c<=13)x.fillRect(sx+c,yy+r,c<13?2:1,1)}}
    else if(q.used)x.drawImage(T.used,sx,yy);else x.drawImage(T.brick,sx,yy)}}
@@ -287,6 +321,7 @@ function draw(x,t){const sp=sprites();const cam=Math.round(S.camX),ft=S.ft;x.sav
   else if(av>RUN-14)f=sp.run[Math.floor(S.dist/10)%3];else if(av>4)f=sp.walk[Math.floor(S.dist/7)%4];else f=(t%3.1)<0.12?sp.blink:sp.idle;
   if(p.g){x.fillStyle='rgba(0,0,0,.25)';x.fillRect(Math.round(p.x-cam)-6,Math.round(p.y)-1,12,2)}
   x.drawImage(f[p.face<0?1:0],Math.round(p.x-cam)-8-OX,Math.round(p.y)-24-OY)}
+ if(S.ug){const q=S.ug.q;drawPipe(x,Math.round(q.x-cam),q.y,q.h)} // sinking into / rising out of the secret pipe: the pipe hides the body
  for(const q of S.pops){x.globalAlpha=Math.min(1,q.l*3);x.fillStyle=q.c||'#e0b0ff';const z=q.sz||2;x.fillRect(Math.round(q.x-cam),Math.round(q.y),z,z)}x.globalAlpha=1;
  x.restore();
  x.font="6px 'Press Start 2P',monospace";x.fillStyle='#fff';x.strokeStyle='#1c3a6a';x.lineWidth=2;x.strokeText('SCORE '+S.score,6,26);x.fillText('SCORE '+S.score,6,26);x.fillStyle='#ffd23f';x.strokeText('WORDS '+S.coinsGot,LW-76,26);x.fillText('WORDS '+S.coinsGot,LW-76,26);x.fillStyle='#e0b0ff';x.strokeText('STOMPS '+S.stomps,6,36);x.fillText('STOMPS '+S.stomps,6,36);

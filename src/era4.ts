@@ -1,4 +1,5 @@
 import {ERAS,TRANS,BAR,BEAT,bar,W,H,LYRICS,hash,clamp,lerp,smooth,blip,noise} from './core';
+import {eggFind} from './eggs';
 
 // ---------- ERA 4: mobile. A phone on a desk running a one-thumb flapping game ----------
 export const E4=(()=>{
@@ -27,7 +28,12 @@ const GX=i=>-44+((i*53)%176),GDY=i=>[-26,14,-12,28][i%4];
 let S:any,PIPEG:any=null,BOKEH:any=null;const WRAP=new Map<string,string[]>();
 const pipeX=(k,t)=>PIPE0+k*SPACING-Math.max(0,t-s4)*V;
 const gapY=k=>178+81*Math.sin(k*0.7)+25*(hash(k*3.7+0.5)-0.5);   // 84..272, step between neighbours <= ~80 px
-function init(t){S={bird:{y:GAH/2,vy:0,alive:true,deadT:-9,flapT:-9,inv:0,hover:false,bornT:-9},score:0,best:0,counted:new Set(),words:new Map(),line:[],got:0,ghosts:[],agents:[],ripples:[],flash:0,started:false,parts:[],total:0,signs:0,deaths:0,agentsOut:0,planned:new Set()};
+// secret 4: a gold star in the open air between two pipes, reached around bar 64.5, a little above the line between the two
+// gaps (one easy flap). A player who flies through it finds it; the autopilot flies its own line and never counts.
+const KSTAR=Math.round(((bar(64.5)-s4)*V+BX-PIPE0-PWD-(SPACING-PWD)/2)/SPACING);
+const starX=t=>pipeX(KSTAR,t)+PWD+(SPACING-PWD)/2,starY=(gapY(KSTAR)+gapY(KSTAR+1))/2-26;
+function drawStar(ctx,x,y,r,rot){ctx.beginPath();for(let i=0;i<10;i++){const a=rot+i*Math.PI/5-Math.PI/2,rr=i%2?r*0.45:r;ctx.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr)}ctx.closePath()}
+function init(t){S={starGot:false,starT:-9,starY,starAt:s4+(PIPE0+KSTAR*SPACING+PWD+(SPACING-PWD)/2-BX)/V,bird:{y:GAH/2,vy:0,alive:true,deadT:-9,flapT:-9,inv:0,hover:false,bornT:-9},score:0,best:0,counted:new Set(),words:new Map(),line:[],got:0,ghosts:[],agents:[],ripples:[],flash:0,started:false,parts:[],total:0,signs:0,deaths:0,agentsOut:0,planned:new Set()};
  const k0=firstPipe(t);for(let k=0;k<k0;k++)S.counted.add(k);
  // seek == play: plan every era-4 line that has already started (onLine is a pure function of (words, line start)),
  // then count the pipes already behind the bird as flown through, as an uninterrupted play-through would have
@@ -54,6 +60,7 @@ function update(dt,t,inp,auto){if(t<s4-TRANS||t>=s5)return;const b=S.bird;
    if(b.y>GROUND-12){if(b.inv>0||t>=bar(74.4)){b.y=GROUND-12;b.vy=FLAP*0.8}else hit=true}
    if(!hit&&b.inv<=0)for(let i=k;i<k+2;i++){const px=pipeX(i,t);if(BX+10>px&&BX-10<px+PWD){const c=gapY(i);if(b.y-9<c-GAP/2||b.y+9>c+GAP/2)hit=true}}
    if(hit&&t<bar(74.4)){b.alive=false;b.deadT=t;b.vy=-150;S.deaths++;S.flash=0.3;S.best=Math.max(S.best,S.score);noise(0.15,0.4,900);blip(110,0.25,0.15)}
+   if(!S.starGot&&!auto&&!hit){const sx=starX(t);if(Math.abs(sx-BX)<16&&Math.abs(b.y-starY)<18){S.starGot=true;S.starT=t;S.score+=5;eggFind(3,false)}}
    for(let i=k-1;i<k+1;i++){if(i<0||S.counted.has(i))continue;if(pipeX(i,t)+PWD<BX-10){S.counted.add(i);S.score++;const w=S.words.get(i);if(w){S.line.push(w);S.got+=w.split(' ').length;S.words.delete(i);S.signs=S.words.size;S.parts.push({t,w,y:gapY(i)});blip(1568,0.08,0.1)}else blip(1046,0.06,0.08)}}}
   else{b.vy+=G*dt;b.y=Math.min(GROUND-12,b.y+b.vy*dt);const age=t-b.deadT;if(age>BEAT*2||(!auto&&tap&&age>0.45))respawn(t,k)}   // auto-retry after two beats, or tap to retry
   // ghosts: perfect players that fly in from the right during the bridge, one every two beats
@@ -130,6 +137,9 @@ function drawGame(ctx,t,pulse){const b=S.bird,run=Math.max(0,t-s4);ctx.save();ct
    ctx.strokeStyle='rgba(47,106,28,.7)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cx,c-GAP/2);ctx.lineTo(cx,top);ctx.stroke();
    ctx.fillStyle='rgba(255,255,255,.95)';rrect(ctx,cx-tw/2,top,tw,th,5);ctx.fill();ctx.strokeStyle='#2f6a1c';ctx.stroke();
    ctx.font=F(fs);ctx.fillStyle='#1f3a12';ctx.textAlign='center';L.forEach((s,i)=>ctx.fillText(s,cx+1,top+4+fs+i*lh));ctx.textAlign='left'}}
+ // the gold star (secret 4), and its burst once taken
+ {const sx=starX(t);if(!S.starGot&&sx>-20&&sx<GW+20){const r=11+Math.sin(t*8)*1.5;ctx.save();ctx.shadowColor='#ffd23f';ctx.shadowBlur=14;ctx.fillStyle='#ffd23f';drawStar(ctx,sx,starY,r,t*1.5);ctx.fill();ctx.shadowBlur=0;ctx.lineWidth=2;ctx.strokeStyle='#a86a08';ctx.stroke();ctx.fillStyle='#fff6c0';drawStar(ctx,sx-2,starY-2,r*0.35,t*1.5);ctx.fill();ctx.restore()}
+  const age=t-S.starT;if(S.starGot&&age<0.6){ctx.save();ctx.globalAlpha=1-age/0.6;ctx.strokeStyle='#ffd23f';ctx.lineWidth=3;ctx.beginPath();ctx.arc(BX,S.bird.y,10+age*90,0,7);ctx.stroke();for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.fillStyle='#fff2a0';drawStar(ctx,BX+Math.cos(a)*age*120,S.bird.y+Math.sin(a)*age*120,5,age*6);ctx.fill()}ctx.restore()}}
  // ground
  ctx.fillStyle='#ddd894';ctx.fillRect(0,GROUND,GW,GAH-GROUND);ctx.fillStyle='#73c84e';ctx.fillRect(0,GROUND,GW,8);ctx.fillStyle='#5aa83a';ctx.fillRect(0,GROUND+8,GW,2);ctx.fillStyle='#c9c07a';for(let i=-1;i<GW/14+1;i++){const x=i*14-((run*V)%14);ctx.beginPath();ctx.moveTo(x,GROUND+10);ctx.lineTo(x+7,GROUND+10);ctx.lineTo(x+14,GAH);ctx.lineTo(x+7,GAH);ctx.fill()}
  // ghosts: co-pilot green birds with a glow, and green taps from hands that are not yours

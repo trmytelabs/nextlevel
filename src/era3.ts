@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import {ERAS,TRANS,W,H,rngf,hash,clamp,lerp,blip,noise} from './core';
+import {ERAS,TRANS,W,H,rngf,hash,clamp,lerp,blip,noise,bar} from './core';
+import {eggFind} from './eggs';
 
 // ---------- ERA 3: arcade racer. Tri-oval with banked turns, traffic to overtake, each lyric line an overhead gantry you drive under ----------
 export const E3=(()=>{
@@ -23,7 +24,9 @@ function frame(s:number,out=newFrame()){const u=wrapU(s);curve.getPointAt(u,out.
  const bank=clamp(-Math.sign(cr)*Math.max(0,Math.abs(cr)-0.08)*1.3,-0.3,0.3),c=Math.cos(bank),sn=Math.sin(bank);
  const r0=out.right0.crossVectors(out.T,UP).normalize();out.right.copy(r0).multiplyScalar(c).addScaledVector(UP,sn);out.up.copy(UP).multiplyScalar(c).addScaledVector(r0,-sn);
  out.lift=Math.abs(sn)*ROADW*1.14+0.02;out.p.y+=out.lift;out.bank=bank;out.curv=cr;return out}
-function init(t){const r=rngf(31);S={s:Math.max(0,t-(start-TRANS))*SPEED,x:0,vx:0,speedK:1,shake:0,flash:0,score:0,words:0,spawned:0,missed:0,line:[],passes:0,overtakes:0,bumps:0,cars:[],lap:0,lyr:[],planT:0,planLane:null};
+function init(t){const r=rngf(31);S={s:Math.max(0,t-(start-TRANS))*SPEED,x:0,vx:0,speedK:1,shake:0,flash:0,score:0,words:0,spawned:0,missed:0,line:[],passes:0,overtakes:0,bumps:0,cars:[],lap:0,lyr:[],planT:0,planLane:null,
+  // secret 3: a rainbow pad in the left lane, reached at bar 46 (just after the "every lap" gate). A player who drives over it finds it.
+  padS:(bar(46)-(start-TRANS))*SPEED,padX:LANES[0],padGot:false,rainbow:0};
  for(let i=0;i<NCARS;i++){const x=LANES[Math.floor(r()*4)];S.cars.push({i,s:S.s+30+i*26+r()*8,x,tx:x,sp:SPEED*(0.9+r()*0.05),col:CARCOL[i%CARCOL.length],word:null,ahead:true,passed:false,ph:r()*6,changeT:1+r()*3})}}
 function rel(c){let d=c.s-S.s;d=((d+L/2)%L+L)%L-L/2;return d}
 function gap(a,b){let d=b.s-a.s;d=((d+L/2)%L+L)%L-L/2;return d}
@@ -80,6 +83,8 @@ function update(dt,t,inp,auto){if(t<start-TRANS||t>=end)return;// the autopilot 
   if(d<-45){c.s+=L*0.5+45;c.ahead=true} // recycled half a lap away (as lapped traffic it keeps its passed flag)
   if(Math.abs(d)<HIT_S&&Math.abs(c.x-S.x)<HIT_X){const push=S.x<c.x?-1:1;S.x=clamp(S.x+push*2.2*dt,-0.9,0.9);if(d>0)S.s-=Math.min(HIT_S-d,SPEED*dt)*0.5;if(S.shake<=0){S.bumps++;S.speedK=0.86;S.score=Math.max(0,S.score-30);noise(0.1,0.3,1200);blip(110,0.2,0.12)}S.shake=0.3}}
  for(const w of S.lyr){const before=w.s-ps,after=w.s-S.s;if(!w.got&&!w.missed&&before>0&&after<=0){if(Math.abs(S.x-w.x)<0.36){w.got=t;S.words++;S.score+=300;S.line=[w.text];S.flash=Math.max(S.flash,0.3);blip(1568,0.1,0.12);blip(2093,0.16,0.08)}else{w.missed=true;S.missed++;blip(220,0.12,0.08)}}}
+ if(!S.padGot&&!auto){const before=S.padS-ps,after=S.padS-S.s;if(before>0&&after<=0&&Math.abs(S.x-S.padX)<0.4){S.padGot=true;S.rainbow=1.8;S.speedK=1.3;S.flash=0.5;S.score+=500;eggFind(2,false)}}
+ S.rainbow=Math.max(0,S.rainbow-dt);
  if(S.lyr.length&&S.lyr[0].s-S.s<=-70)S.lyr=S.lyr.filter(w=>(w.s-S.s)>-70);
  S.shake=Math.max(0,S.shake-dt);S.flash=Math.max(0,S.flash-dt)}
 function hudText(ctx,s,x,y){ctx.strokeText(s,x,y);ctx.fillText(s,x,y)}
@@ -87,5 +92,6 @@ function overlay(ctx,t){if(t<start-TRANS*0.3||t>=end)return;const a=clamp((t-(st
  const pos=clamp(1+NCARS-S.passes,1,NCARS+1);ctx.font="12px 'Press Start 2P',monospace";ctx.lineWidth=4;ctx.strokeStyle='#102040';ctx.fillStyle='#ffe066';hudText(ctx,'POS '+pos+'/'+(NCARS+1),20,86);
  ctx.font="9px 'Press Start 2P',monospace";ctx.fillStyle='#fff';hudText(ctx,'SCORE '+S.score,20,106);ctx.fillStyle='#5df2ff';hudText(ctx,'LINES '+S.words+'/'+S.spawned+'   PASSES '+S.overtakes,20,124);
  ctx.textAlign='right';ctx.font="14px 'Press Start 2P',monospace";ctx.fillStyle='#ffe066';const kmh=Math.round(288*S.speedK+Math.sin(t*20)*2);hudText(ctx,kmh+' KM/H',W-20,90);ctx.font="8px 'Press Start 2P',monospace";ctx.fillStyle='#fff';hudText(ctx,'LAP '+(S.lap+1),W-20,108);ctx.textAlign='left';
+ if(S.rainbow>0){ctx.textAlign='center';ctx.font="18px 'Press Start 2P',monospace";const tx='RAINBOW BOOST!';let x0=W/2-ctx.measureText(tx).width/2;ctx.textAlign='left';for(let i=0;i<tx.length;i++){ctx.fillStyle=`hsl(${(i*28+t*400)%360},100%,62%)`;hudText(ctx,tx[i],x0,H*0.3);x0+=ctx.measureText(tx[i]).width}}
  if(S.flash>0){ctx.fillStyle=`rgba(93,242,255,${S.flash*0.35})`;ctx.fillRect(0,0,W,H)}ctx.restore()}
 return{init,onLine,update,overlay,frame,newFrame,get S(){return S},K:{ROADW,L,SPEED,LANES,curve,start,end}}})();

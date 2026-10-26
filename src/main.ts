@@ -9,6 +9,7 @@ import {E3GL} from './era3gl';
 import {E1GL} from './era1gl';
 import {CRT} from './crt';
 import {NOTES} from './patchnotes';
+import {EGG,eggReset,eggToast,eggEndLine,eggCount} from './eggs';
 import {START} from './startgl';
 import {MUSIC} from './music';
 import {SONG,loadSong,songTime,songSeek,songPlay,songPause,nudge,tap,clearTaps,saveTiming} from './song';
@@ -16,7 +17,7 @@ import {SONG,loadSong,songTime,songSeek,songPlay,songPause,nudge,tap,clearTaps,s
 // ---------- transport, compositing, HUD ----------
 let songT=0,playing=true,startUp=false,idleT=0,sway0=0,soundChosen=false,lastNow=performance.now(),ended=false,lastBeatT=-1,beatIdx=0,songArmed=false,seeks=0,etmUsed=false;
 // lastBeatT/beatIdx are reset so the era-5 glitch (keyed off the last beat) does not depend on where we seeked from
-function seek(t){hideStart();seeks++;lineIdx=-1;songT=clamp(t,0,TOTAL);lastBeatT=-1;beatIdx=Math.floor(songT/BEAT);ensureGL(songT);E1.init(songT);E2.init(songT);E3.init(songT);E4.init(songT);E5.init(songT);ended=false;songSeek(songT)}
+function seek(t){if(t<0.5)eggReset();hideStart();seeks++;lineIdx=-1;songT=clamp(t,0,TOTAL);lastBeatT=-1;beatIdx=Math.floor(songT/BEAT);ensureGL(songT);E1.init(songT);E2.init(songT);E3.init(songT);E4.init(songT);E5.init(songT);ended=false;songSeek(songT)}
 function setPlaying(v){playing=v;$('#play').textContent=playing?'PAUSE':'PLAY';if(playing)songPlay().then(ok=>{if(!ok)setPlaying(false)});else songPause()}
 function togglePlay(){if(startUp){startGame();return}if(ended){seek(0);setPlaying(true)}else setPlaying(!playing)}
 function toggleClick(){soundChosen=true;ensureAC();setClickOn(!clickOn);$('#click').textContent='SOUND: '+(clickOn?'ON':'OFF');$('#click').classList.toggle('on',clickOn)}
@@ -92,7 +93,10 @@ const HEL:any={},HTX:any={};function setTxt(id:string,s:string){if(HTX[id]===s)r
 // side-pad labels follow the stage (see #pads in index.html and the pad code in core.ts)
 const PADL=['< MOVE >','< MOVE >\nPUSH UP · JUMP','< STEER >','TAP · FLAP','DRAG HERE\nTO AIM\nTHE SABER'],PADA=['FIRE','JUMP','','FLAP',''],PADR=['HOLD · RAPID FIRE','HOLD · JUMP HIGHER','','TAP · FLAP','DRAG HERE\nTO AIM\nTHE SABER'];let padE=-1;
 function padLabels(e){if(e===padE||!MOBILE)return;padE=e;$('#padLl').textContent=PADL[e];$('#padA').textContent=PADA[e];$('#padRl').textContent=PADR[e];document.body.classList.toggle('noA',e===2);document.body.classList.toggle('aim',e===4)}
-function hud(t,auto){const e=eraAt(t),tr=transAt(t);padLabels(e);document.body.classList.toggle('e1',e===0);document.body.classList.toggle('e4',e===3);document.body.classList.toggle('endcard',t>=bar(94.9));setTxt('era',tr?ERAS[tr.from].name+'  >  '+ERAS[tr.to].name:ERAS[e].name);
+function hud(t,auto){const e=eraAt(t),tr=transAt(t);padLabels(e);
+ // secrets: a short toast when one is found, and a line on the end card
+ {const on=performance.now()-EGG.lastT<2600;if(on)setTxt('eggT',eggToast());(HEL.eggT||(HEL.eggT=$('#eggT'))).classList.toggle('on',on);setTxt('eggEnd',eggEndLine());document.body.classList.toggle('egg5',eggCount()===5)}
+document.body.classList.toggle('e1',e===0);document.body.classList.toggle('e4',e===3);document.body.classList.toggle('endcard',t>=bar(94.9));setTxt('era',tr?ERAS[tr.from].name+'  >  '+ERAS[tr.to].name:ERAS[e].name);
  setTxt('clock','BAR '+(Math.floor(t/BAR)+1)+' · '+(Math.floor((t%BAR)/BEAT)+1)+'  ·  '+BPM+' BPM'+(SONG.has?'  ·  SONG '+(SONG.offset>=0?'+':'')+SONG.offset.toFixed(2)+'s'+(SONG.taps.length?'  ·  TAP '+SONG.taps.length+'/'+LYRICS.length:''):''));
  let line='',idx=-1;for(let i=0;i<LYRICS.length;i++){const s=bar(LYRICS[i][0]);if(t<s)break;idx=i;const nx=LYRICS[i+1]?bar(LYRICS[i+1][0]):1e9;if(t-s<Math.min(nx-s,bar(1.9)))line=LYRICS[i][1];else line=''}
  // only consume the line index when the line is actually dispatched: a seek/scrub while paused used to mark the line as
@@ -121,7 +125,7 @@ Object.assign(HK,{togglePlay,toggleClick,cycleAuto,toggleCaptions,seek,nudge,tap
 // auto=false steps with the live keyboard/touch state (ETM.input()) instead of autopilot, for manual-play cases.
 const NOINP={left:false,right:false,up:false,down:false,fire:false,fireHeld:false,jump:false,upEdge:false,mv:{x:0,y:0}};
 (window as any).ETM={seek(t){etmUsed=true;seek(t)},step(secs,auto=true){etmUsed=true;hideStart();stepping=true;try{const n=secs>0?Math.max(1,Math.round(secs*60)):0,dt=n?secs/n:0;for(let i=0;i<n;i++){const inp=auto?NOINP:readInput();const prev=songT;songT=Math.min(TOTAL,songT+dt);ensureGL(songT);const pb=Math.floor(prev/BEAT),cb=Math.floor(songT/BEAT);if(cb!==pb){beatIdx=cb;lastBeatT=songT;onBeat(cb,songT,auto)}const p8=Math.floor(prev/(BEAT/2)),c8=Math.floor(songT/(BEAT/2));if(c8!==p8)on8th(c8,songT,auto);hud(songT,auto);E1.update(dt,songT,inp,auto);E2.update(dt,songT,inp,auto);E3.update(dt,songT,inp,auto);E4.update(dt,songT,inp,auto);E5.update(dt,songT,inp,auto);if(!auto)clearEdges()}render(songT,auto);hud(songT,auto)}finally{stepping=false}},
- render(){if(!startUp)render(songT,true);cards(songT)},showStart(){etmUsed=true;seek(0);showStart()},idle(dt:number){etmUsed=true;idleT+=dt},start:()=>startGame(),input:()=>readInput(),now:()=>songT,lyrics:LYRICS,raw:{e1:()=>(E1 as any).S,e2:()=>(E2 as any).S,e3:()=>E3.S,e4:()=>E4.S,e5:()=>E5.S},errs:[] as any[],setAuto(m:string){etmUsed=true;hideStart();autoMode=m;$('#autoBtn').textContent=AUTO_LABEL[autoMode]},setPlaying(v:boolean){etmUsed=true;hideStart();setPlaying(v)},
+ render(){if(!startUp)render(songT,true);cards(songT)},showStart(){etmUsed=true;seek(0);showStart()},idle(dt:number){etmUsed=true;idleT+=dt},start:()=>startGame(),input:()=>readInput(),now:()=>songT,lyrics:LYRICS,eggs:EGG,ptr,raw:{e1:()=>(E1 as any).S,e2:()=>(E2 as any).S,e3:()=>E3.S,e4:()=>E4.S,e5:()=>E5.S},errs:[] as any[],setAuto(m:string){etmUsed=true;hideStart();autoMode=m;$('#autoBtn').textContent=AUTO_LABEL[autoMode]},setPlaying(v:boolean){etmUsed=true;hideStart();setPlaying(v)},
  probe(){const sum=(S:any)=>{if(!S||typeof S!=='object')return null;const o:any={},bad:string[]=[];const walk=(v:any,path:string,depth:number)=>{if(typeof v==='number'){if(!isFinite(v))bad.push(path)}else if(v&&typeof v==='object'&&depth<4){if(Array.isArray(v)){if(v.length<=64)v.forEach((x,i)=>walk(x,path+'['+i+']',depth+1))}else for(const k in v){if(k.startsWith('_')||k==='g'||k==='mesh'||k==='map')continue;walk(v[k],path+'.'+k,depth+1)}}};walk(S,'',0);for(const k in S){const v=S[k];if(typeof v==='number'||typeof v==='boolean'||typeof v==='string')o[k]=v;else if(Array.isArray(v))o[k+'#']=v.length;else if(v&&typeof v==='object'){const q:any={};for(const kk in v){const vv=v[kk];if(typeof vv==='number'||typeof vv==='boolean'||typeof vv==='string')q[kk]=vv}o[k]=q}}return{bad,...o}};
   return{t:songT,bar:songT/BAR,era:eraAt(songT),playing,ended,start:startUp,sound:clickOn,lyricIdx:lineIdx,caption:lyricShown,quality:QUALITY,mobile:MOBILE,gl:{e5:E5GL.ok,e3:E3GL.ok},e1:sum((E1 as any).S),e2:sum((E2 as any).S),e3:sum(E3.S),e4:sum(E4.S),e5:sum(E5.S)}}};
 addEventListener('error',e=>(window as any).ETM.errs.push(String(e.message||e)));addEventListener('unhandledrejection',e=>(window as any).ETM.errs.push('rejection: '+String((e as any).reason)));

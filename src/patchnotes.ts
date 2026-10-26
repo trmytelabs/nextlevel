@@ -15,6 +15,7 @@ export const NOTES:{title:string,sub:string,secs:Sec[]}={
    'MOBILE: a one-thumb flyer on a phone screen, with notifications arriving as you play.',
    'VR: a saber lane. One saber follows your mouse or finger, and an AI co-pilot builds the arena from what you cut.',
    'Autopilot plays every stage and aims for every lyric. Press any key or touch to take over.',
+   'Five hidden secrets, one per stage, for players who go exploring (the autopilot never takes them). Find all five for a special ending.',
    'Plays fully on phones: a thumb stick and action button beside the screen in landscape, or under it like a handheld when upright. In the finale either pad aims the saber.',
    'Forgiving deaths, captions, pause, scrubbing and a low-FX mode for older phones.']},
   {h:'UNDER THE HOOD',items:[

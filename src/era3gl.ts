@@ -85,6 +85,13 @@ function loft(liv,idx){const pos:number[]=[],uv:number[]=[],idxs:number[][]=[[],
  const mats=[new THREE.MeshLambertMaterial({map:sideTex(liv,idx,false),flatShading:true}),new THREE.MeshLambertMaterial({map:sideTex(liv,idx,true),flatShading:true}),new THREE.MeshLambertMaterial({map:topTex(liv),flatShading:true}),flat(0x14202e),flat(liv.b)];
  return new THREE.Mesh(g,mats)}
 let blobT:THREE.Texture|null=null;
+// secret 3: the rainbow pad (a scrolling rainbow plate with a light beam over it so it reads from far away)
+let pad:THREE.Group|null=null,padTex:THREE.CanvasTexture|null=null;
+function makePad(){const c=document.createElement('canvas');c.width=64;c.height=256;const x=c.getContext('2d')!;for(let i=0;i<256;i++){x.fillStyle=`hsl(${i/256*720},100%,50%)`;x.fillRect(0,i,64,1)}
+ x.fillStyle='rgba(255,255,255,.85)';for(let k=0;k<4;k++){const y=k*64+20;x.beginPath();x.moveTo(12,y+24);x.lineTo(32,y);x.lineTo(52,y+24);x.lineTo(44,y+24);x.lineTo(32,y+10);x.lineTo(20,y+24);x.fill()}
+ padTex=new THREE.CanvasTexture(c);padTex.wrapT=THREE.RepeatWrapping;padTex.repeat.set(1,1.5);const g=new THREE.Group();
+ const plate=new THREE.Mesh(new THREE.PlaneGeometry(ROADW*0.36,9),new THREE.MeshBasicMaterial({map:padTex,transparent:true,opacity:1,toneMapped:false,fog:false}));plate.rotation.x=-Math.PI/2;plate.position.y=0.06;g.add(plate);
+ const beam=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.6,26,12,1,true),new THREE.MeshBasicMaterial({color:0xfff2a0,transparent:true,opacity:0.18,side:THREE.DoubleSide,depthWrite:false}));beam.position.y=13;g.add(beam);g.userData.beam=beam;return g}
 function blobTex(){if(!blobT){blobT=canvasTex(64,128,x=>{x.scale(1,2);const g=x.createRadialGradient(32,32,8,32,32,32);g.addColorStop(0,'rgba(0,0,0,.6)');g.addColorStop(0.55,'rgba(0,0,0,.4)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,64,64)});blobT.magFilter=THREE.LinearFilter}return blobT}
 function makeCar(liv,idx=0){const g=new THREE.Group();const body=loft(liv,idx);g.add(body);const dark=flat(0x111115),chrome=flat(0xd0d0d8);
  // bumpers, splitter, spoiler and struts, roof flaps, mirror, exhaust
@@ -226,6 +233,7 @@ export const E3GL={init,get ok(){return ok},canvas:()=>renderer.domElement,
    const rise=clamp((t-w.t0)/0.35,0,1);gt.g.scale.y=Math.max(0.01,1-(1-rise)*(1-rise)); // gantry drops in instead of popping
    if(gt.kit){if(st==='live')(gt.marker.material as any).color.setHex(LANE_ON).multiplyScalar(0.75+0.25*Math.sin(t*10))}else gt.marker.scale.y=1+(st==='live'?Math.sin(t*10)*0.3+0.3:0);gt.chev.position.y=gt.chevY0+(st==='live'?Math.sin(t*6)*0.25:0);gt.text.position.y=gt.textY0+gotA*4;(gt.text.material as any).opacity=w.got?1-gotA:1;gt.g.visible=d>-60&&d<240}
   for(const [w,gt] of gantries){if(gt.tick!==_tick){disposeGantry(gt);gantries.delete(w)}}
+  if(!pad){pad=makePad();scene.add(pad)}{const d=S.padS-S.s;pad.visible=!S.padGot&&d>-8&&d<260;if(pad.visible){const f=E3.frame(S.padS,_fb);pad.position.copy(f.p).addScaledVector(f.right,S.padX*ROADW).addScaledVector(f.up,0.02);orient(pad,f);padTex!.offset.y=-t*1.6;(pad.userData.beam.material as any).opacity=0.12+0.08*Math.sin(t*6)}}
   for(const r of reels){_q.setFromAxisAngle(_Y,t*2.4+r.userData.ph);r.quaternion.copy(r.userData.q0).multiply(_q)}
   // chase camera: 10.5 behind, rolls with 60% of the banking so the horizon tilts without swinging
   const f=E3.frame(S.s-10.5,_fb),fp=E3.frame(S.s,_fc);camera.position.copy(f.p).addScaledVector(f.right,S.x*ROADW*0.5).addScaledVector(f.up,3.8);

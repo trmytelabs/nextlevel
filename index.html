@@ -91,6 +91,11 @@ body.endcard #endbtns{display:flex}
  .pad{top:calc(env(safe-area-inset-top,0px) + 100vw*9/16);bottom:var(--barH,110px)}
  #padL{left:0}#padR{right:0}
 }
+#eggT{left:50%;top:3%;transform:translateX(-50%) scale(.9);color:#ffd23f;font-size:clamp(7px,1.2vw,14px);opacity:0;transition:opacity .25s,transform .25s;text-align:center;padding:.7em 1em;background:rgba(10,6,24,.78);border:1px solid rgba(255,210,63,.6);text-shadow:0 0 8px rgba(255,210,63,.6)}
+#eggT.on{opacity:1;transform:translateX(-50%) scale(1)}
+#eggEnd{display:none;left:5%;right:5%;bottom:21%;text-align:center;color:#c9a8ff;font-size:clamp(6px,.9vw,11px);white-space:pre-line;line-height:1.9}
+body.endcard #eggEnd{display:block}
+body.egg5 #eggEnd{color:#ffd23f;font-size:clamp(7px,1.15vw,14px);text-shadow:0 0 10px rgba(255,210,63,.7)}
 body.start #hud .tag{display:none}
 body.start canvas#c{cursor:pointer}
 body.e1 #lyric{bottom:26%}
@@ -118,6 +123,8 @@ body.e4 #lyric{left:3%;right:64%;bottom:30%;text-align:left}
   <div class="tag" id="era">1 · ARCADE</div>
   <div class="tag" id="clock">BAR 1 · 1</div>
   <div class="tag" id="lyric"></div>
+  <div class="tag" id="eggT"></div>
+  <div class="tag" id="eggEnd"></div>
   <div class="tag" id="auto">AUTOPILOT ON · press any key to play</div>
   <div class="tag" id="help">WASD / ARROWS MOVE · SPACE FIRE / JUMP · Q AUTOPILOT · M SOUND · L CAPTIONS · G FX · P PAUSE · 1-5 ERA</div>
   <div id="bar">

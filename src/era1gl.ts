@@ -112,7 +112,7 @@ function render(t:number){const S=E1.S;if(!S)return;
  // voxel words
  syncWords(S,t);let n=0;const pulse=1+S.pulse*0.18;
  for(const r of track){if(r.dead)continue;const a=E1.alphaOf(r.ln,t)*pulse;if(a<=0)continue;
-  for(let k=0;k<r.on.length&&n<MAXV;k++){if(!r.on[k])continue;cellPos(r,k,t,v3);if(-v3.z<ZDECK)continue;setM(vox,n,v3.x,v3.y,v3.z,CELL*SU*0.9,EXT,CELL*ROWD*0.94);setC(vox,n,a,a,a);n++}}
+  for(let k=0;k<r.on.length&&n<MAXV;k++){if(!r.on[k])continue;cellPos(r,k,t,v3);if(-v3.z<ZDECK)continue;setM(vox,n,v3.x,v3.y,v3.z,CELL*SU*0.9,EXT,CELL*ROWD*0.94);if(r.w.gold){const s=0.85+0.4*(0.5+0.5*Math.sin(t*7+k*0.6));setC(vox,n,a*1.25*s,a*0.72*s,a*0.16)}else setC(vox,n,a,a,a);n++}}
  commit(vox,n);
  // chip debris
  let nd=0;for(let i=0;i<MAXD;i++){const s=t-D.t0[i];if(s<0||s>LIFE)continue;const y=Math.max(-CAMH,D.p[i*3+1]+D.v[i*3+1]*s-0.5*GRAV*s*s),sz=0.2*(1-s/LIFE)+0.04,f=1-s/LIFE;

@@ -16,7 +16,7 @@ const LOW=QUALITY==='low';
 // ---------- ERA 5 in WebGL: a VR saber lane. Word blocks fly at you on the beat, you cut them, and an AI co-pilot builds the arena out of them ----------
 const {SPD,LEAD,COLS,ROWS,TUNNEL,OUT,s5,HIT,BACK,EYE,COLW,ROW0,ROWH,fovAt}=E5.K;
 const CYAN=0x4df0ff,MAG=0xff5be0,YEL=0xffe14d,ORG=0xff9a3c,GRN=0x5bff5b,VIO=0xb07cff;
-const HUEX=[MAG,CYAN,VIO]; // matches E5.K.HUES: block / piece colour per lyric line
+const HUEX=[MAG,CYAN,VIO,0xffc21a]; // [3] = the golden secret block // matches E5.K.HUES: block / piece colour per lyric line
 const COLZ=(c:number)=>(c-1.5)*COLW,ROWY=(r:number)=>ROW0+r*ROWH; // hit plane is HIT units ahead of the player (HIT+BACK from the camera)
 const LANEZ=COLS/2*COLW+0.15,PIECEZ=3.6; // rails, and where side pieces stand
 let ok=false,renderer:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.PerspectiveCamera,composer:EffectComposer,bloom:UnrealBloomPass;
