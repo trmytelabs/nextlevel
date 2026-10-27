@@ -7,6 +7,19 @@
 - Play it: https://nextlevel.patchnotes.ca (mirror: https://trmytelabs.github.io/nextlevel/)
 - It plays itself. Press any key or touch a pad to take over; the autopilot picks back up after two idle seconds. Leave the title screen alone and a muted demo runs.
 
+## Technical highlights
+
+- **Five game engines in one page.** A perspective-projection crawl with per-pixel hit-testing and voxel words (arcade); fixed-tick 60 Hz platform physics with a receding-horizon planning autopilot (32-bit); a Catmull-Rom spline speedway with banking, traffic and a lane planner (3D console); a one-thumb flyer on a simulated phone (mobile); a rhythm lane with pointer-driven saber sweep detection (VR).
+- **Deterministic simulation on the beat clock.** Seeded hashes, never `Math.random`; `seek(t)` rebuilds every stage from scratch, so any moment replays exactly. That is what makes a three-minute game testable.
+- **Song-driven timing.** Each song ships a timing map (tempo, length, the second every lyric line starts). A piecewise-linear timeline maps the original 128 BPM layout onto the song, so all five stages re-time themselves to whatever song is loaded.
+- **Lyrics timed by machine.** faster-whisper word timestamps, aligned to the lyric sheet with a Needleman-Wunsch sequence alignment: 339 of 352 words matched for Press Start. Tempo and length come from a small onset-autocorrelation analysis of the audio.
+- **3D built by code.** Three.js / WebGL for three stages with bloom and a CRT shader; Blender scripts generate the cars, speedway scenery and finale kit headlessly; the synthwave towers, palms, car and fireworks are procedural and instanced.
+- **Tested like a product.** A puppeteer harness plays the whole video in headless Edge or Chrome with software WebGL: 65 checks on desktop and 97 in an iPhone emulation pass (collisions, respawns, lyric timing, autopilot coverage, controls, the secrets, seeking), plus screenshot regression and per-stage performance budgets.
+- **Full CI/CD.** GitHub Actions type-checks, builds, runs the suite, then builds a Docker image and smoke-tests it read-only with every capability dropped. Merges to `main` publish it to GHCR and deploy it to a VPS through an SSH key locked to one command, with a health check, automatic rollback, and a final check that the live site serves the new commit.
+- **Secure by default.** HTTPS end to end behind Cloudflare with an origin certificate, a server that only accepts Cloudflare traffic, an unprivileged read-only container, and a strict Content-Security-Policy, HSTS and other security headers.
+- **Plays on phones.** Thumb pads beside the screen (or under it when upright) with per-stage labels, notch-safe layout, an automatic low-FX tier, and audio that starts on the first tap.
+- **Directed with AI agents.** Built with Claude Code over about 100 commits: review agents played every stage and reported problems, and every fix was confirmed by a test.
+
 ## The five stages
 
 | Stage | Chapter | How you play the lyrics |
