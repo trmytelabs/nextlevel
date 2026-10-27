@@ -76,7 +76,7 @@ function update(dt,t,inp,auto){if(t<s5-TRANS)return;S.t=t;S.dist=xAt(t);S.tunnel
 // "Ready when you are. Press start." and the card's prompt are never on screen together. Times in bars.
 const CARD={fly:94.0,lock:95.0,name:95.0,nameIn:0.125,prog:95.19,invite:95.3,credit:95.45,capOff:95.5,prompt:95.625,
  nameY:0.48,progY:0.567,inviteY:0.64,creditY:0.69,promptY:0.80,nameFont:40,progFont:11,copilotX:0.875}; // layout: canvas fractions / px
-const CT={name:'IAN GINN',sep:'  ·  ',prog:"FOR THE DEPUTY'S MAXIMALISTS",invite:'Imagine what we could build together.',credit:'Built with AI agents, asking to build with people.',prompt:'READY WHEN YOU ARE  ·  PRESS START'};
+const CT={name:'IAN GINN',sep:'  ·  ',prog:"INSPIRED BY THE DEPUTY'S MAXIMALISTS",invite:'Imagine what we could build together.',credit:'Built with AI agents, asking to build with people.',prompt:'READY WHEN YOU ARE  ·  PRESS START'};
 const ease3=(x:number)=>1-Math.pow(1-clamp(x,0,1),3);
 function card(ctx:CanvasRenderingContext2D,t:number){const b=cbInv(t);if(b<CARD.fly)return;const dpr=ctx.getTransform().a||1;
  // the hold after the song ends keeps the prompt alive on the wall clock (t stops at TOTAL)

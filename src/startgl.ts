@@ -104,7 +104,7 @@ function type(x:CanvasRenderingContext2D,a:number,it:number,nameA:number){if(a<=
  x.globalAlpha=1;
  const pl=plate('IAN GINN',MOBILE?40:36);drawPlate(x,pl,W/2,NAMEY,{a:nameA,sweep:((it%5)-0.6)/1.1});
  if(a<=0){x.restore();return}x.globalAlpha=a;
- text(x,"FOR THE DEPUTY'S MAXIMALISTS",W/2,MOBILE?214:204,Math.round(12*k),'#5bff5b');
+ text(x,"INSPIRED BY THE DEPUTY'S MAXIMALISTS",W/2,MOBILE?214:204,Math.round(12*k),'#5bff5b');
  text(x,'I leveled up the way gaming did.',W/2,238,Math.round(11*k),'#ffffff');
  text(x,'Just a lot faster.',W/2,261,Math.round(11*k),'#ffe14d');
  // five chapters: one row of cartridges, the analogy at a glance (kept deliberately sparse: title, name, tagline, stages, start)

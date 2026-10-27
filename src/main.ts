@@ -96,7 +96,7 @@ function blitCRT(lo,t){if(CRT.ok){CRT.render(lo,t,1);ctx.save();ctx.imageSmoothi
 function drawE3(t){if(E3GL.ok){E3GL.render(t);ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(E3GL.canvas(),0,0,W,H);ctx.restore();E3.overlay(ctx,t)}else{ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font="10px 'Press Start 2P',monospace";ctx.fillText('WEBGL REQUIRED FOR THE RACER',W/2-150,H/2)}}
 function drawE5(t){if(E5GL.ok){E5GL.render(t);ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(E5GL.canvas(),0,0,W,H);ctx.restore();E5.overlay(ctx,t)}else E5.draw(ctx,t)}
 
-const CARD={name:'IAN GINN',program:"FOR THE DEPUTY'S MAXIMALISTS",title:'NEXT LEVEL',thesis:['I leveled up the way gaming did.','Just a lot faster.'],credit:'Built with AI agents, asking to build with people.',invite:'Imagine what we could build together.'};
+const CARD={name:'IAN GINN',program:"INSPIRED BY THE DEPUTY'S MAXIMALISTS",title:'NEXT LEVEL',thesis:['I leveled up the way gaming did.','Just a lot faster.'],credit:'Built with AI agents, asking to build with people.',invite:'Imagine what we could build together.'};
 function cards(t){ctx.setTransform(dpr,0,0,dpr,0,0);
  if(startUp){START.drawStart(ctx,idleT);return}
  if(t<START.FL_END){START.drawFlourish(ctx,t,sway0);return}
