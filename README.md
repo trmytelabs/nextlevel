@@ -2,7 +2,7 @@
 
 ![The finale: a synthwave saber lane with neon towers, palms and a pacing sports car](docs/era5-saber.jpg)
 
-**Next Level** is a three-minute music video you can play, made by Ian Ginn for the Deputy's Maximalists (Government of Alberta). Five generations of games stand for how he leveled up with AI, the same way gaming did, just a lot faster: from first prompts in a retro arcade to full development in a synthwave VR finale. The song, the stages and the end card all tell that story.
+**Next Level** is a three-minute music video you can play, made by Ian Ginn as a weekend project to learn by building. It was inspired by the Deputy's Maximalists music-video call (Government of Alberta) and is not an application to the program. Five generations of games stand for how he leveled up with AI, the same way gaming did, just a lot faster: from first prompts in a retro arcade to full development in a synthwave VR finale. The song, the stages and the end card all tell that story.
 
 - Play it: https://nextlevel.patchnotes.ca (mirror: https://trmytelabs.github.io/nextlevel/)
 - It plays itself. Press any key or touch a pad to take over; the autopilot picks back up after two idle seconds. Leave the title screen alone and a muted demo runs.
@@ -98,7 +98,7 @@ Screenshot regression: `node tools/test/visual/snap.mjs` compares frames against
 
 The image serves `dist/` with Caddy on port 8080 as an unprivileged user, on a read-only filesystem (`deploy/container.Caddyfile` holds the Content-Security-Policy, security headers and caching rules). On the VPS, the host's own Caddy terminates HTTPS with a Cloudflare origin certificate and only accepts connections from Cloudflare; DNS for patchnotes.ca is on Cloudflare. Pull requests from forks get no secrets and a read-only token, and never publish or deploy.
 
-`pages.yml` also publishes every push to `main` to https://trmytelabs.github.io/nextlevel/. The WordPress site on the same server has its Docker Compose setup, backup and restore scripts in `deploy/wp/`.
+`pages.yml` also publishes every push to `main` to https://trmytelabs.github.io/nextlevel/. `deploy/wp/` holds a Docker Compose setup and backup / restore scripts for moving a WordPress site onto the same server.
 
 ## Architecture
 
@@ -122,6 +122,10 @@ The image serves `dist/` with Caddy on port 8080 as an unprivileged user, on a r
 | `src/music.ts` | Generated score, used only with `?song=none` |
 
 The simulation is deterministic: seeded hashes, never `Math.random`, in sim code. `tools/blender/*.py` build the cars, speedway scenery and finale kit headlessly into `public/models/`.
+
+## Development notes
+
+`docs/notes/` keeps the working notes and reviews written while building it (they describe earlier builds). `LYRICS.md` has the lyrics and the Suno brief, and `tools/test/CASES.md` the test-case spec.
 
 ## Credits
 

@@ -29,7 +29,7 @@ puppeteer page if a case needs to drive input (`page.keyboard`, `page.touchscree
 - G6 (--mobile) canvas fits an iPhone landscape viewport, control bar does not overflow, no horizontal scroll, rotate card in portrait and dismissible.
 - G7 perf: sim cost per simulated second and render ms per era are logged to the report (software GL, so only relative).
 
-## Era 1 — 1978 arcade (`src/era1.ts`)  bars 0–19
+## Stage 1 — ARCADE · first prompts (`src/era1.ts`)  bars 0–19
 - E1.1 the title card covers bars 0–2 and the first lyric crawl starts after it; a word is on screen by bar 3.5.
 - E1.2 every lyric line dispatched in the era becomes crawl words (count words vs LYRICS lines with bar < 19).
 - E1.3 autopilot fires and chips pixels: `chips`/score increase over the era; no word is deleted whole by a single hit.
@@ -37,7 +37,7 @@ puppeteer page if a case needs to drive input (`page.keyboard`, `page.touchscree
 - E1.5 the shatter at bar 17 clears remaining words before the transition at bar 19; nothing from era 1 draws after bar 19.
 - E1.6 words are readable: bitmap scale at ZNEAR gives letters ≥ 10 px tall on the 480×270 canvas (screenshot check).
 
-## Era 2 — 1991 16-bit platformer (`src/era2.ts`)  bars 19–37
+## Stage 2 — 32-BIT · learning to ask (platformer) (`src/era2.ts`)  bars 19–37
 - E2.1 the player sprite is on screen on the very first frame of the era (bar 19.0, also at 18.9 during the transition).
 - E2.2 the runner stays on the ground; lyric phrases sit in ? blocks four tiles up and pop out when hit from below (plain bricks break); autopilot pops ≥ 50% of the phrases by the end of the era.
 - E2.3 enemies: walkers are stomped (count), flyers exist; the player never clips through ground (y never below ground level).
@@ -45,7 +45,7 @@ puppeteer page if a case needs to drive input (`page.keyboard`, `page.touchscree
 - E2.5 arms/legs animate: the run frame index advances while moving.
 - E2.6 camera never shows past the level end; SPEED gives a readable pace (player x advances ~50 px per beat).
 
-## Era 3 — 1997 Saturn racer (`src/era3.ts`, `src/era3gl.ts`)  bars 37–56
+## Stage 3 — 3D CONSOLE · directing agents (racer) (`src/era3.ts`, `src/era3gl.ts`)  bars 37–56
 - E3.1 GL renderer initialised (`gl.e3 === true`); car models load (GLB or loft fallback) without errors.
 - E3.2 lyric words fly in over the cars (h 22 → 3.2) and are collected by lane; `words` ≥ 70% of dispatched words.
 - E3.3 overtakes happen (`passes` increases), bumps are bounded (`bumps` < 25 for the era), position stays within 1..13.
@@ -53,13 +53,13 @@ puppeteer page if a case needs to drive input (`page.keyboard`, `page.touchscree
 - E3.5 HUD shows POS / SCORE / LINES / KM/H / LAP (overlay text present; screenshot).
 - E3.6 the chase camera never clips through the track; screenshots at bars 37.6, 46.5, 55.6 look like Daytona (stands, pits, banked turns).
 
-## Era 4 — 2013 mobile / flappy (`src/era4.ts`)  bars 56–75
+## Stage 4 — MOBILE · working from anywhere (flyer) (`src/era4.ts`)  bars 56–75
 - E4.1 pipes spawn every 2 beats; word signs sit in the gaps; the phone frame + status bar draw.
 - E4.2 autopilot flaps through: deaths ≤ 3 in the era, and auto-retry restarts within 1 s.
 - E4.3 words collected ≥ 70%.
 - E4.4 bridge (bars 66.5–75): ghost birds appear; at bar 73 the agents fly out right; the transition into era 5 at bar 75 is clean (no leftover phone frame after 75.3).
 
-## Era 5 — NOW: VR saber lane + AI co-pilot (`src/era5.ts`, `src/era5gl.ts`)  bars 75–96
+## Stage 5 — VR · full development (saber lane + AI co-pilot) (`src/era5.ts`, `src/era5gl.ts`)  bars 75–96
 - E5.0 the sabers follow the pointer: the hand on the pointer's half of the screen moves to the pointer, blocks are cut when a hand is within 0.7 cells at the beat (±0.22 s); autopilot swings each hand to its next block.
 - E5.1 GL renderer initialised (`gl.e5 === true`), no errors on high or low tier.
 - E5.2 blocks are planned from the lyric table and spawn LEAD seconds before their beat; `spawned` grows monotonically.

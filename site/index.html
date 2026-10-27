@@ -70,7 +70,7 @@
       <div class="card-body">
         <h2 id="feat-title" class="card-title">NEXT LEVEL</h2>
         <p class="pitch">My AI journey, told through five generations of games.</p>
-        <p class="meta">A three-minute playable music video. 1978 arcade, 1991 platformer, 1995 racer, 2013 phone game, then a VR lane where an AI co-pilot builds the arena out of every word you cut. It plays itself if you just want to watch.</p>
+        <p class="meta">A three-minute playable music video: a retro-3D arcade, a 32-bit platformer, a 3D racer and a phone game, then a synthwave VR saber lane where an AI co-pilot builds the arena out of every word you cut. It plays itself if you just want to watch.</p>
         <div class="actions">
           <a class="btn btn-play" href="https://nextlevel.patchnotes.ca/">
             <svg aria-hidden="true" viewBox="0 0 12 12" width="12" height="12"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg>
@@ -87,27 +87,27 @@
     <ol class="log" reversed>
       <li class="entry">
         <div class="entry-head">
-          <time datetime="2026-10-24">2026-10-24</time>
+          <time datetime="2026-10-26">2026-10-26</time>
           <span class="tag tag-magenta">NEXT LEVEL</span>
         </div>
-        <h3>Finale rebuilt as a VR saber lane with an AI co-pilot</h3>
-        <p>The last era was agents building a neon city ahead of a runner. It did not land, so it is now two sabers, word blocks on the beat, and a co-pilot that turns the words you cut into arches, pillars and rings ahead of you. The sabers follow your mouse or finger into the lane, and the headset-on transition at bar 75 is the moment the genre changes.</p>
+        <h3>A real song, and a game that follows it</h3>
+        <p>The soundtrack is now Press Start, made with Suno. Faster-whisper timed every lyric line (339 of 352 words matched), and the game re-times all five stages to whichever song is loaded, so a new song drops in without hand-timing.</p>
       </li>
       <li class="entry">
         <div class="entry-head">
-          <time datetime="2026-10-24">2026-10-24</time>
+          <time datetime="2026-10-26">2026-10-26</time>
           <span class="tag tag-cyan">NEXT LEVEL</span>
         </div>
-        <h3>Racer: one gantry per lyric line, not a word every half second</h3>
-        <p>Streaming individual words past the car was unreadable. Each line is now a single overhead gantry every two bars with the racing line lit on one lane; drive under it in that lane to take the line. Track widened, full-resolution antialiased render, and CC0 textures for asphalt, grass and walls. Fixed an inverted banking sign while in there.</p>
+        <h3>Full CI/CD to my own server</h3>
+        <p>Every push is type-checked, built and played through by a headless test suite, then packaged as a read-only, unprivileged Docker image and smoke-tested. Merges to main deploy it to a VPS behind Cloudflare, with health checks, automatic rollback and a check that the live site serves the new commit.</p>
       </li>
       <li class="entry">
         <div class="entry-head">
-          <time datetime="2026-10-24">2026-10-24</time>
+          <time datetime="2026-10-26">2026-10-26</time>
           <span class="tag tag-yellow">NEXT LEVEL</span>
         </div>
-        <h3>Platformer made Mario-proper, plus a headless test harness</h3>
-        <p>The 16-bit era now runs on the ground with pits and pipes; plain bricks shatter from below and ? blocks pop a phrase of the lyric. Behind it, a puppeteer-core harness drives the full three minutes in headless Edge, checks era boundaries and page errors, and runs on every push. Server side: a Caddy config with HTTPS and security headers, a restricted rsync deploy user, and a deploy workflow gated on the tests passing.</p>
+        <h3>Secrets, transitions and phone controls</h3>
+        <p>Five hidden secrets with a fireworks ending for finding them all, four new stage transitions (a pixel upgrade, a CRT power-off, a race that shrinks into a phone, a VR world that opens out of it), and thumb pads beside the screen on phones.</p>
       </li>
     </ol>
   </section>

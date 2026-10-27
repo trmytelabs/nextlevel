@@ -1,6 +1,6 @@
 # Landing page deploy (patchnotes.ca)
 
-The apex `patchnotes.ca` serves `site/` as plain static files from `/var/www/patchnotes` (copy `site/index.html`, `site/style.css`, plus `public/favicon-32.png` and `public/og.png` into that folder; nothing to build). The Next Level game stays on its own subdomain, `nextlevel.patchnotes.ca`, served from `/var/www/nextlevel`, which is where `deploy/server-setup.sh` + `.github/workflows/deploy.yml` already rsync the Vite build (run server-setup with `DOMAIN=nextlevel.patchnotes.ca`). DNS needs A/AAAA records for `patchnotes.ca`, `www`, and `nextlevel` pointing at the VPS; Caddy then issues all three certificates itself.
+The apex `patchnotes.ca` can serve `site/` as plain static files from `/var/www/patchnotes` (copy `site/index.html`, `site/style.css`, plus `public/favicon-32.png` and `public/og.png` into that folder; nothing to build). It is not live yet. The Next Level game is on its own subdomain, `nextlevel.patchnotes.ca`, deployed as a container by `.github/workflows/ci-cd.yml`; the host Caddy terminates HTTPS with a Cloudflare origin certificate and proxies to it. DNS is on Cloudflare: proxied records for `patchnotes.ca`, `www` and `nextlevel` point at the VPS, so the apex block below should use the same origin certificate as the `nextlevel` block rather than requesting its own.
 
 Add this block to `/etc/caddy/Caddyfile` next to the existing `nextlevel` site block, then `systemctl reload caddy`:
 

@@ -35,16 +35,18 @@ infection to the new box. Prefer re-downloading plugins and themes fresh from wo
 Any machine with Docker: run `restore.sh` against a throwaway VM or a second cheap VPS for an hour, log in to
 `/wp-admin`, click through pages, check uploads display. Only when that works is the backup proven.
 
-## 5. Wipe and rebuild (provider console → reinstall OS: Ubuntu 24.04 LTS)
+## 5. Restore onto the rebuilt server
+The VPS has already been rebuilt: its host Caddy terminates HTTPS (Cloudflare origin certificate, Cloudflare-only
+traffic) and the Next Level container is deployed by `.github/workflows/ci-cd.yml` through the server's `deploy-app`
+command. To bring WordPress back alongside it:
 ```
-scp -r deploy root@NEW_SERVER:/root/
-ssh root@NEW_SERVER 'DOMAIN=nextlevel.yourdomain.ca DEPLOY_PUBKEY="ssh-ed25519 AAAA... nextlevel-deploy@belt-pc" bash /root/deploy/server-setup.sh'
-scp wp-rescue-<date>.tar.gz root@NEW_SERVER:/root/
-ssh root@NEW_SERVER 'WP_DOMAIN=yourwordpress.ca bash /root/deploy/wp/restore.sh /root/wp-rescue-<date>.tar.gz'
+scp -r deploy/wp root@SERVER:/root/wp
+scp wp-rescue-<date>.tar.gz root@SERVER:/root/
+ssh root@SERVER 'WP_DOMAIN=yourwordpress.ca bash /root/wp/restore.sh /root/wp-rescue-<date>.tar.gz'
 ```
-What that gives you: Caddy with automatic HTTPS for both sites, WordPress + MariaDB in Docker on localhost only, daily
-DB dumps kept 14 days, firewall on 22/80/443, fail2ban, unattended security updates, xmlrpc and config probes blocked,
-login rate-limited, file editing from wp-admin disabled, the Next Level static site deployed by CI.
+That gives WordPress + MariaDB in Docker on localhost only, daily DB dumps kept 14 days, xmlrpc and config probes
+blocked, login rate-limited and file editing from wp-admin disabled. Then add a site block for the WordPress domain to
+the host Caddy (reverse proxy to the WordPress container), the same way the `nextlevel` block proxies to its container.
 
 ## 6. Cut over
 - [ ] Point the WordPress domain's A record at the new IP (and `www`).
@@ -52,7 +54,7 @@ login rate-limited, file editing from wp-admin disabled, the Next Level static s
       contact forms, and that mail still sends (a mail plugin with SMTP is more reliable than PHP mail in a container).
 - [ ] Update WordPress core, themes and plugins; delete unused plugins and themes; change the admin password; enable
       2FA (a plugin such as Two-Factor); make sure no account is named `admin`.
-- [ ] Once your own SSH key works for root: `HARDEN_SSH=1 bash server-setup.sh` to turn off password logins.
+- [ ] Confirm SSH is key-only (`PasswordAuthentication no` in `/etc/ssh/sshd_config.d/`).
 - [ ] Delete the old server (or keep it powered off for a week, then delete).
 
 ## 7. Keep it that way
@@ -60,4 +62,4 @@ login rate-limited, file editing from wp-admin disabled, the Next Level static s
   nightly `rsync` or `rclone` to object storage (Backblaze B2 or Cloudflare R2 cost cents).
 - Updates: `unattended-upgrades` handles the OS; WordPress minor core updates are automatic; check plugins monthly.
 - Monitoring: a free uptime check (UptimeRobot or Better Stack) on both domains, pointing alerts at your phone.
-- Rebuilding again later is `server-setup.sh` + `restore.sh`, nothing manual.
+- Rebuilding again later: reprovision the host, let CI/CD redeploy Next Level, then `restore.sh` for WordPress.

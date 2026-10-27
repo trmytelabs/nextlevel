@@ -1,10 +1,8 @@
 # Next Level — lyrics and Suno brief
 
-(Working title was "Everything, Then More", which stays as the chorus hook.)
+A playable music video about leveling up with AI the way gaming did, just a lot faster. The soundtrack is **Press Start**, made with Suno from the lyrics below (2:59, about 143 BPM).
 
-A playable music video submitted to join the Deputy's Maximalists. Five generations of games stand for two curves rising together: AI getting better, and me getting better at using it.
-
-128 BPM throughout. One bar = 1.875 s. 96 bars = 3:00. The game is timed to the bar map below. The lyric text here matches `LYRICS` in `src/core.ts` word for word; `src/core.ts` is the source of truth. The words are gameplay objects in every era, so if a line changes, change it there first.
+The lyric text here matches `LYRICS` in `src/core.ts` word for word, and `src/core.ts` is the source of truth: the words are gameplay objects in every stage, so a lyric change starts there. The game is not tied to one tempo: each song in `public/songs/<id>/` has a `map.json` with the second every line starts, and the stages re-time themselves to it (see the README).
 
 ## 1. Lyric sheet (paste into Suno's lyrics field)
 
@@ -74,7 +72,9 @@ The only limit now is how creative we are.
 Ready when you are. Press start.
 ```
 
-## 2. Bar map
+## 2. Bar map (the canonical layout)
+
+The game was laid out on this 128 BPM, 96-bar timeline. It is still the reference the stages and the test suite use; a song map moves every row to where that song sings it.
 
 Time = bar x 1.875 s. Era switches are the rows with no lyric.
 
@@ -88,14 +88,14 @@ Time = bar x 1.875 s. Era switches are the rows with no lyric.
 | 12 | 0:22.5 | Verse 1 (lift) | 1 · Arcade, first prompts | But I wanted it faster |
 | 14 | 0:26.3 | Verse 1 (lift) | 1 · Arcade, first prompts | And it kept getting new |
 | 17 | 0:31.9 | Verse 1 (lift) | 1 · Arcade, first prompts | (screen shatters, build into the drop) |
-| 19 | 0:35.6 | Chorus | 2 · 16-bit, learning to ask | Turn it up to eleven, then a little bit more |
-| 21 | 0:39.4 | Chorus | 2 · 16-bit, learning to ask | That's the only setting I've been looking for |
-| 23 | 0:43.1 | Chorus | 2 · 16-bit, learning to ask | Turn it all the way up, let the whole thing run |
-| 25 | 0:46.9 | Chorus | 2 · 16-bit, learning to ask | I don't do a little, I do everything, then some |
-| 27.5 | 0:51.6 | Verse 2 | 2 · 16-bit, learning to ask | Then the box talked back, and I talked back too |
-| 29.5 | 0:55.3 | Verse 2 | 2 · 16-bit, learning to ask | Taught myself the questions till the answers came true |
-| 31.5 | 0:59.1 | Verse 2 | 2 · 16-bit, learning to ask | Emails and briefings, every answer's a drum |
-| 33.5 | 1:02.8 | Verse 2 | 2 · 16-bit, learning to ask | I was learning in weeks what took years to come |
+| 19 | 0:35.6 | Chorus | 2 · 32-bit, learning to ask | Turn it up to eleven, then a little bit more |
+| 21 | 0:39.4 | Chorus | 2 · 32-bit, learning to ask | That's the only setting I've been looking for |
+| 23 | 0:43.1 | Chorus | 2 · 32-bit, learning to ask | Turn it all the way up, let the whole thing run |
+| 25 | 0:46.9 | Chorus | 2 · 32-bit, learning to ask | I don't do a little, I do everything, then some |
+| 27.5 | 0:51.6 | Verse 2 | 2 · 32-bit, learning to ask | Then the box talked back, and I talked back too |
+| 29.5 | 0:55.3 | Verse 2 | 2 · 32-bit, learning to ask | Taught myself the questions till the answers came true |
+| 31.5 | 0:59.1 | Verse 2 | 2 · 32-bit, learning to ask | Emails and briefings, every answer's a drum |
+| 33.5 | 1:02.8 | Verse 2 | 2 · 32-bit, learning to ask | I was learning in weeks what took years to come |
 | 37 | 1:09.4 | Verse 3 | 3 · 3D console, directing agents | (racer begins) |
 | 38 | 1:11.3 | Verse 3 | 3 · 3D console, directing agents | Back at my desk, and I built me a crew |
 | 40 | 1:15.0 | Verse 3 | 3 · 3D console, directing agents | One sums up the meetings, one gets the inbox through |
@@ -128,27 +128,19 @@ Time = bar x 1.875 s. Era switches are the rows with no lyric.
 
 ## 3. Suno style prompts
 
-One genre for the whole song (decided 2026-10-25: no genre-hopping). Synthwave pop matches the game's look, sits naturally at 128 BPM and keeps a steady four-on-the-floor grid the game can lock to. Make two generations (four songs) in Custom mode, title "Next Level", lyrics from section 1.
-
-Style A (bright):
+The song that stuck, **Press Start**, came from a 2000s baroque-pop indie-rock brief (artist names are not accepted by Suno, so the sound is described):
 
 ```
-synthwave pop, 128 BPM, 4/4, driving analog synth bass, gated reverb drums, bright retro arpeggios, anthemic chorus, confident male vocal, euphoric, steady tempo
-```
-
-Style B (darker, more drive):
-
-```
-outrun synthwave, 128 BPM, 4/4, pulsing sequenced bass, punchy 80s drums, soaring lead synth, big chorus, clear male vocal, nostalgic and driving, steady tempo
+2000s indie rock, baroque pop, anthemic, driving four-on-the-floor drums, urgent strummed guitars, soaring violins, piano, glockenspiel, accordion, building crescendos, earnest yelping male lead vocal, gang vocal chants, female harmonies, cathartic and euphoric
 ```
 
 Exclude styles:
 
 ```
-chiptune, dubstep, trap, half-time, tempo change, ballad, orchestral
+chiptune, dubstep, trap, rap, EDM, synthwave, autotune, country
 ```
 
-Timing: Suno cannot be forced onto an exact bar map, so pick the take whose tempo holds steady and whose length is closest to 3:00, then retime the game to the take (section 5), not the other way round.
+Also tried along the way: synthwave pop, outrun synthwave, indie synth-rock with a cool breathy female vocal, and indie pop-punk with a powerful belted vocal. Any take works: the game re-times itself to whichever song is loaded.
 
 ## 4. Production notes per section
 
@@ -172,21 +164,10 @@ Same tempo, same key centre, every section. Each sound switch lands on the bar w
 
 Getting Suno to change sound on the bar: it rarely holds five genres in one generation. Build with Extend: (1) Intro, Verse 1 and Chorus 1 with a chiptune-into-16-bit style, keeping a take where the chorus arrives near 0:36; (2) extend with Verse 2 in 16-bit style; (3) Verse 3 and Chorus 2 in the rave style; (4) Verse 4 and Bridge in the EDM pop style; (5) Final Verse, Final Chorus and Outro in the hyperpop synthwave style. Put "128 BPM" in every style field and listen for the kick holding tempo across joins.
 
-## 5. Syncing the game to the track
+## 5. Syncing the game to a new song
 
-1. Export the track from Suno as MP3 and save it as `public/song.mp3`. Reload. The game now runs off the audio clock and starts paused; press Play. The built-in generative score mutes itself while a song is present.
-2. Line up the start. The clock (top right) shows `SONG +0.00s`. Press `]` to push the game 50 ms later against the song, `[` to pull it 50 ms earlier, until the first chorus hits on bar 19 (0:35.6). The offset is remembered in the browser.
-3. If lines drift, tap-sync. Play from the start and press `T` the moment each lyric line begins, all 40 lines in order. The clock shows `TAP n/40`. `U` clears the taps.
-4. Press `Y`. It downloads `timing.json`; save it as `public/timing.json` and reload. Every line and era switch now follows your taps. The era starts are derived from the taps: era 2 at the first chorus line, era 3 one bar before "Brought it back to my desk", era 4 one bar before "Now the whole toolbox", era 5 at "A hundred little hands" (needs at least 31 taps).
-
-`timing.json` is plain JSON: `offset`, `lines` (seconds per line) and `eras` (seconds per era start). Edit it by hand if a tap was late.
-
-### Retiming if Suno's sections land differently
-
-If you prefer a take whose sections sit on different bars, re-time the game, not the song. Both tables in `src/core.ts` are in bars (seconds / 1.875):
-
-- `ERAS`: the `start: bar(n)` of each era (currently 0, 19, 37, 56, 75). Move each to the bar where the matching sound change happens in the take.
-- `LYRICS`: the first number on each line (e.g. `[38, "Brought it back to my desk..."]`). Set it to the bar where that line is sung. Fractions are fine (27.5, 66.5).
-- The piece length is `TOTAL = 96*BAR`; change it only if the take is not three minutes.
-
-Change the numbers only; keep the lyric strings exactly as they are.
+1. Put the audio at `public/songs/<id>/song.mp3`.
+2. `python tools/song/analyze.py <id>` measures duration, tempo and the first beat into `public/songs/<id>/map.json`.
+3. `python tools/song/align.py <id>` (in a Python environment with `faster-whisper`) transcribes the song with word timestamps, aligns it to the lyric sheet and writes each line's start time into `map.json`. Press Start matched 339 of 352 words.
+4. Or by ear: open the game with `?song=<id>`, press T at the start of each of the 40 lines and once when the last one ends, then Y to save `map.json`.
+5. Open `?song=<id>` to play it; `DEFAULT_SONG` in `src/boot.ts` sets the song everyone gets. `[` / `]` nudge the audio against the game by 50 ms if a file and its map disagree slightly.
